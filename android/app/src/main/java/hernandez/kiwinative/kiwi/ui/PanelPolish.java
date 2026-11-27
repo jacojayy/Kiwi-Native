@@ -89,7 +89,7 @@ public final class PanelPolish {
             b.setMaxLines(1);   // not setSingleLine: its horizontal scrolling moves the foreground (SidePanel's focus frame) out of sight
             b.setMinHeight(Math.round(38 * dp));
             b.setPadding(Math.round(8 * dp), 0, Math.round(8 * dp), 0);
-            b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+            b.setTypeface(hernandez.kiwinative.Fonts.face(500));
             b.setTextColor(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {-android.R.attr.state_enabled}, {}}, new int[] {CREAM, 0x66B0B3B8, QUIET}));
             StateListDrawable bg = new StateListDrawable();
             bg.addState(new int[] {android.R.attr.state_checked}, pill(KIWI, 0, dp, 9));
@@ -264,7 +264,7 @@ public final class PanelPolish {
         if (bold && t.getPaddingLeft() == 0 && t.getPaddingTop() >= Math.round(12 * dp) && size >= 13 * sp) {
             float scale = size / (15 * sp);   // the panel's text size setting scales every size; keep it
             t.setTag(DONE);
-            t.setTypeface(Typeface.DEFAULT_BOLD);
+            t.setTypeface(hernandez.kiwinative.Fonts.face(700));
             t.setTextSize(TypedValue.COMPLEX_UNIT_PX, 12 * sp * scale);
             t.setAllCaps(true);
             t.setLetterSpacing(0.08f);
@@ -294,7 +294,7 @@ public final class PanelPolish {
         row.setPadding(0, Math.round(6 * dp), 0, 0);
         TextView name = new TextView(g.getContext()), value = new TextView(g.getContext());
         for (TextView t : new TextView[] {name, value}) { t.setTextSize(TypedValue.COMPLEX_UNIT_PX, label.getTextSize()); t.setTextColor(0xFFE8EAED); t.setSingleLine(true); }
-        value.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        value.setTypeface(hernandez.kiwinative.Fonts.face(500));
         row.addView(name, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
         row.addView(value, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         Runnable split = () -> {
@@ -333,7 +333,7 @@ public final class PanelPolish {
         b.setStateListAnimator(null);
         b.setBackground(pill(0xFF3A3B3E, 0, dp, 999));
         b.setTextColor(0xFFE8EAED);
-        b.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        b.setTypeface(hernandez.kiwinative.Fonts.face(500));
         b.setMinHeight(Math.round(38 * dp));
         b.setMinimumHeight(Math.round(38 * dp));
         b.setPadding(Math.round(18 * dp), 0, Math.round(18 * dp), 0);

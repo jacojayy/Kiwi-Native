@@ -66,4 +66,25 @@ public final class Icons {
         tile.setForeground(new InsetDrawable(d, inset));
         return true;
     }
+
+    /** The icon that stands for an emoji of a row's tile (Ui.Setting), so no row shows the system's emoji font; the names are pi_<name> drawables */
+    private static final Map<String, String> EMOJI = new HashMap<>();
+    static {
+        String[] m = {"\uD83C\uDFAE", "game", "\uD83E\uDDE9", "mods", "\uD83D\uDD0D", "search", "\uD83D\uDDBC", "picture", "\uD83D\uDDA5", "display", "\uD83D\uDCC1", "folder",
+            "\u2728", "quality", "\u26A1", "gauge", "\uD83D\uDCFA", "tv", "\u26A0", "warning", "\uD83E\uDDEA", "terminal", "\uD83D\uDDD1", "trash", "\uD83D\uDD79", "controller",
+            "\uD83D\uDD04", "update", "\uD83D\uDCF3", "rumble", "\uD83D\uDCE6", "pack_out", "\u2B06", "upscale", "\uD83E\uDDF9", "undo", "\uD83E\uDDE0", "memory",
+            "\uD83D\uDEE0", "build", "\uD83D\uDE80", "fast_forward", "\uD83D\uDDDC", "pack_in", "\uD83D\uDD52", "clock", "\uD83D\uDD2D", "aim", "\uD83D\uDD28", "build",
+            "\uD83D\uDD24", "language", "\uD83D\uDD11", "key", "\uD83D\uDCFC", "log", "\uD83D\uDCF1", "screen_landscape", "\uD83D\uDCE8", "share", "\uD83D\uDCE5", "download",
+            "\uD83D\uDCBE", "saves", "\uD83C\uDFAF", "aim", "\uD83C\uDFAC", "scene", "\uD83C\uDF9A", "contrast", "\uD83C\uDF3F", "leaf", "\uD83E\uDE9F", "window",
+            "\uD83E\uDDFE", "list", "\uD83E\uDDF5", "cores", "\uD83E\uDDF1", "layers", "\uD83E\uDDF0", "settings", "\uD83E\uDD47", "quality", "\uD83D\uDE42", "user",
+            "\uD83D\uDDC2", "library", "\uD83D\uDD33", "passes", "\u2699", "settings"};
+        for (int i = 0; i < m.length; i += 2) EMOJI.put(m[i], m[i + 1]);
+    }
+
+    /** A row's tile with the icon of its emoji instead of it (the variation selector is ignored); false for an emoji that has none, which stays as it is */
+    public static boolean tileForEmoji(TextView tile, String emoji) {
+        if (emoji == null) return false;
+        String name = EMOJI.get(emoji.replace("\uFE0F", ""));
+        return name != null && tile(tile, name);
+    }
 }

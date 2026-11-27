@@ -6,6 +6,7 @@ import android.app.Application;
 public final class NxApp extends Application {
     @Override public void onCreate() {
         super.onCreate();
+        Fonts.init(this);   // KIWI: the app's font, before any page is built
         PickedNup.install(this);
         hernandez.kiwinative.kiwi.ui.AppScreens.install(this);   // KIWI: the app's pages in other processes keep the second display's page (hernandez.kiwinative.kiwi.ui.AppScreens)
     }

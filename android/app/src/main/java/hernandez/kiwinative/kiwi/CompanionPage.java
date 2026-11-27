@@ -85,8 +85,8 @@ final class CompanionPage {
         textRoot.setGravity(Gravity.CENTER_HORIZONTAL);
         textRoot.setPadding(32, 48, 32, 32);
         textRoot.setBackgroundColor(Color.rgb(0x14, 0x12, 0x0c));
-        textRoot.addView(text("Kiwi Native", 30, Color.rgb(0x9a, 0xd6, 0x4a), Typeface.DEFAULT_BOLD));
-        textRoot.addView(text(gameName, 22, Color.WHITE, Typeface.DEFAULT));
+        textRoot.addView(text("Kiwi Native", 30, Color.rgb(0x9a, 0xd6, 0x4a), hernandez.kiwinative.Fonts.face(700)));
+        textRoot.addView(text(gameName, 22, Color.WHITE, hernandez.kiwinative.Fonts.face(400)));
         values = text("", 18, Color.LTGRAY, Typeface.MONOSPACE);
         values.setGravity(Gravity.START);
         textRoot.addView(values);

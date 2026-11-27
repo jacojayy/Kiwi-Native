@@ -110,7 +110,7 @@ final class ModsPanel {
      */
     private static void widths(LinearLayout bar) {
         android.graphics.Paint p = new android.graphics.Paint();
-        p.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        p.setTypeface(hernandez.kiwinative.Fonts.face(700));
         p.setTextSize(16 * bar.getResources().getDisplayMetrics().scaledDensity);
         for (int i = 0; i < bar.getChildCount(); i++) {
             View c = bar.getChildAt(i);

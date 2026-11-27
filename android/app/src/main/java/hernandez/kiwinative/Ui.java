@@ -62,7 +62,7 @@ final class Ui {
         return new RippleDrawable(ColorStateList.valueOf(0x336B4423), shape, mask);
     }
 
-    static Typeface face(int weight) { return Typeface.create(Typeface.SANS_SERIF, weight, false); }
+    static Typeface face(int weight) { return hernandez.kiwinative.Fonts.face(weight); }   // KIWI: Nunito
 
     /** A vector icon (res/drawable/ic_*.xml) tinted with a palette color */
     static Drawable icon(Context c, int drawable, int colorRes) {
@@ -557,6 +557,7 @@ final class Ui {
             tile.setBackground(round(col(c, R.color.bn_tint), dp(c, 11), 0, 0));
             tile.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             view.addView(tile, new LinearLayout.LayoutParams(dp(c, 36), dp(c, 36)));
+            hernandez.kiwinative.kiwi.ui.Icons.tileForEmoji(tile, emoji);   // KIWI: the row's own icon, not the system's emoji
             LinearLayout col = new LinearLayout(c);
             col.setOrientation(LinearLayout.VERTICAL);
             col.setPadding(dp(c, 12), 0, dp(c, 8), 0);

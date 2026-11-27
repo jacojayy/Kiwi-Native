@@ -279,7 +279,7 @@ final class SidePanel extends FrameLayout {
             t.setIncludeFontPadding(false);
             t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);   // one size for every tab, set once the bar is laid out (tabTextSize)
             t.setPadding(pad, 0, pad, 0);
-            t.setTypeface(on ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+            t.setTypeface(on ? hernandez.kiwinative.Fonts.face(700) : hernandez.kiwinative.Fonts.face(400));
             t.setTextColor(on ? 0xFF000000 : 0xFFE8EAED);
             t.setBackgroundColor(on ? FOCUS : 0);
             t.setSelected(on);
@@ -306,7 +306,7 @@ final class SidePanel extends FrameLayout {
         if (tabs.getChildCount() <= TAB_NAMES.length) return;
         float sp = getResources().getDisplayMetrics().scaledDensity, fit = 16;
         android.graphics.Paint p = new android.graphics.Paint();
-        p.setTypeface(Typeface.DEFAULT_BOLD);
+        p.setTypeface(hernandez.kiwinative.Fonts.face(700));
         p.setTextSize(16 * sp);
         for (int i = 0; i < TAB_NAMES.length; i++) {
             TextView t = (TextView) tabs.getChildAt(i);
@@ -368,7 +368,7 @@ final class SidePanel extends FrameLayout {
     private TextView head(String t) {
         TextView h = new TextView(act);
         h.setText(t);
-        h.setTypeface(Typeface.DEFAULT_BOLD);
+        h.setTypeface(hernandez.kiwinative.Fonts.face(700));
         h.setTextSize(15);
         h.setPadding(0, Math.round(18 * getResources().getDisplayMetrics().density), 0, 0);
         box.addView(h);
@@ -557,7 +557,7 @@ final class SidePanel extends FrameLayout {
         for (Cheats.Entry e : list) {
             if (!e.section.equals(sec)) {
                 sec = e.section;
-                if (!sec.isEmpty()) { TextView s = note(sec); s.setTypeface(Typeface.DEFAULT_BOLD); }
+                if (!sec.isEmpty()) { TextView s = note(sec); s.setTypeface(hernandez.kiwinative.Fonts.face(700)); }
             }
             android.widget.CheckBox b = new android.widget.CheckBox(act);
             b.setText(e.name);

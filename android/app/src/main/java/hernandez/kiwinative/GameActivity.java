@@ -128,7 +128,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         // The build tag: an overlay item, on by default (fpsTick follows the switches); bold, flush in the top-left corner
         tag = overlayText(Gravity.TOP | Gravity.START, 1f);
         tag.setText(Prefs.buildTag(this));
-        tag.setTypeface(Typeface.DEFAULT_BOLD);
+        tag.setTypeface(hernandez.kiwinative.Fonts.face(700));
         tag.setVisibility(overlayOn() && hernandez.kiwinative.kiwi.overlay.Hud.tagOn(this) ? View.VISIBLE : View.GONE);   // KIWI: Hud.tagOn (off by default under the pill)
         root.addView(tag, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.START));
         // The log block may grow at most up to the tag's bottom edge (its top margin), so a long log never runs under the tag
@@ -141,7 +141,7 @@ public final class GameActivity extends Activity implements SurfaceHolder.Callba
         root.addView(fps, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.TOP | Gravity.END));
         // The same two blocks for the host's present, which draws them into the game's images (Overlay.Block): the views show only when it does not
         TextView tagPic = overlayText(Gravity.TOP | Gravity.START, 1f);
-        tagPic.setTypeface(Typeface.DEFAULT_BOLD);
+        tagPic.setTypeface(hernandez.kiwinative.Fonts.face(700));
         tagBlock = new Overlay.Block(0, tagPic);
         fpsBlock = new Overlay.Block(1, overlayText(Gravity.TOP | Gravity.END, 0.85f));
         stats = new Overlay(this);

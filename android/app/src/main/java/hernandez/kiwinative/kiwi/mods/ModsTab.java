@@ -314,7 +314,7 @@ public final class ModsTab {
         name.setText(b.cheat.name);
         name.setTextSize(14);
         name.setTextColor(TEXT);
-        name.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        name.setTypeface(hernandez.kiwinative.Fonts.face(500));
         name.setSingleLine(true);
         name.setEllipsize(TextUtils.TruncateAt.END);
         line.addView(name, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
@@ -494,7 +494,7 @@ public final class ModsTab {
         b.field = new Field(c);
         b.field.setTextSize(15);
         b.field.setTextColor(TEXT);
-        b.field.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        b.field.setTypeface(hernandez.kiwinative.Fonts.face(500));
         b.field.setGravity(Gravity.CENTER);
         b.field.setMaxLines(1);   // not setSingleLine: its horizontal scrolling moves the foreground (the focus frame) out of sight
         b.field.setMinWidth(Math.round(72 * dp));
@@ -817,7 +817,7 @@ public final class ModsTab {
         TextView t = new TextView(c);
         t.setText("Restart the game to apply");
         t.setTextSize(13);
-        t.setTypeface(Typeface.DEFAULT_BOLD);
+        t.setTypeface(hernandez.kiwinative.Fonts.face(700));
         t.setTextColor(0xFF2A1D0C);
         col.addView(t);
         TextView n = new TextView(c);
@@ -863,7 +863,7 @@ public final class ModsTab {
         TextView t = new TextView(c);
         t.setText(s);
         t.setTextSize(11);
-        t.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        t.setTypeface(hernandez.kiwinative.Fonts.face(500));
         t.setTextColor(QUIET);
         t.setSingleLine(true);
         t.setPadding(Math.round(8 * dp), Math.round(3 * dp), Math.round(8 * dp), Math.round(3 * dp));
@@ -878,7 +878,7 @@ public final class ModsTab {
     private static TextView head(Context c, String s) {
         TextView h = new TextView(c);
         h.setText(s);
-        h.setTypeface(Typeface.DEFAULT_BOLD);
+        h.setTypeface(hernandez.kiwinative.Fonts.face(700));
         h.setTextSize(15);
         h.setPadding(0, Math.round(18 * c.getResources().getDisplayMetrics().density), 0, 0);
         return h;

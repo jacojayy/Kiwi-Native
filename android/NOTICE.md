@@ -125,3 +125,5 @@ It lives under `dm/host/android/` so the Mac and iPhone builds do not include it
 from Recompia revision `75dae2f2ccdada74e6b8ba12ea7de30560a84221`, whose file carries `SPDX-License-Identifier: GPL-3.0-or-later`.
 The Android adaptation keeps the game's original aspect field and corrects its completed projection. The GPL implementation lives under
 `dm/host/android/` so the Mac and iPhone host builds do not include it; the MIT files retain their own license.
+
+The launcher's font is Nunito (Copyright 2014 The Nunito Project Authors), under the SIL Open Font License 1.1; the licence is `android/app/src/main/assets/licenses/Nunito-OFL.txt` and the font `android/app/src/main/res/font/nunito_vf.ttf`, unchanged. The launcher's icons (`res/drawable/ic_*.xml`, `kiwi/res/drawable/pi_*.xml`) are drawn for this app.

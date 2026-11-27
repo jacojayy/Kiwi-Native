@@ -69,7 +69,7 @@ final class Shortcuts {
         String letter = n.isEmpty() ? "?" : n.substring(0, n.offsetByCodePoints(0, 1)).toUpperCase(Locale.ROOT);
         Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
         p.setColor(c.getColor(R.color.bn_on_kiwi));
-        p.setTypeface(Typeface.create(Typeface.DEFAULT, 800, false));
+        p.setTypeface(hernandez.kiwinative.Fonts.face(800));
         p.setTextSize(size * 0.36f);
         p.setTextAlign(Paint.Align.CENTER);
         Rect r = new Rect();

@@ -125,7 +125,7 @@ public final class Rail {
         title = new TextView(c);
         title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
         title.setTextColor(Look.TEXT);
-        title.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        title.setTypeface(hernandez.kiwinative.Fonts.face(500));
         title.setSingleLine(true);
         title.setPadding(Look.dp(c, 12), 0, 0, 0);
         head.addView(title, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
@@ -214,7 +214,7 @@ public final class Rail {
         TextView k = new TextView(c);
         k.setText(key);
         k.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        k.setTypeface(Typeface.DEFAULT_BOLD);
+        k.setTypeface(hernandez.kiwinative.Fonts.face(700));
         k.setTextColor(Look.SHEET | 0xFF000000);
         k.setGravity(Gravity.CENTER);
         k.setIncludeFontPadding(false);
@@ -227,7 +227,7 @@ public final class Rail {
         t.setText(label);
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         t.setTextColor(Look.TEXT);
-        t.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        t.setTypeface(hernandez.kiwinative.Fonts.face(500));
         t.setSingleLine(true);
         t.setPadding(Look.dp(c, 8), 0, 0, 0);
         a.addView(t);

@@ -694,7 +694,7 @@ public final class InGamePanel {
     private static TextView head(SidePanel p, String s) {
         TextView h = new TextView(p.getContext());
         h.setText(s);
-        h.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        h.setTypeface(hernandez.kiwinative.Fonts.face(700));
         h.setTextSize(15);
         h.setPadding(0, Math.round(18 * p.getResources().getDisplayMetrics().density), 0, 0);
         return h;

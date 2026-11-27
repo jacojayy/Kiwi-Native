@@ -87,7 +87,7 @@ public final class GameRows extends LinearLayout {
         TextView t = new TextView(c);
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, sp);
         t.setTextColor(color);
-        t.setTypeface(bold ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+        t.setTypeface(bold ? hernandez.kiwinative.Fonts.face(700) : hernandez.kiwinative.Fonts.face(400));
         t.setIncludeFontPadding(false);
         return t;
     }
@@ -126,7 +126,7 @@ public final class GameRows extends LinearLayout {
         int is = Look.dp(c, 30);
         r.addView(ic, new LayoutParams(is, is));
         TextView t = text(c, 15, Look.TEXT, false);
-        t.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        t.setTypeface(hernandez.kiwinative.Fonts.face(500));
         t.setText(it.title());
         t.setSingleLine(true);
         t.setEllipsize(TextUtils.TruncateAt.END);
@@ -182,7 +182,7 @@ public final class GameRows extends LinearLayout {
 
     private TextView button(Context c, String s, View.OnClickListener l) {
         TextView t = text(c, 14, Look.TEXT, false);
-        t.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        t.setTypeface(hernandez.kiwinative.Fonts.face(500));
         t.setText(s);
         t.setGravity(Gravity.CENTER);
         t.setBackground(Look.round(Look.ROW, Look.dp(c, 10)));

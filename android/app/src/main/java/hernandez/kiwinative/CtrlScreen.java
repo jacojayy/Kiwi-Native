@@ -71,7 +71,7 @@ final class CtrlScreen {
         box.setFocusable(false);
         int pad = Math.round(24 * dp);
         box.setPadding(pad, pad, pad, pad);
-        TextView title = text(a, "Controllers", 24, Color.WHITE); title.setTypeface(Typeface.DEFAULT_BOLD);
+        TextView title = text(a, "Controllers", 24, Color.WHITE); title.setTypeface(hernandez.kiwinative.Fonts.face(700));
         box.addView(title);
         hint = text(a, "", 15, 0xFFB8C4CC);
         box.addView(hint, lp(LinearLayout.LayoutParams.WRAP_CONTENT, 8));

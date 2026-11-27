@@ -1,4 +1,4 @@
-# KIWI: builds the Kiwi Native APK (hernandez.kiwinative, debug-signed) on a GitHub-hosted Linux runner and uploads it as an artifact. Run it from the Actions tab
+# KIWI: builds the Kiwi Native APK (hernandez.kiwinative, signed with the release key in the repository's secrets, so each build installs over the last) on a GitHub-hosted Linux runner and uploads it as an artifact. Run it from the Actions tab
 # (engine "real" makes the on-device packer's stage first, android/ondevice/build.sh; "fake" builds the simulated packer, for the screens only).
 name: apk
 
@@ -42,11 +42,23 @@ jobs:
       - name: Stage the on-device packer
         if: inputs.engine == 'real'
         run: zsh kiwi/scripts/ondevice-stage.sh "$RUNNER_TEMP/work"
+      - name: Release key
+        env:
+          STORE_B64: ${{ secrets.KIWI_SIGN_STORE_B64 }}
+        run: |
+          [ -n "$STORE_B64" ] || { echo "::error::no signing key: run kiwi/scripts/make-signing-key.sh once (it sets the KIWI_SIGN_* secrets)"; exit 1; }
+          echo "$STORE_B64" | base64 -d > "$RUNNER_TEMP/kiwi.keystore"
+          echo "NX_SIGN_STORE=$RUNNER_TEMP/kiwi.keystore" >> "$GITHUB_ENV"
       - name: Gradle apk
         working-directory: android/app
+        env:
+          NX_SIGN_ALIAS: ${{ secrets.KIWI_SIGN_ALIAS }}
+          NX_SIGN_PASS: ${{ secrets.KIWI_SIGN_PASS }}
         run: |
           if [ "${{ inputs.engine }}" = real ]; then ENGINE="-PnxPackStage=$RUNNER_TEMP/work/stage"; else ENGINE="-PnxPackEngine=fake"; fi
-          ./gradlew --no-daemon -PnxApp=kiwi -PnxLabel="Kiwi Native" "$ENGINE" apk
+          V=$(cat ../../kiwi/VERSION)
+          # the version code grows with every run, so Android accepts each build as an update of the one before
+          ./gradlew --no-daemon -PnxApp=kiwi -PnxRelease=true -PnxVersion="$V" -PnxVersionCode="$GITHUB_RUN_NUMBER" -PnxLabel="Kiwi Native" "$ENGINE" apk
           ls -la out
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

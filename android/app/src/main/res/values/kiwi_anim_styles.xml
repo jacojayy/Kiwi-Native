@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pages (activities) slide and fade, dialogs grow and fade (themes.xml, values-night/themes.xml: android:windowAnimationStyle) -->
+    <style name="Kiwi.WindowAnim" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/kiwi_open_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/kiwi_open_exit</item>
+        <item name="android:activityCloseEnterAnimation">@anim/kiwi_close_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/kiwi_close_exit</item>
+    </style>
+    <style name="Kiwi.DialogAnim" parent="@android:style/Animation.Dialog">
+        <item name="android:windowEnterAnimation">@anim/kiwi_dialog_in</item>
+        <item name="android:windowExitAnimation">@anim/kiwi_dialog_out</item>
+    </style>
+</resources>

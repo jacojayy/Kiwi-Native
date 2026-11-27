@@ -179,7 +179,7 @@ public final class GameMenu extends FrameLayout {
         TextView t = new TextView(c);
         t.setTextSize(TypedValue.COMPLEX_UNIT_SP, sp * text);
         t.setTextColor(color);
-        t.setTypeface(style == Typeface.BOLD ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+        t.setTypeface(style == Typeface.BOLD ? hernandez.kiwinative.Fonts.face(700) : hernandez.kiwinative.Fonts.face(400));
         t.setIncludeFontPadding(false);
         return t;
     }
@@ -229,7 +229,7 @@ public final class GameMenu extends FrameLayout {
         int is = Look.dp(c, 30);
         r.addView(ic, new LinearLayout.LayoutParams(is, is));
         TextView t = label(c, 15, Look.TEXT, Typeface.NORMAL);
-        t.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        t.setTypeface(hernandez.kiwinative.Fonts.face(500));
         t.setText(it.title);
         t.setSingleLine(true);
         t.setEllipsize(TextUtils.TruncateAt.END);
@@ -297,7 +297,7 @@ public final class GameMenu extends FrameLayout {
 
     private TextView button(Context c, String s, View.OnClickListener l) {
         TextView t = label(c, 14, Look.TEXT, Typeface.NORMAL);
-        t.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        t.setTypeface(hernandez.kiwinative.Fonts.face(500));
         t.setText(s);
         t.setGravity(Gravity.CENTER);
         t.setBackground(Look.round(Look.ROW, Look.dp(c, 10)));

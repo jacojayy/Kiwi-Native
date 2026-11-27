@@ -2,6 +2,8 @@
 <resources>
     <!-- The launcher's look (MainActivity): cream and banana, no action bar (the screen draws its own header), edge to edge. values-night has the dark parent -->
     <style name="Theme.Kiwi" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">@font/nunito</item>
+        <item name="android:windowAnimationStyle">@style/Kiwi.WindowAnim</item>
         <item name="android:colorPrimary">@color/bn_kiwi</item>
         <item name="android:colorPrimaryDark">@color/bn_bg</item>
         <item name="android:colorAccent">@color/bn_accent</item>
@@ -19,6 +21,8 @@
 
     <!-- Dialogs: a rounded cream card; buttons in the deep gold accent -->
     <style name="Theme.Kiwi.Dialog" parent="android:Theme.Material.Light.Dialog.Alert">
+        <item name="android:fontFamily">@font/nunito</item>
+        <item name="android:windowAnimationStyle">@style/Kiwi.DialogAnim</item>
         <item name="android:colorAccent">@color/bn_accent</item>
         <item name="android:colorControlActivated">@color/bn_accent</item>
         <item name="android:colorBackground">@color/bn_card</item>

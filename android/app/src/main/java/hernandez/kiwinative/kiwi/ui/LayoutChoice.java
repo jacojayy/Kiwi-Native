@@ -154,7 +154,7 @@ public final class LayoutChoice {
         }
         c.addView(top, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Math.round(PICTURE_DP * dp)));   // one box for every picture, so the names line up
         TextView name = PUi.text(a, NAMES[i], 15, R.color.bn_text, 700);
-        name.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        name.setTypeface(hernandez.kiwinative.Fonts.face(700));
         LinearLayout.LayoutParams np = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         np.topMargin = Math.round(8 * dp);
         c.addView(name, np);
