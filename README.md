@@ -161,6 +161,25 @@ Hold a game's cover to open its own page: picture and speed settings, mods, the 
 After an app update, rebuilding every game is strongly recommended: hold the cover, open **Storage**, tap
 **Build again**, then **Rebuild**.
 
+## Porting a game
+
+The full guide, with every command, is [docs/porting-a-game.md](docs/porting-a-game.md). In short:
+
+**A game that already has a profile** (it is in the table above): add your keys, firmware and game folder, open the game, tap **Build**, tap the game to play. Nothing to port.
+
+**A game with no profile**, in order:
+
+1. Check it is worth it: a 32-bit game cannot run, and a game whose shaders the tools cannot read needs extra work first.
+2. Make a `.nup` of your own dump with `nximport_cli`.
+3. Survey it: `python scripts/build_ipa_from_nsp.py <dump> --survey-only` and read `survey.md`.
+4. Write the provisional profile (`build_ipa_from_nsp.py`, which fills `game.tsv` from the files) and split the shaders with `shader_split.py`. Zero shaders means the files need a reader first.
+5. Put the profile in `dm/games/<TITLE ID>/`: fix `game.tsv`, write the game's note, add its row to the games table and its title ID to `kiwi/release-titles.txt`, then run `test_docs.py` and `check-profiles.sh`.
+6. Pack it from the `.nup`: `python scripts/pack_android.py <game>.nup --shader-pkg <split>/pkg`.
+7. Build a test app that carries the profile (`./gradlew apk -PnxApp=kiwi -PnxAppId=kiwitest -PnxGames=<TITLE ID>`, or the **apk** workflow in Actions).
+8. Push the pack (`kiwi/scripts/push-pack.py`) and test on the device from the library, on the system driver and on Turnip.
+9. If it does not reach its frame loop, bring it up: patch, build the host, run, read the log by stage, fix the root cause (not the symptom), keep game-specific rules to a minimum and keyed by build ID.
+10. Ship source only (no pack, APK, `.nup`, log or key) with the tests green and what you did and did not test.
+
 ## Settings worth knowing
 
 - **Console mode**: Docked or Handheld, for all games in Settings and per game on its page. It can also be changed
