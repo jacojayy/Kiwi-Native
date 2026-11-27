@@ -29,6 +29,8 @@ if (nxLive && (nxPlay || nxApp)) throw new GradleException('nxLive builds the re
 // KIWI: -PnxRelease=true (with -PnxApp=kiwi) builds the Kiwi Native release: not debuggable, signed with the release key named by the environment
 // (NX_SIGN_STORE, NX_SIGN_ALIAS, NX_SIGN_PASS, as nxLive), so an update installs over it and adb cannot run-as into the user's keys; give -PnxVersion=X.Y.Z for the update check
 def nxRelease = providers.gradleProperty('nxRelease').getOrElse('false') == 'true'
+// KIWI: -PnxGenSeeds=true: a release made without the pinned prewarm seeds (PN_PREWARM_SEEDS, the upstream release's own pipeline lists) makes each game's seed from its profile, as a development build does
+def nxGenSeeds = providers.gradleProperty('nxGenSeeds').getOrElse('false') == 'true'
 if (nxRelease && nxApp != 'kiwi') throw new GradleException('nxRelease builds the Kiwi Native release: give -PnxApp=kiwi')
 def nxVersion = providers.gradleProperty('nxVersion').getOrElse('0.1-bringup')
 def nxVersionCode = providers.gradleProperty('nxVersionCode').getOrElse('1') as int
@@ -642,7 +644,7 @@ if (nxGenericHost) {
                     def digest = java.security.MessageDigest.getInstance('SHA-256').digest(bytes).encodeHex().toString()
                     if (digest != expectedSeeds[g]) throw new GradleException("Prewarm seed for $g has SHA-256 $digest, expected ${expectedSeeds[g]}")
                     output.bytes = bytes
-                } else if (seed != null && (nxRelease || seedDir)) {
+                } else if (seed != null && ((nxRelease && !nxGenSeeds) || seedDir)) {
                     throw new GradleException("Missing release prewarm seed for $g. Set PN_PREWARM_SEEDS to the folder containing ${g}.seed")
                 } else {
                     run(['seed', g, output.path])

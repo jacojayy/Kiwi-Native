@@ -58,7 +58,7 @@ jobs:
           if [ "${{ inputs.engine }}" = real ]; then ENGINE="-PnxPackStage=$RUNNER_TEMP/work/stage"; else ENGINE="-PnxPackEngine=fake"; fi
           V=$(cat ../../kiwi/VERSION)
           # the version code grows with every run, so Android accepts each build as an update of the one before
-          ./gradlew --no-daemon -PnxApp=kiwi -PnxRelease=true -PnxVersion="$V" -PnxVersionCode="$GITHUB_RUN_NUMBER" -PnxLabel="Kiwi Native" "$ENGINE" apk
+          ./gradlew --no-daemon -PnxApp=kiwi -PnxRelease=true -PnxGenSeeds=true -PnxVersion="$V" -PnxVersionCode="$GITHUB_RUN_NUMBER" -PnxLabel="Kiwi Native" "$ENGINE" apk
           ls -la out
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
