@@ -386,7 +386,7 @@ android {
     // The icon's variant badge: a "T" dot on the test app, none on the play app (res/drawable/ic_launcher_badge*.xml)
     sourceSets {
         main {
-            res.srcDirs += nxPlay || nxLive || nxRelease ? 'src/variant-play/res'   /* KIWI: the release has no "T" badge */ : 'src/variant-test/res'
+            res.srcDirs += nxPlay || nxLive || nxRelease || (nxApp == "kiwi" && nxAppId == "kiwi") ? 'src/variant-play/res'   /* KIWI: the Kiwi Native app (hernandez.kiwinative) has no "T" badge */ : 'src/variant-test/res'
             java.srcDirs += 'src/ondevice/java'
         }
         if (nxApp == 'kiwi') { release { res.srcDirs += 'src/kiwi/res' }; debug { res.srcDirs += 'src/kiwi/res' } }   // KIWI: kiwi icon/background overlay (a build type's res overrides main's by name)

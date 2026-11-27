@@ -29,7 +29,7 @@ public final class PanelPolish {
     private static final String DONE = "pn_polish";
     // The rows already moved clear of the focus frame: a weak set, not a keyed tag, so this class needs no R (dm/tools/tests/test_android_hud compiles it alone)
     private static final java.util.Set<View> INSET = java.util.Collections.newSetFromMap(new java.util.WeakHashMap<>());
-    private static final int ACCENT = 0xFFFFD54F;   // SidePanel.FOCUS, the selected tab's colour
+    private static final int ACCENT = 0xFF9AD64A;   // SidePanel.FOCUS, the selected tab's colour
     private static final int OUTLINE = 0xFF555555;
     private static final int HEAD = 0xFFCDB48C;   // kiwi tan: the section heads (hernandez.kiwinative.kiwi.ingame.Look.TAN)
     private static final int TRACK = 0xFF2D2E31, KIWI = 0xFF4A3920, CREAM = 0xFFFFF1D2, QUIET = 0xFFB0B3B8;   // a choice's track, its chosen part (the rail's block)
@@ -221,7 +221,7 @@ public final class PanelPolish {
     }
 
     private static android.graphics.drawable.Drawable toggle(float dp, boolean on) {
-        GradientDrawable track = pill(on ? 0xAAFFD54F : 0xFF5F6368, 0, dp, 7);
+        GradientDrawable track = pill(on ? 0xAA9AD64A : 0xFF5F6368, 0, dp, 7);
         GradientDrawable thumb = new GradientDrawable();
         thumb.setShape(GradientDrawable.OVAL);
         thumb.setColor(on ? ACCENT : 0xFFBDC1C6);

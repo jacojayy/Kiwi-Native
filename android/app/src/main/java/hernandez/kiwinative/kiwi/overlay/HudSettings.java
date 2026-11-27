@@ -159,7 +159,7 @@ public final class HudSettings {
         row.addView(val, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         Runnable show = () -> {
             int i = Math.max(0, Arrays.asList(values).indexOf(cur.get()));
-            val.setTextColor(0xFFFFD54F);   // the panel's accent (SidePanel.FOCUS), full opacity
+            val.setTextColor(0xFF9AD64A);   // the panel's accent (SidePanel.FOCUS), full opacity
             val.setText(names[i] + " \u203A");
         };
         show.run();

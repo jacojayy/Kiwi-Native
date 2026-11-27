@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Dark mode: a warm night (roasted peel browns) with the same banana yellow -->
-    <color name="bn_bg">#FF17120C</color>
-    <color name="bn_card">#FF241C14</color>
-    <color name="bn_card_stroke">#FF3A2E20</color>
-    <color name="bn_tint">#FF3A2D17</color>
-    <color name="bn_kiwi">#FFFFD43B</color>
-    <color name="bn_kiwi_deep">#FFF2B705</color>
-    <color name="bn_on_kiwi">#FF3B2611</color>
-    <color name="bn_text">#FFFFF1D2</color>
-    <color name="bn_text_2">#FFCDB48C</color>
-    <color name="bn_accent">#FFFFD43B</color>
-    <color name="bn_leaf">#FF7FC79A</color>
-    <color name="bn_on_leaf">#FF10241A</color>
+    <!-- Dark mode: a deep leaf night with the same kiwi green -->
+    <color name="bn_bg">#FF0E160F</color>
+    <color name="bn_card">#FF16221A</color>
+    <color name="bn_card_stroke">#FF263A2A</color>
+    <color name="bn_tint">#FF20331F</color>
+    <color name="bn_kiwi">#FF9AD64A</color>
+    <color name="bn_kiwi_deep">#FF7FBF35</color>
+    <color name="bn_on_kiwi">#FF13250A</color>
+    <color name="bn_text">#FFEEF8DC</color>
+    <color name="bn_text_2">#FFA9C48A</color>
+    <color name="bn_accent">#FF9AD64A</color>
+    <color name="bn_leaf">#FF86D07A</color>
+    <color name="bn_on_leaf">#FF0E2410</color>
     <color name="bn_danger">#FFFF9670</color>
     <color name="bn_danger_tint">#FF3D2016</color>
-    <color name="bn_warn_tint">#FF3F3014</color>
+    <color name="bn_warn_tint">#FF343512</color>
 </resources>

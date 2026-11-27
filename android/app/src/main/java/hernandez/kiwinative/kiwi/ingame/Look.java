@@ -18,7 +18,7 @@ public final class Look {
     private Look() {}
 
     // The panel (SidePanel, ModsTab): the sheet, a row, a chip, text, quiet text, the yellow and the text on it
-    public static final int SHEET = 0xF5202124, ROW = 0xFF2D2E31, CHIP = 0xFF3A3B3E, TEXT = 0xFFE8EAED, QUIET = 0xFFB0B3B8, YELLOW = 0xFFFFD54F, ON_YELLOW = 0xFF2A1D0C;
+    public static final int SHEET = 0xF5202124, ROW = 0xFF2D2E31, CHIP = 0xFF3A3B3E, TEXT = 0xFFE8EAED, QUIET = 0xFFB0B3B8, YELLOW = 0xFF9AD64A, ON_YELLOW = 0xFF2A1D0C;
     // The rail: its ground, its edge, the selected block (kiwi brown); a section head (kiwi tan); a line that went wrong; the scrim over the game
     public static final int RAIL = 0xFF151618, RAIL_EDGE = 0xFF2A2B2E, KIWI = 0xFF4A3920, TAN = 0xFFCDB48C, BAD = 0xFFFF9670, SCRIM = 0x66000000, HAIRLINE = 0xFF3A3B3E;
 
@@ -67,7 +67,7 @@ public final class Look {
     /** The controller's focus: the panel's own frame (SidePanel.focusMoved), a yellow ring with a light yellow tint, here with the row's corners */
     public static GradientDrawable focus(Context c, float radiusDp) {
         GradientDrawable d = new GradientDrawable();
-        d.setColor(0x26FFD54F);
+        d.setColor(0x269AD64A);
         d.setStroke(Math.round(2.5f * c.getResources().getDisplayMetrics().density), YELLOW);
         d.setCornerRadius(radiusDp * c.getResources().getDisplayMetrics().density);
         return d;

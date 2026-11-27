@@ -63,7 +63,7 @@ public final class ModsTab {
         default void action(String key, String label, Runnable run) {}
     }
 
-    private static final int YELLOW = 0xFFFFD54F, ROW = 0xFF2D2E31, CHIP = 0xFF3A3B3E, TEXT = 0xFFE8EAED, QUIET = 0xFFB0B3B8, BAD_TEXT = 0xFFFF9670, BAD = 0xFF3D2016;
+    private static final int YELLOW = 0xFF9AD64A, ROW = 0xFF2D2E31, CHIP = 0xFF3A3B3E, TEXT = 0xFFE8EAED, QUIET = 0xFFB0B3B8, BAD_TEXT = 0xFFFF9670, BAD = 0xFF3D2016;
     private static final Handler UI = new Handler(Looper.getMainLooper());
     static final int SEARCH_FROM = 15;
 
@@ -336,7 +336,7 @@ public final class ModsTab {
         b.sw.setChecked(on);
         b.sw.setContentDescription(b.cheat.name);
         b.sw.setThumbTintList(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {}}, new int[] {YELLOW, 0xFFBDC1C6}));
-        b.sw.setTrackTintList(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {}}, new int[] {0xAAFFD54F, 0xFF5F6368}));
+        b.sw.setTrackTintList(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {}}, new int[] {0xAA9AD64A, 0xFF5F6368}));
         LinearLayout.LayoutParams sl = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         sl.leftMargin = Math.round(8 * dp);
         r.addView(b.sw, sl);
@@ -433,7 +433,7 @@ public final class ModsTab {
         b.chip.setTextColor(fg);
         GradientDrawable d = (GradientDrawable) b.chip.getBackground();
         d.setColor(bg);
-        d.setStroke(look == CheatStatus.Look.RUNNING ? Math.max(1, Math.round(b.chip.getResources().getDisplayMetrics().density)) : 0, 0x66FFD54F);
+        d.setStroke(look == CheatStatus.Look.RUNNING ? Math.max(1, Math.round(b.chip.getResources().getDisplayMetrics().density)) : 0, 0x669AD64A);
         b.sw.setEnabled(!bad);
         if (b.field != null) { b.field.setEnabled(!bad); b.field.setFocusable(!bad); }
         b.row.setAlpha(bad ? 0.75f : 1f);
@@ -781,7 +781,7 @@ public final class ModsTab {
         sw.setFocusable(false);
         sw.setChecked(m.enabled);
         sw.setThumbTintList(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {}}, new int[] {YELLOW, 0xFFBDC1C6}));
-        sw.setTrackTintList(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {}}, new int[] {0xAAFFD54F, 0xFF5F6368}));
+        sw.setTrackTintList(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {}}, new int[] {0xAA9AD64A, 0xFF5F6368}));
         LinearLayout.LayoutParams sl = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         sl.leftMargin = Math.round(8 * dp);
         r.addView(sw, sl);

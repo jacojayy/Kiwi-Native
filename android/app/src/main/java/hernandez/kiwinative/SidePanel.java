@@ -47,7 +47,7 @@ final class SidePanel extends FrameLayout {
     static String[] TAB_NAMES = {"Performance", "Display", "Controls", "General"};   // KIWI: not final, ModsPanel.opening puts Mods between Controls and General
     private static final int TAB_PERF = 0, TAB_DISPLAY = 1; static int TAB_CONTROLS = 2, TAB_GENERAL = 3;   // KIWI: TAB_CONTROLS and TAB_GENERAL not final: ModsPanel puts Cheats and Mods before Controls, General last
     private int tab = TAB_PERF;
-    private static final int FOCUS = 0xFFFFD54F;   // the tab bar's selected tab and the focus frame: a banana yellow, dark text on it
+    private static final int FOCUS = 0xFF9AD64A;   // the tab bar's selected tab and the focus frame: a banana yellow, dark text on it
 
     // A controller: its confirm and back keys (padButtons), the held direction and its repeat
     private int confirm = KeyEvent.KEYCODE_BUTTON_B, back = KeyEvent.KEYCODE_BUTTON_A;
@@ -238,7 +238,7 @@ final class SidePanel extends FrameLayout {
         if (now == null || !inside(now) || isInTouchMode()) return;
         float dp = getResources().getDisplayMetrics().density;
         android.graphics.drawable.GradientDrawable d = new android.graphics.drawable.GradientDrawable();
-        d.setColor(0x26FFD54F);
+        d.setColor(0x269AD64A);
         d.setStroke(Math.round(2.5f * dp), FOCUS);
         d.setCornerRadius(6 * dp);
         now.setForeground(d);

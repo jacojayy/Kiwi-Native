@@ -1022,7 +1022,7 @@ public final class StatsView extends FrameLayout {
         Switch(Context c, boolean on) { super(c); this.on = on; setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO); }
         @Override protected void onDraw(Canvas c) {
             float w = getWidth(), h = getHeight(), g = h * 0.15f;
-            p.setColor(on ? 0xFFFFD43B : blend(track, text2, 0.25f));
+            p.setColor(on ? 0xFF8BC53F : blend(track, text2, 0.25f));
             r.set(0, 0, w, h);
             c.drawRoundRect(r, h / 2, h / 2, p);
             p.setColor(on ? 0xFF3B2A1A : text2);
