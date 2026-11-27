@@ -41,7 +41,7 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq zsh ninja-build cmake clang zlib1g-dev
       - name: Stage the on-device packer
         if: inputs.engine == 'real'
-        run: zsh android/ondevice/build.sh "$RUNNER_TEMP/work"
+        run: zsh kiwi/scripts/ondevice-stage.sh "$RUNNER_TEMP/work"
       - name: Gradle apk
         working-directory: android/app
         run: |
