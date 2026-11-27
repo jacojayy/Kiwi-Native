@@ -104,7 +104,7 @@ final class TouchControls extends View {
         shown = prefs().getBoolean("shown", true);
         line.setStyle(Paint.Style.STROKE);
         text.setTextAlign(Paint.Align.CENTER);
-        text.setFakeBoldText(true);
+        text.setTypeface(Fonts.face(800));   // KIWI: Nunito, heavy (replaces the fake bold)
         setHapticFeedbackEnabled(true);
     }
 
@@ -498,6 +498,9 @@ final class TouchControls extends View {
     }
 
     // ---- Drawing ----
+    // KIWI: the controls are glass in the leaf's dark green with a lime-cream rim; a held one fills with the kiwi's flesh green; a stick's thumb is the cream core
+    private static final int GLASS = 0xFF0E160F, RIM = 0xFFD4F06A, FLESH = 0xFF6DB02A, LEAF = 0xFF2E6B1E, CORE = 0xFFF4EDCB, INK = 0xFF0F2008, PEEL = 0xFF8A5A2E;
+    private static int argb(int rgb, int a) { return (a << 24) | (rgb & 0xFFFFFF); }
     private int alpha(float a) { return Math.max(0, Math.min(255, Math.round(255 * a * opacity))); }
 
     @Override protected void onDraw(Canvas c) {
@@ -508,14 +511,13 @@ final class TouchControls extends View {
         // The show / hide button (when it is on): a small pad outline, mostly transparent over the game, fainter still while the controls are hidden
         boolean on = active();
         if (button) {
-            float ta = on ? 1f : 0.7f;
-            fill.setColor(Color.argb(Math.round(255 * 0.15f * ta), 0, 0, 0));
-            c.drawCircle(tx, ty, tr, fill);
-            line.setColor(Color.argb(Math.round(255 * 0.4f * ta), 255, 255, 255));
-            c.drawCircle(tx, ty, tr, line);
-            rect.set(tx - tr * 0.6f, ty - tr * 0.3f, tx + tr * 0.6f, ty + tr * 0.35f);
-            c.drawRoundRect(rect, tr * 0.3f, tr * 0.3f, line);
-            if (!on) c.drawLine(tx - tr * 0.65f, ty + tr * 0.65f, tx + tr * 0.65f, ty - tr * 0.65f, line);
+            float ta = on ? 1f : 0.6f;
+            int a = Math.round(255 * 0.55f * ta);
+            fill.setColor(argb(PEEL, a)); c.drawCircle(tx, ty, tr * 0.82f, fill);        // a kiwi slice: the peel, the flesh, the core
+            fill.setColor(argb(FLESH, a)); c.drawCircle(tx, ty, tr * 0.7f, fill);
+            fill.setColor(argb(CORE, a)); c.drawCircle(tx, ty, tr * 0.28f, fill);
+            line.setColor(argb(0xFF000000 | GLASS, a));
+            if (!on) c.drawLine(tx - tr * 0.8f, ty + tr * 0.8f, tx + tr * 0.8f, ty - tr * 0.8f, line);
         }
         if (!on) return;
         drawControls(c);
@@ -524,8 +526,8 @@ final class TouchControls extends View {
     private void drawControls(Canvas c) {
         for (int i = 0; i < n; i++) {
             boolean held = pressed[i] != 0;
-            fill.setColor(held ? Color.argb(alpha(0.55f), 255, 255, 255) : Color.argb(alpha(0.35f), 0, 0, 0));
-            line.setColor(Color.argb(alpha(0.9f), 255, 255, 255));
+            fill.setColor(held ? argb(FLESH, alpha(0.9f)) : argb(GLASS, alpha(0.5f)));
+            line.setColor(held ? argb(RIM, alpha(1f)) : argb(RIM, alpha(0.55f)));
             if (kind[i] == STICK) drawStick(c, i);
             else if (kind[i] == DPAD) drawDpad(c, i);
             else {
@@ -537,7 +539,7 @@ final class TouchControls extends View {
                     c.drawCircle(cx[i], cy[i], r[i], fill);
                     c.drawCircle(cx[i], cy[i], r[i], line);
                 }
-                text.setColor(held ? Color.argb(alpha(1f), 0, 0, 0) : Color.argb(alpha(1f), 255, 255, 255));
+                text.setColor(held ? argb(INK, alpha(1f)) : argb(CORE, alpha(1f)));
                 text.setTextSize(r[i] * (label[i].length() > 1 ? 0.72f : 0.95f));
                 c.drawText(label[i], cx[i], cy[i] - (text.descent() + text.ascent()) / 2, text);
             }
@@ -582,19 +584,22 @@ final class TouchControls extends View {
     private void drawStick(Canvas c, int i) {
         float sx = sticks[2 * stick[i]], sy = sticks[2 * stick[i] + 1];
         boolean held = sx != 0 || sy != 0;
-        fill.setColor(Color.argb(alpha(0.25f), 0, 0, 0));
+        fill.setColor(argb(GLASS, alpha(0.42f)));
         c.drawCircle(cx[i], cy[i], r[i], fill);
+        line.setColor(argb(RIM, alpha(0.4f)));
         c.drawCircle(cx[i], cy[i], r[i], line);
         float k = r[i] * 0.55f, kx = cx[i] + sx * k, ky = cy[i] - sy * k;
-        fill.setColor(held ? Color.argb(alpha(0.6f), 255, 255, 255) : Color.argb(alpha(0.4f), 90, 90, 90));
+        fill.setColor(held ? argb(RIM, alpha(0.95f)) : argb(CORE, alpha(0.8f)));   // the cream core, lime while it is moved
         c.drawCircle(kx, ky, r[i] * 0.45f, fill);
+        line.setColor(argb(FLESH, alpha(1f)));
         c.drawCircle(kx, ky, r[i] * 0.45f, line);
     }
 
     private void drawDpad(Canvas c, int i) {
         float x = cx[i], y = cy[i], rr = r[i], w = rr * 0.36f;
-        fill.setColor(Color.argb(alpha(0.25f), 0, 0, 0));
+        fill.setColor(argb(GLASS, alpha(0.42f)));
         c.drawCircle(x, y, rr, fill);
+        line.setColor(argb(RIM, alpha(0.4f)));
         c.drawCircle(x, y, rr, line);
         long[] dirs = {UP, RIGHT, DOWN, LEFT};
         for (int k = 0; k < 4; k++) {
@@ -608,7 +613,7 @@ final class TouchControls extends View {
                 if (j == 0) path.moveTo(x + px, y + py); else path.lineTo(x + px, y + py);
             }
             path.close();
-            fill.setColor(held ? Color.argb(alpha(0.9f), 255, 255, 255) : Color.argb(alpha(0.35f), 255, 255, 255));
+            fill.setColor(held ? argb(FLESH, alpha(1f)) : argb(CORE, alpha(0.55f)));
             c.drawPath(path, fill);
         }
     }
