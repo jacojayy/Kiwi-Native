@@ -31,8 +31,8 @@ public final class PanelPolish {
     private static final java.util.Set<View> INSET = java.util.Collections.newSetFromMap(new java.util.WeakHashMap<>());
     private static final int ACCENT = 0xFF9AD64A;   // SidePanel.FOCUS, the selected tab's colour
     private static final int OUTLINE = 0xFF555555;
-    private static final int HEAD = 0xFFCDB48C;   // kiwi tan: the section heads (hernandez.kiwinative.kiwi.ingame.Look.TAN)
-    private static final int TRACK = 0xFF2D2E31, KIWI = 0xFF4A3920, CREAM = 0xFFFFF1D2, QUIET = 0xFFB0B3B8;   // a choice's track, its chosen part (the rail's block)
+    private static final int HEAD = 0xFFB9D98A;   // kiwi tan: the section heads (hernandez.kiwinative.kiwi.ingame.Look.TAN)
+    private static final int TRACK = 0xFF16221A, KIWI = 0xFF6DB02A, CREAM = 0xFF0F2008, QUIET = 0xFFA3BD86;   // a choice's track, its chosen part (the rail's block)
     private static final java.util.regex.Pattern VALUED = java.util.regex.Pattern.compile("^(\\D+?)\\s+(\\d.*)$");
 
     public static void apply(View root) {
@@ -81,7 +81,7 @@ public final class PanelPolish {
         g.setTag(DONE);
         int pad = Math.round(3 * dp);
         g.setPadding(pad, pad, pad, pad);
-        g.setBackground(pill(TRACK, 0, dp, 12));
+        g.setBackground(pill(TRACK, 0, dp, 22));   // KIWI: a pill
         for (int i = 0; i < n; i++) {
             RadioButton b = (RadioButton) g.getChildAt(i);
             b.setButtonDrawable(null);
@@ -90,10 +90,10 @@ public final class PanelPolish {
             b.setMinHeight(Math.round(38 * dp));
             b.setPadding(Math.round(8 * dp), 0, Math.round(8 * dp), 0);
             b.setTypeface(hernandez.kiwinative.Fonts.face(500));
-            b.setTextColor(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {-android.R.attr.state_enabled}, {}}, new int[] {CREAM, 0x66B0B3B8, QUIET}));
+            b.setTextColor(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {-android.R.attr.state_enabled}, {}}, new int[] {CREAM, 0x66A3BD86, QUIET}));
             StateListDrawable bg = new StateListDrawable();
-            bg.addState(new int[] {android.R.attr.state_checked}, pill(KIWI, 0, dp, 9));
-            bg.addState(new int[] {}, pill(Color.TRANSPARENT, 0, dp, 9));
+            bg.addState(new int[] {android.R.attr.state_checked}, pill(KIWI, 0, dp, 19));
+            bg.addState(new int[] {}, pill(Color.TRANSPARENT, 0, dp, 19));
             b.setBackground(bg);
             RadioGroup.LayoutParams lp = new RadioGroup.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
             lp.setMargins(0, 0, 0, 0);
@@ -199,6 +199,8 @@ public final class PanelPolish {
         if (b.getLayoutParams() instanceof LinearLayout.LayoutParams) b.getLayoutParams().width = ViewGroup.LayoutParams.MATCH_PARENT;
         b.setPaddingRelative(0, b.getPaddingTop(), 0, b.getPaddingBottom());
         inset(b, dp);
+        b.setBackground(pill(TRACK, 0x00000000, dp, 14));   // KIWI: the row is a rounded card
+
     }
 
     /**
@@ -221,10 +223,11 @@ public final class PanelPolish {
     }
 
     private static android.graphics.drawable.Drawable toggle(float dp, boolean on) {
-        GradientDrawable track = pill(on ? 0xAA9AD64A : 0xFF5F6368, 0, dp, 7);
+        GradientDrawable track = pill(on ? 0xFF6DB02A : 0xFF3A4D38, 0, dp, 7);   // KIWI: flesh green when on
         GradientDrawable thumb = new GradientDrawable();
         thumb.setShape(GradientDrawable.OVAL);
-        thumb.setColor(on ? ACCENT : 0xFFBDC1C6);
+        thumb.setColor(0xFFF4EDCB);   // the core's cream
+        thumb.setStroke(Math.round(2 * dp), on ? 0xFF2E6B1E : 0xFF8A5A2E);   // a ring of the leaf when on, of the peel when off
         android.graphics.drawable.LayerDrawable l = new android.graphics.drawable.LayerDrawable(new android.graphics.drawable.Drawable[] {track, thumb});
         int w = Math.round(38 * dp), h = Math.round(22 * dp);
         l.setLayerSize(0, Math.round(34 * dp), Math.round(14 * dp));
@@ -240,8 +243,8 @@ public final class PanelPolish {
         if (DONE.equals(s.getTag())) return;
         s.setTag(DONE);
         s.setProgressTintList(ColorStateList.valueOf(ACCENT));
-        s.setProgressBackgroundTintList(ColorStateList.valueOf(0xFF5F6368));
-        s.setThumbTintList(ColorStateList.valueOf(ACCENT));
+        s.setProgressBackgroundTintList(ColorStateList.valueOf(0xFF3A4D38));
+        s.setThumbTintList(ColorStateList.valueOf(0xFFF4EDCB));   // KIWI: the core's cream
     }
 
     private static GradientDrawable pill(int fill, int stroke, float dp) { return pill(fill, stroke, dp, 8); }
@@ -274,7 +277,7 @@ public final class PanelPolish {
             float scale = size / (12 * sp);
             t.setTag(DONE);
             t.setTextSize(TypedValue.COMPLEX_UNIT_PX, 12 * sp * scale);
-            t.setTextColor(0xFF8A8A8A);
+            t.setTextColor(0xFF8FA678);
             t.setLineSpacing(0, 1.15f);
         }
     }
@@ -293,7 +296,7 @@ public final class PanelPolish {
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setPadding(0, Math.round(6 * dp), 0, 0);
         TextView name = new TextView(g.getContext()), value = new TextView(g.getContext());
-        for (TextView t : new TextView[] {name, value}) { t.setTextSize(TypedValue.COMPLEX_UNIT_PX, label.getTextSize()); t.setTextColor(0xFFE8EAED); t.setSingleLine(true); }
+        for (TextView t : new TextView[] {name, value}) { t.setTextSize(TypedValue.COMPLEX_UNIT_PX, label.getTextSize()); t.setTextColor(0xFFEEF8DC); t.setSingleLine(true); }
         value.setTypeface(hernandez.kiwinative.Fonts.face(500));
         row.addView(name, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
         row.addView(value, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -331,8 +334,8 @@ public final class PanelPolish {
         b.setTag(DONE);
         b.setAllCaps(false);
         b.setStateListAnimator(null);
-        b.setBackground(pill(0xFF3A3B3E, 0, dp, 999));
-        b.setTextColor(0xFFE8EAED);
+        b.setBackground(pill(0xFF20331F, 0, dp, 999));
+        b.setTextColor(0xFFEEF8DC);
         b.setTypeface(hernandez.kiwinative.Fonts.face(500));
         b.setMinHeight(Math.round(38 * dp));
         b.setMinimumHeight(Math.round(38 * dp));

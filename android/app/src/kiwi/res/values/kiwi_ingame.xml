@@ -7,17 +7,17 @@
 
     <!-- The quick menu's rail at rest: a muted grey with a muted banana -->
     <style name="KiwiSolidRest">
-        <item name="pnSolidBase">#FFAEB3BA</item>
-        <item name="pnSolidAccent">#FF8FB05A</item>
+        <item name="pnSolidBase">#FFA3BD86</item>
+        <item name="pnSolidAccent">#FF6E9446</item>
     </style>
     <!-- The selected tab, on the kiwi-brown block: kiwi cream with banana yellow -->
     <style name="KiwiSolidSelected">
-        <item name="pnSolidBase">#FFFFF1D2</item>
-        <item name="pnSolidAccent">#FF9AD64A</item>
+        <item name="pnSolidBase">#FF0F2008</item>
+        <item name="pnSolidAccent">#FFF4EDCB</item>
     </style>
     <!-- The game menu's rows and the quick menu's back button: the panel's text colour with banana yellow -->
     <style name="KiwiSolidMenu">
-        <item name="pnSolidBase">#FFE8EAED</item>
+        <item name="pnSolidBase">#FFEEF8DC</item>
         <item name="pnSolidAccent">#FF9AD64A</item>
     </style>
     <!-- The game page's Cheats row (upstream's strings.xml): the cheats are the quick menu's Cheats tab now (InGamePanel) -->

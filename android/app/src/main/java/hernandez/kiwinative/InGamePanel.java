@@ -892,7 +892,7 @@ public final class InGamePanel {
         if (!(sheet.getBackground() instanceof android.graphics.drawable.GradientDrawable)) {
             float r = Look.dp(p.getContext(), 18);
             android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
-            bg.setColor(0xFF202124);
+            bg.setColor(0xFF0E160F);
             bg.setCornerRadii(new float[] {r, r, r, r, 0, 0, 0, 0});
             sheet.setBackground(bg);
             sheet.setClipToOutline(true);

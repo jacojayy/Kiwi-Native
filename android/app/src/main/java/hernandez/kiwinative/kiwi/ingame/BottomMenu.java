@@ -24,7 +24,7 @@ public final class BottomMenu {
     public static View grip(Context c) {
         View g = new View(c);
         GradientDrawable d = new GradientDrawable();
-        d.setColor(0xFF3A3B3E);
+        d.setColor(0xFF20331F);
         d.setCornerRadius(Look.dp(c, 2));
         g.setBackground(d);
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(Look.dp(c, 40), Look.dp(c, 4), Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);

@@ -55,7 +55,12 @@ public final class Rail {
         this.content = rows;
         sheet.removeAllViews();
         sheet.setOrientation(LinearLayout.HORIZONTAL);
-        sheet.setBackgroundColor(Look.SHEET);
+        Look.sheetShape(sheet, game != null);   // KIWI: rounded on the game's side
+        if (game == null) {   // the top screen's drawer: a thin kiwi peel along its edge
+            View peel = new View(c);
+            peel.setBackgroundColor(Look.PEEL);
+            sheet.addView(peel, new LinearLayout.LayoutParams(Look.dp(c, 3), ViewGroup.LayoutParams.MATCH_PARENT));
+        }
 
         box = new FrameLayout(c) {
             // Right from the rail goes into the rows beside it (the first one in sight), not to the header's Back (the nearer one by the default search)
@@ -66,7 +71,7 @@ public final class Rail {
         };
         box.setBackgroundColor(Look.RAIL);
         block = new View(c);
-        block.setBackgroundColor(Look.KIWI);
+        block.setBackground(new android.graphics.drawable.InsetDrawable(Look.round(Look.KIWI, Look.dp(c, 14)), Look.dp(c, 7), Look.dp(c, 3), Look.dp(c, 7), Look.dp(c, 3)));   // KIWI: a rounded block of flesh green
         block.setVisibility(View.INVISIBLE);
         box.addView(block, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, itemHeight()));
         LinearLayout column = new LinearLayout(c);
@@ -115,7 +120,7 @@ public final class Rail {
         b.setScaleType(ImageView.ScaleType.FIT_CENTER);
         int p = Look.dp(c, 7);
         b.setPadding(p, p, p, p);
-        b.setBackground(Look.round(Look.ROW, Look.dp(c, 8)));
+        b.setBackground(Look.round(Look.ROW, Look.dp(c, 16)));   // KIWI: a pill
         b.setFocusable(true);
         b.setClickable(true);
         b.setDefaultFocusHighlightEnabled(false);   // the panel's yellow frame alone shows the focus (no grey veil over the button)
@@ -129,6 +134,13 @@ public final class Rail {
         title.setSingleLine(true);
         title.setPadding(Look.dp(c, 12), 0, 0, 0);
         head.addView(title, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        int kiwiId = c.getResources().getIdentifier("ic_kiwi", "drawable", c.getPackageName());   // KIWI: the app's mark at the header's end (no R: this class is compiled alone by the tests)
+        if (kiwiId != 0) {
+            ImageView mark = new ImageView(c);
+            mark.setImageResource(kiwiId);
+            mark.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+            head.addView(mark, new LinearLayout.LayoutParams(Look.dp(c, 40), Look.dp(c, 40)));
+        }
         col.addView(head);
         col.addView(rows, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
         if (game != null) {

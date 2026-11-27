@@ -18,9 +18,11 @@ public final class Look {
     private Look() {}
 
     // The panel (SidePanel, ModsTab): the sheet, a row, a chip, text, quiet text, the yellow and the text on it
-    public static final int SHEET = 0xF5202124, ROW = 0xFF2D2E31, CHIP = 0xFF3A3B3E, TEXT = 0xFFE8EAED, QUIET = 0xFFB0B3B8, YELLOW = 0xFF9AD64A, ON_YELLOW = 0xFF2A1D0C;
+    public static final int SHEET = 0xF40E160F, ROW = 0xFF16221A, CHIP = 0xFF20331F, TEXT = 0xFFEEF8DC, QUIET = 0xFFA3BD86, YELLOW = 0xFF9AD64A, ON_YELLOW = 0xFF0F2008;
+    // The kiwi: the peel (the drawer's edge), the flesh (the selected block, a switch that is on), the lime of a ray, the core's cream (a thumb)
+    public static final int PEEL = 0xFF8A5A2E, FLESH = 0xFF6DB02A, LIME = 0xFFD4F06A, CORE = 0xFFF4EDCB;
     // The rail: its ground, its edge, the selected block (kiwi brown); a section head (kiwi tan); a line that went wrong; the scrim over the game
-    public static final int RAIL = 0xFF151618, RAIL_EDGE = 0xFF2A2B2E, KIWI = 0xFF4A3920, TAN = 0xFFCDB48C, BAD = 0xFFFF9670, SCRIM = 0x66000000, HAIRLINE = 0xFF3A3B3E;
+    public static final int RAIL = 0xFF0A110B, RAIL_EDGE = 0xFF263A2A, KIWI = 0xFF6DB02A, TAN = 0xFFB9D98A, BAD = 0xFFFF9670, SCRIM = 0x66000000, HAIRLINE = 0xFF20331F;
 
     /** The solid icons' colours: REST (the rail, not selected), SELECTED (the selected tab), MENU (the game menu's rows, the back button) */
     public enum Ink {
@@ -53,6 +55,26 @@ public final class Look {
             THEMES.put(ink, t);
         }
         try { return c.getResources().getDrawable(d, t).mutate(); } catch (Resources.NotFoundException e) { return null; }
+    }
+
+    /**
+     * The drawer's shape (Rail): the sheet's corners on the game's side rounded, 22 dp, its children clipped to them; a bottom screen's menu has its top corners
+     * rounded instead. The sheet keeps its colour; the outline reaches past the far edge so only the two corners show
+     */
+    public static void sheetShape(android.view.View sheet, boolean bottom) {
+        Context c = sheet.getContext();
+        final float r = dp(c, 22);
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(SHEET);
+        d.setCornerRadii(bottom ? new float[] {r, r, r, r, 0, 0, 0, 0} : new float[] {r, r, 0, 0, 0, 0, r, r});
+        sheet.setBackground(d);
+        sheet.setClipToOutline(true);
+        sheet.setOutlineProvider(new android.view.ViewOutlineProvider() {
+            @Override public void getOutline(android.view.View v, android.graphics.Outline o) {
+                int w = v.getWidth(), h = v.getHeight(), x = Math.round(r);
+                if (bottom) o.setRoundRect(0, 0, w, h + x, r); else o.setRoundRect(0, 0, w + x, h, r);
+            }
+        });
     }
 
     public static int dp(Context c, float v) { return Math.round(v * c.getResources().getDisplayMetrics().density); }

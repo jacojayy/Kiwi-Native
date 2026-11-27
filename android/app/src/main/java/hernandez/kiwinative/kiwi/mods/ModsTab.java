@@ -63,7 +63,7 @@ public final class ModsTab {
         default void action(String key, String label, Runnable run) {}
     }
 
-    private static final int YELLOW = 0xFF9AD64A, ROW = 0xFF2D2E31, CHIP = 0xFF3A3B3E, TEXT = 0xFFE8EAED, QUIET = 0xFFB0B3B8, BAD_TEXT = 0xFFFF9670, BAD = 0xFF3D2016;
+    private static final int YELLOW = 0xFF9AD64A, ROW = 0xFF16221A, CHIP = 0xFF20331F, TEXT = 0xFFEEF8DC, QUIET = 0xFFA3BD86, BAD_TEXT = 0xFFFF9670, BAD = 0xFF3D2016;
     private static final Handler UI = new Handler(Looper.getMainLooper());
     static final int SEARCH_FROM = 15;
 
@@ -335,8 +335,8 @@ public final class ModsTab {
         b.sw.setFocusable(false);
         b.sw.setChecked(on);
         b.sw.setContentDescription(b.cheat.name);
-        b.sw.setThumbTintList(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {}}, new int[] {YELLOW, 0xFFBDC1C6}));
-        b.sw.setTrackTintList(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {}}, new int[] {0xAA9AD64A, 0xFF5F6368}));
+        b.sw.setThumbTintList(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {}}, new int[] {YELLOW, 0xFFA3BD86}));
+        b.sw.setTrackTintList(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {}}, new int[] {0xAA9AD64A, 0xFF3A4D38}));
         LinearLayout.LayoutParams sl = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         sl.leftMargin = Math.round(8 * dp);
         r.addView(b.sw, sl);
@@ -501,8 +501,8 @@ public final class ModsTab {
         b.field.setMinHeight(Math.round(36 * dp));
         b.field.setPadding(Math.round(14 * dp), 0, Math.round(14 * dp), 0);
         GradientDrawable fb = new GradientDrawable();
-        fb.setColor(0xFF202124);
-        fb.setStroke(Math.max(1, Math.round(dp)), 0xFF5F6368);
+        fb.setColor(0xFF0E160F);
+        fb.setStroke(Math.max(1, Math.round(dp)), 0xFF3A4D38);
         fb.setCornerRadius(999);
         b.field.setBackground(fb);
         b.field.setFocusable(true);
@@ -780,8 +780,8 @@ public final class ModsTab {
         Switch sw = new Switch(c);
         sw.setFocusable(false);
         sw.setChecked(m.enabled);
-        sw.setThumbTintList(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {}}, new int[] {YELLOW, 0xFFBDC1C6}));
-        sw.setTrackTintList(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {}}, new int[] {0xAA9AD64A, 0xFF5F6368}));
+        sw.setThumbTintList(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {}}, new int[] {YELLOW, 0xFFA3BD86}));
+        sw.setTrackTintList(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {}}, new int[] {0xAA9AD64A, 0xFF3A4D38}));
         LinearLayout.LayoutParams sl = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         sl.leftMargin = Math.round(8 * dp);
         r.addView(sw, sl);

@@ -83,10 +83,10 @@ final class SidePanel extends FrameLayout {
         scroll.addView(box);
         LinearLayout sh = new LinearLayout(a);   // the tab bar fixed at the top, the tab's rows scrolling under it
         sh.setOrientation(LinearLayout.VERTICAL);
-        sh.setBackgroundColor(0xF0202124);
+        sh.setBackgroundColor(0xF40E160F);
         tabs = new LinearLayout(a);
         tabs.setOrientation(LinearLayout.HORIZONTAL);
-        tabs.setBackgroundColor(0xFF2D2E31);
+        tabs.setBackgroundColor(0xFF16221A);
         sh.addView(tabs, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         sh.addView(scroll, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
         addView(sh, new LayoutParams(PanelLook.widthPx(Prefs.panelSize(a), dp, a.getResources().getDisplayMetrics().widthPixels), LayoutParams.MATCH_PARENT, Gravity.END));
@@ -240,7 +240,7 @@ final class SidePanel extends FrameLayout {
         android.graphics.drawable.GradientDrawable d = new android.graphics.drawable.GradientDrawable();
         d.setColor(0x269AD64A);
         d.setStroke(Math.round(2.5f * dp), FOCUS);
-        d.setCornerRadius(6 * dp);
+        d.setCornerRadius(12 * dp);   // KIWI: as rounded as the rows
         now.setForeground(d);
         lit = now;
     }
@@ -280,7 +280,7 @@ final class SidePanel extends FrameLayout {
             t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);   // one size for every tab, set once the bar is laid out (tabTextSize)
             t.setPadding(pad, 0, pad, 0);
             t.setTypeface(on ? hernandez.kiwinative.Fonts.face(700) : hernandez.kiwinative.Fonts.face(400));
-            t.setTextColor(on ? 0xFF000000 : 0xFFE8EAED);
+            t.setTextColor(on ? 0xFF000000 : 0xFFEEF8DC);
             t.setBackgroundColor(on ? FOCUS : 0);
             t.setSelected(on);
             t.setFocusable(true);
@@ -292,7 +292,7 @@ final class SidePanel extends FrameLayout {
         x.setText("✕");
         x.setGravity(Gravity.CENTER);
         x.setTextSize(18);
-        x.setTextColor(0xFFE8EAED);
+        x.setTextColor(0xFFEEF8DC);
         x.setFocusable(true);
         x.setOnClickListener(v -> close());
         x.setContentDescription("Close the panel, back to the game");
