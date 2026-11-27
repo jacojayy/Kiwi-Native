@@ -7,7 +7,7 @@ import android.view.View;
 /**
  * A tapped kiwi of the drifting background cracks open instead of bursting (upstream's KiwiBackgroundView draws a burst of flecks; one KIWI line
  * at the start of its drawKiwi hands the first CRACK_MS of a pop to here). The app's own kiwi (KiwiArt) at the tile's size and tilt: the seam
- * runs down it, the halves swing apart about the foot and show the kernels, and it fades away, calmly. After that upstream's view goes on as before:
+ * runs down it, the halves swing apart about the foot and show the juice, and it fades away, calmly. After that upstream's view goes on as before:
  * the kiwi stays away and grows back. Only in a Kiwi build, whose background is the kiwi, and only while the system's animations are on.
  */
 public final class Crack {

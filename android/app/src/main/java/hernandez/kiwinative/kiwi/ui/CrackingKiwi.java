@@ -8,7 +8,7 @@ import android.view.animation.LinearInterpolator;
 
 /**
  * The app's kiwi (KiwiArt, the one of About and the shader screen) cracking open once, for a short wait such as switching users
- * (hernandez.kiwinative.kiwi.users.ProfileButton): the seam runs down it, the halves swing open about the foot and the kernels show, then it rests open. Under reduced motion,
+ * (hernandez.kiwinative.kiwi.users.ProfileButton): the seam runs down it, the halves swing open about the foot and the juice shows, then it rests open. Under reduced motion,
  * or with the system's animations off, it is drawn open at once.
  */
 public final class CrackingKiwi extends View {

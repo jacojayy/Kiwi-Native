@@ -1,0 +1,5 @@
+-d
+/data/data/com.termux/files/usr/tmp/x
+-cp
+/dev/null
+android/app/src/main/java/hernandez/kiwinative/kiwi/ui/KiwiArt.java

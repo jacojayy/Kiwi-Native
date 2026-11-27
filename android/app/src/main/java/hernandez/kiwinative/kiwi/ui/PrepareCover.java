@@ -152,7 +152,7 @@ public final class PrepareCover extends FrameLayout {
 
     /**
      * The app's kiwi (KiwiArt: the shell of res/drawable/ic_kiwi.xml of the kiwi source set, 108 units across) split along its seam: a crack runs down it
-     * over the first two fifths of the progress, then the halves swing apart about the foot and show the two kernels. It rocks a little all the while, so the
+     * over the first two fifths of the progress, then the halves swing apart about the foot and show the juice. It rocks a little all the while, so the
      * screen is seen to be alive between two counts (still when the system's animations are off).
      */
     private static final class Kiwi extends View {

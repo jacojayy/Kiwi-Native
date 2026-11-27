@@ -5,21 +5,19 @@ import android.graphics.Paint;
 import android.graphics.Path;
 
 /**
- * The app's kiwi (res/drawable/ic_kiwi.xml of the kiwi source set: the same shell, 108 units across) split along its seam: drawn by PrepareCover
- * while shaders are prepared, by CrackedKiwi on About, and by Crack when a kiwi of the background is tapped. A crack runs down the seam, the halves
- * swing apart about the foot (54, 90) and show the two kernels. Coordinates are the drawable's 108 units; the caller scales.
+ * The app's kiwi (the slice of res/drawable-nodpi/kiwi_sprite.png, drawn in code: a peel ring, green flesh, a pale core and a ring of seeds, 108 units across)
+ * split along its seam: drawn by PrepareCover while shaders are prepared, by CrackedKiwi on About, and by Crack when a kiwi of the background is tapped.
+ * A crack runs down the seam, the halves swing apart about the foot (54, 90) and show the juice between them. Coordinates are the drawable's 108 units;
+ * the caller scales.
  */
 final class KiwiArt {
     static final float[] ZIG = {54, 18, 57, 27, 51, 36, 57, 45, 52, 54, 57, 63, 51, 72, 56, 81, 54, 92};   // the seam, top to foot
+    private static final float CX = 54, CY = 54, R = 36;   // the slice
     private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG), line = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Path shell = new Path(), shade = new Path(), left = new Path(), right = new Path(), crack = new Path();
+    private final Path shell = new Path(), left = new Path(), right = new Path(), crack = new Path();
 
     KiwiArt() {
-        shell.moveTo(54, 20); shell.cubicTo(65, 20, 71, 29, 69, 39); shell.cubicTo(68, 46, 62, 50, 58, 54); shell.cubicTo(62, 58, 69, 62, 70, 71);
-        shell.cubicTo(72, 82, 65, 90, 54, 90); shell.cubicTo(43, 90, 36, 82, 38, 71); shell.cubicTo(39, 62, 46, 58, 50, 54); shell.cubicTo(46, 50, 40, 46, 39, 39);
-        shell.cubicTo(37, 29, 43, 20, 54, 20); shell.close();
-        shade.moveTo(58, 54); shade.cubicTo(62, 58, 69, 62, 70, 71); shade.cubicTo(72, 82, 65, 90, 54, 90); shade.cubicTo(49, 90, 45, 88, 42, 85);
-        shade.cubicTo(50, 85, 59, 80, 61, 70); shade.cubicTo(63, 62, 60, 56, 58, 54); shade.close();
+        shell.addCircle(CX, CY, R, Path.Direction.CW);
         left.moveTo(0, 0); right.moveTo(108, 0);
         for (int i = 0; i < ZIG.length; i += 2) { left.lineTo(ZIG[i], ZIG[i + 1]); right.lineTo(ZIG[i], ZIG[i + 1]); }
         left.lineTo(0, 108); left.close(); right.lineTo(108, 108); right.close();
@@ -32,11 +30,11 @@ final class KiwiArt {
      */
     void draw(Canvas c, float crackT, float swing, float deg, int alpha) {
         int layer = alpha < 255 ? c.saveLayerAlpha(0, 0, 108, 108, Math.max(0, alpha)) : -1;
-        if (swing > 0) {   // the kernels, under the halves
-            fill.setColor(0xFFB5532A); fill.setAlpha((int) (255 * Math.min(1f, swing * 2)));
-            c.drawOval(45, 27, 63, 51, fill); c.drawOval(44, 58, 64, 84, fill);
-            fill.setColor(0xFFD9825A); fill.setAlpha((int) (255 * Math.min(1f, swing * 2)));
-            c.drawOval(49, 30, 54, 40, fill); c.drawOval(48, 62, 54, 73, fill);
+        if (swing > 0) {   // the juice, under the halves
+            fill.setColor(0xFF9CD13A); fill.setAlpha((int) (255 * Math.min(1f, swing * 2)));
+            c.drawOval(44, 22, 64, 56, fill); c.drawOval(43, 52, 65, 86, fill);
+            fill.setColor(0xFFF4EDCB); fill.setAlpha((int) (255 * Math.min(1f, swing * 2)));
+            c.drawOval(49, 30, 59, 46, fill); c.drawOval(48, 60, 60, 78, fill);
             fill.setAlpha(255);
         }
         half(c, left, -deg);
@@ -62,11 +60,23 @@ final class KiwiArt {
         c.save();
         c.rotate(deg, 54, 90);
         c.clipPath(side);
-        fill.setColor(0xFFD9A066); c.drawPath(shell, fill);
-        fill.setColor(0xFFC08A52); c.drawPath(shade, fill);
-        line.setColor(0xFF8C5A2B); line.setStrokeWidth(2f); c.drawPath(shell, line);
-        fill.setColor(0xFF8C5A2B);
-        c.drawOval(48, 27.2f, 52.4f, 32.8f, fill); c.drawOval(60, 30.7f, 63.6f, 35.3f, fill); c.drawOval(46, 65.7f, 49.6f, 70.3f, fill); c.drawOval(59, 72.2f, 63.4f, 77.8f, fill);
+        fill.setColor(0xFF8A5A2E); c.drawCircle(CX, CY, R, fill);                 // the peel
+        fill.setColor(0xFF2E6B1E); c.drawCircle(CX, CY, R - 3.4f, fill);          // the flesh's dark rim
+        fill.setColor(0xFF6DB02A); c.drawCircle(CX, CY, R - 5.2f, fill);          // the flesh
+        fill.setColor(0xFF9CD13A); c.drawCircle(CX, CY, 21, fill);                // its lighter heart
+        line.setColor(0xFFD4F06A); line.setStrokeWidth(1.4f);
+        for (int i = 0; i < 8; i++) {                                             // the light rays
+            double a = i * Math.PI / 4;
+            c.drawLine(CX + (float) Math.cos(a) * 14, CY + (float) Math.sin(a) * 14, CX + (float) Math.cos(a) * 27, CY + (float) Math.sin(a) * 27, line);
+        }
+        fill.setColor(0xFFF4EDCB); c.drawCircle(CX, CY, 11, fill);                // the core
+        fill.setColor(0xFF15150F);
+        for (int i = 0; i < 8; i++) {                                             // the seeds, between the rays
+            double a = (i + 0.5) * Math.PI / 4;
+            float x = CX + (float) Math.cos(a) * 17.5f, y = CY + (float) Math.sin(a) * 17.5f;
+            c.save(); c.rotate((float) Math.toDegrees(a), x, y); c.drawOval(x - 2.4f, y - 1.2f, x + 2.4f, y + 1.2f, fill); c.restore();
+        }
+        line.setColor(0xFF15150F); line.setStrokeWidth(2f); c.drawCircle(CX, CY, R, line);   // the outline
         c.restore();
     }
 }

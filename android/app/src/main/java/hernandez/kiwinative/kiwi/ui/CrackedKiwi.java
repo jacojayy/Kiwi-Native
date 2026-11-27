@@ -7,7 +7,7 @@ import android.view.View;
 import android.view.animation.LinearInterpolator;
 
 /**
- * The cracked kiwi of About and of the second display's About page: the app's own kiwi (KiwiArt, PrepareCover's) open, its kernels showing. The
+ * The cracked kiwi of About and of the second display's About page: the app's own kiwi (KiwiArt, PrepareCover's) open, its juice showing. The
  * halves open and close a little, slowly, once every six seconds (each half between 22 and 27 degrees about the foot); no rocking. Still under reduced
  * motion and while the system's animations are off.
  */
