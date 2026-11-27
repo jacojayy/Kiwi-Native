@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Kiwi Native logo (android/images/kiwi_pixel_logo.png) in full, sky and sparkles: the adaptive icon's background. The kiwi fills the middle 62% of it, so a launcher's mask (the middle 67%) keeps it whole -->
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android" android:src="@drawable/kiwi_logo" android:filter="false" android:gravity="fill" />

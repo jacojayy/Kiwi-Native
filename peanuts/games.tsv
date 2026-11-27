@@ -1,0 +1,100 @@
+# PEANUTS: the games players see in the README's Supported games table (README.md and peanuts/docs/README.github.md), in the table's order.
+# peanuts/scripts/games_catalog.py reads it with peanuts/release-titles.txt (which games ship) and each dm/games/<title ID>/game.tsv (the builds
+# Android plays) and writes the two tables and peanuts/games.json; on main, .github/workflows/catalog.yml does that.
+# Columns, tab-separated:
+#   title ID   the game's
+#   name       the name players know (the profile's may be in capitals)
+#   update     the Game update cell, only for a game whose profile has no display version ("?"); empty: the profile's versions
+#   companion  yes or no: whether eden-duo-companions has a release for it. games_catalog.py --refresh sets it from those releases, and adds
+#              a row (the profile's name, at the end) for a game that ships without one
+#   since      optional: the release a game first ships in ("0.1.6"); while peanuts/VERSION is older, the README counts it as coming
+#              in that release and marks its row. Empty: it shipped in an earlier release
+#   contributors  optional: the GitHub accounts, comma-separated, of the community members who brought the game or a supported update
+#              of it to Kiwi Native; the README's Contributor column shows each with a star and a badge. Empty: none listed
+01006BB00C6F0000	The Legend of Zelda: Link's Awakening		yes
+01008CF01BAAC000	The Legend of Zelda: Echoes of Wisdom		yes
+010055D009F78000	Fire Emblem: Three Houses		yes
+0100A6301214E000	Fire Emblem Engage		yes
+010093801237C000	Metroid Dread		yes
+0100000000010000	Super Mario Odyssey		yes
+0100152000022000	Mario Kart 8 Deluxe		yes		intermission88
+01006F8002326000	Animal Crossing: New Horizons		yes
+01005CA01580E000	Persona 5 Royal		yes
+0100BA4026E94000	Castlevania: Belmont's Curse		yes
+01005270232F2000	OCTOPATH TRAVELER 0		yes
+0100000011D90000	Pokémon Brilliant Diamond		yes
+010018E011D92000	Pokémon Shining Pearl		yes
+0100ABF008968000	Pokémon Sword		yes
+01008DB008C2C000	Pokémon Shield		yes
+01007EF00011E000	The Legend of Zelda: Breath of the Wild		yes
+0100F2C0115B6000	The Legend of Zelda: Tears of the Kingdom		yes
+0100606026F12000	FINAL FANTASY RESONANCE		yes
+01002DA013484000	The Legend of Zelda: Skyward Sword HD		yes
+01001F5010DFA000	Pokémon Legends: Arceus		no
+010099A00BC1E000	Resident Evil 4	131072	yes
+01004D300C5AE000	Kirby and the Forgotten Land		no		intermission88
+01006B601380E000	Kirby's Return to Dream Land Deluxe		yes		intermission88
+010028600EBDA000	Super Mario 3D World + Bowser's Fury		no		intermission88
+010015100B514000	Super Mario Bros. Wonder		yes
+01003E601E324000	DRAGON QUEST III HD-2D Remake		yes
+0100C510166F0000	Chained Echoes	1.41	yes
+0100C2901153C000	Yoru, Tomosu	Base game (v0)	yes
+0100F9F00C696000	Crash Team Racing Nitro-Fueled		yes
+01009720213B0000	Captain Tsubasa 2: World Fighters		no
+010097F018538000	DAVE THE DIVER		yes
+0100AD80208A8000	Demon Slayer -Kimetsu no Yaiba- The Hinokami Chronicles 2		no
+0100453019AA8000	Xenoblade Chronicles X: Definitive Edition		no
+0100B63016916000	My Time at Sandrock		yes
+0100A0F00DA68000	Monster Sanctuary		yes
+01007300020FA000	Astral Chain		no
+01001B300B9BE000	Diablo III: Eternal Collection		yes
+0100C49025D3E000	EA Sports FC 27		no		intermission88
+010051F0207B2000	Tomodachi Life: Living the Dream		no		intermission88,davdxpx
+010069401ADB8000	Unicorn Overlord		no	0.1.6
+0100DCA0064A6000	Luigi's Mansion 3		no	0.1.6
+0100F43008C44000	Pokémon Legends: Z-A		yes	0.1.6
+0100DAE01E4C8000	STORY OF SEASONS: Grand Bazaar		no	0.1.6	intermission88
+01006AE02236C000	Double Dragon Revive		no	0.1.6	tapionallanaire
+01007A2027548000	Trails in the Sky 2nd Chapter		no	0.1.6	tapionallanaire
+010035F022078000	DRAGON BALL: Sparking! ZERO		no	0.1.6	dnyan007
+0100A3D008C5C000	Pokémon Scarlet		no	0.1.6
+01008F6008C5E000	Pokémon Violet		no	0.1.6
+010051C0134F8000	DRAGON BALL Z: KAKAROT + A NEW POWER AWAKENS SET		no	0.1.6
+01008BC024FDE000	STEINS;GATE RE:BOOT		no	0.1.6	skyhong2002
+0100B8E016F76000	NieR:Automata The End of YoRHa Edition (Asian release)		no	0.1.6
+01002B00111A2000	Hyrule Warriors: Age of Calamity		no	0.1.6
+01002C9022770000	Trails in the Sky 1st Chapter		no	0.1.7	tapionallanaire
+01006000040C2000	Yoshi's Crafted World		no	0.1.7	999sian
+0100DE501433A000	Tetris Effect: Connected		no	0.1.7	intermission88
+0100F4300BF2C000	New Pokémon Snap		no	0.1.7	ssv0225
+010062E01FE0C000	Digimon Story Time Stranger		yes	0.1.7	intermission88
+0100F7E00C70E000	Hogwarts Legacy		no	0.1.7	tapionallanaire
+010065301A2E0000	Star Ocean The Second Story R		yes	0.1.7
+010075101EF84000	Stray		no	0.1.8	dnyan007
+01003FC01670C000	13 Sentinels: Aegis Rim		no	0.1.8	intermission88
+01009BF0072D4000	Captain Toad: Treasure Tracker		no	0.1.8	intermission88
+0100300012F2A000	Advance Wars 1+2: Re-Boot Camp		no	0.1.8	intermission88
+0100755017EE0000	FANTASY LIFE i: The Girl Who Steals Time		no	0.1.8	tapionallanaire
+010003F003A34000	Pokémon: Let's Go, Pikachu!		no	0.1.8	fireworksordie
+0100187003A36000	Pokémon: Let's Go, Eevee!		no	0.1.8	fireworksordie
+0100F9D023176000	Viewfinder		no	0.1.8	dnyan007
+010089B01AB44000	SPY×ANYA: Operation Memories		no	0.1.8	nomnomab
+0100BC0018138000	Super Mario RPG		no	0.1.8	intermission88
+0100563010E0C000	WarioWare: Get It Together!		no	0.1.8	intermission88
+0100739018020000	LEGO 2K Drive		no	0.1.8	intermission88
+010085500130A000	LEGO CITY UNDERCOVER		no	0.1.8	intermission88
+01006F600FFC8000	LEGO MARVEL Super Heroes		no	0.1.8	intermission88
+0100A7C01B792000	Minecraft Dungeons II		no	0.1.8	intermission88
+01003D100E9C6000	The Witcher 3: Wild Hunt — Complete Edition		no	0.1.8
+01003D200BAA2000	Pokémon Mystery Dungeon: Rescue Team DX		no	0.1.8	shamonj03
+01008FE00E2F6000	One Piece: Pirate Warriors 4		no	0.1.9	codetz7
+0100EB100AB42000	FINAL FANTASY XII THE ZODIAC AGE		no	0.1.9	shamonj03
+01000EA014150000	FINAL FANTASY (Pixel Remaster)		no	0.1.9	shamonj03
+0100C5000F294000	Battle Brothers		no	0.1.9	marojiro
+010093C0215B4000	The Hundred Line -Last Defense Academy-		no	0.1.9	buinghia98
+0100A9D01C446000	DRAGON QUEST VII Reimagined		no	0.1.9	tapionallanaire
+01008C0016544000	Sea of Stars		no	0.1.9	Alliance-Sky
+01001BB01E8E2000	FANTASIAN Neo Dimension		no	0.1.9	tapionallanaire
+01004BC0166CC000	CRISIS CORE –FINAL FANTASY VII– REUNION		no	0.1.9	tapionallanaire
+0100ACD0163D0000	Batman: Arkham Knight		no	0.1.9	tapionallanaire
+010057D006492000	OCTOPATH TRAVELER		no	0.1.9	Alliance-Sky

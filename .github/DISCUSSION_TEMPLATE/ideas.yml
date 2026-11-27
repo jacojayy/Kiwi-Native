@@ -1,0 +1,20 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideas are welcome; requests for new games are not accepted. Supported games are listed on the [main page](https://github.com/jacojayy/Kiwi-Native).
+        **No game files, keys, firmware or links to them**: don't share them, offer them or ask where to get them. Kiwi Native works with your own dump of a game you own. Posts that break this are edited or removed.
+  - type: textarea
+    id: body
+    attributes:
+      label: Your idea
+      description: "What you'd like, and why."
+    validations:
+      required: true
+  - type: checkboxes
+    id: rules
+    attributes:
+      label: Rules
+      options:
+        - label: My post has no game files, keys, firmware or links to them, and doesn't ask for any.
+          required: true

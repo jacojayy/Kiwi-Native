@@ -1,0 +1,63 @@
+PEANUTS: the port of ooz's kraken.cpp and stdafx.h (as they are in this folder, powzix/ooz commit 05038060) to gcc and clang on x86-64, applied to a copy
+at build time (build.sh). stdafx.h: the Windows headers go behind _MSC_VER; elsewhere <x86intrin.h> and the MSVC names kraken.cpp uses. kraken.cpp: the
+command line tool at its end (main, LoadLibrary, QueryPerformanceCounter) goes behind _MSC_VER. The decoder itself is not changed by this patch.
+Licence: GPL-3.0-or-later, as kraken.cpp (COPYING).
+
+--- a/stdafx.h
++++ b/stdafx.h
+@@ -5,19 +5,38 @@
+ 
+ #pragma once
+ 
++#ifdef _MSC_VER
+ #include "targetver.h"
++#endif
+ 
+ #define _CRT_SECURE_NO_WARNINGS 1
+ 
+ #include <stdio.h>
+-#include <tchar.h>
+ #include <stdlib.h>
+ #include <string.h>
+-#include <intrin.h>
+ #include <assert.h>
++#ifdef _MSC_VER
++#include <tchar.h>
++#include <intrin.h>
+ #include <Windows.h>
+ 
+ #pragma warning (disable: 4244)
++#else
++// gcc / clang on x86-64: the MSVC names kraken.cpp uses
++#include <stdint.h>
++#include <stddef.h>
++#include <x86intrin.h>
++#define __int64 long long
++#define __forceinline inline __attribute__((always_inline))
++static inline unsigned char _BitScanReverse(unsigned long *index, unsigned int x) { *index = 31 - __builtin_clz(x); return x != 0; }
++static inline unsigned char _BitScanForward(unsigned long *index, unsigned int x) { *index = __builtin_ctz(x); return x != 0; }
++#define _byteswap_ushort __builtin_bswap16
++#define _byteswap_ulong __builtin_bswap32
++#define _byteswap_uint64 __builtin_bswap64
++#ifndef _rotl
++#define _rotl(x, n) __rold((x), (n))
++#endif
++#endif
+ 
+ // TODO: reference additional headers your program requires here
+ typedef unsigned char byte;
+--- a/kraken.cpp
++++ b/kraken.cpp
+@@ -4149,6 +4149,7 @@
+   return -1;
+ }
+ 
++#ifdef _MSC_VER   // the command line tool (Windows API): not built elsewhere
+ // The decompressor will write outside of the target buffer.
+ #define SAFE_SPACE 64
+ 
+@@ -4450,3 +4451,4 @@
+   return 0;
+ }
+ 
++#endif

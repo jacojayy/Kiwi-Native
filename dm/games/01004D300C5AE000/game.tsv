@@ -1,0 +1,64 @@
+# Game profile of Kirby and the Forgotten Land (Switch, update 1.1.0 = v65536). Plays on the Mac
+# Format: see dm/games/README.md
+# HAL Laboratory's own engine on NintendoWare (G3d, Font, Fxt) and nn::atk2 sound, SDK 11.4.0, NVN; subsdk0 is the movie module (VP9 / Vorbis WebM cinematics and guide movies).
+# The shaders are BNSH archives inside HAL's .cmp containers under gfx/, ptcl/ and lyt/, in the loose shader/ files and embedded in main (shader_split.py); no run met a shader missing from the map.
+# The game asks for present interval 1 and paces itself at 30 fps, as on the Switch
+
+# ---- Identity ----
+title_id	01004D300C5AE000
+program_id	01004D300C5AE000
+
+# ---- App ----
+# Game name: only a label for profile listings and the Mac window title; the iOS app name is the game name in the base NSP, and the bundle ID comes from the base game title ID (build_ipa.sh / NSP script)
+name	Kirby and the Forgotten Land
+ipa	KirbyAndTheForgottenLand.ipa
+app_category	public.app-category.games
+
+# ---- Versions ----
+build	v65536	1.1.0	main=a6ce40dc3aedb1becacd2f1ff4515307	subsdk0=535249a546887cac875a099e9c8ef367	sdk=b39add63421be525d352e576dab438d3
+package	v65536
+shader_versions	v65536
+
+# ---- Files ----
+# load order as on Horizon: main, subsdk*, sdk (subsdk0 = NintendoSDK_movie 11.4.0)
+modules	main subsdk0 sdk
+romfs_marker	mov/EventMovie/Ending.webm
+zip_store	.bfstm:.cmpbin:.opus:.webm:.metallib
+
+# ---- Memory ----
+# The NPDM declares no system resource, so there is no virtual address memory: the game sets a heap of the pool less 64 MB of used memory (3.14 GB, measured), which fits the
+# 3.25 GB heap region of this 4 GB block (256 MB in front + 256 MB alias region + 256 MB stack region + heap region). The application pool is the Switch's 3285 MB
+mem_reserve	0x100000000
+mem_alias	0x10000000
+mem_stack	0x10000000
+app_pool	0xCD500000
+sys_resource	0x0
+
+# ---- Frame rate (Android) ----
+# PEANUTS begin: frame limits from 20 to 120
+# Reviewed memory writes for this exact main, on the pointer of the FPSLocker Warehouse v4 config (01004D300C5AE000/A6CE40DC3AEDB1BE.yaml, found by Hazerou); no
+# executable patch or arbitrary YAML evaluation. [main+0xA76728] points 0x10 into the game's frame timer: +0x50 is its mode (2 as shipped: one update a frame, the
+# step measured in 1/60 s ticks and averaged over 4 frames), +0x2c the least ticks a frame waits in that mode (2 as shipped, the game's 30 fps). That least set to
+# 1 lets the game run to 60 in its own mode, and the host's frame limit picks the rate: the launcher's choices from 20 to 120, 60 by default since 0.1.8 (the
+# owner's call; fps_owned_default, Game owned before then). The Warehouse's write, the mode set to 0, is not used: mode 0 runs fixed 1/60 s updates, two a frame
+# at 30 fps, and catches up on a late frame with up to 10 updates without drawing ([main+0xA76728]+0x10, checked at main+0x532FB8), so a frame whose updates
+# outlast 16.7 ms never caught up and fell to 4-9 fps (GitHub issue #153 at the 30 and 60 limits; an AYN Thor at 30). The dynamic resolution's GPU frame-time
+# budget (max 1.95, min 1.7 at 30 fps) follows the limit
+fps_limit	60
+fps_owned_default	1
+fps_limit_max	120
+fpslocker	a6ce40dc3aedb1becacd2f1ff4515307	constant_i32	0xa76728/0x2c	1	1:1
+fpslocker	a6ce40dc3aedb1becacd2f1ff4515307	inverse_f32	0xa767b0/0x140/0x1b0/0x20/0x34	1	30:1.95
+fpslocker	a6ce40dc3aedb1becacd2f1ff4515307	inverse_f32	0xa767b0/0x140/0x1b0/0x20/0x38	1	30:1.7
+# PEANUTS end
+# PEANUTS begin: picture shapes without code of the game's own (aspect_plan, dm/host/aspect_plan.h)
+# The game builds its screen size at main+0x747408 (mov x8,#1920; movk x8,#1080,lsl #32) and the row makes the width the one for the picture's shape (2520 for
+# 21:9, 1234 for 8:7), read on the 1.1.0 pack's main. The site is the one of the community's 21:9 patch for this build (Fl4sh9174,
+# Switch-Emulator-Ultrawide-FPS-Mods), which says the cameras and part of the menus follow it. The row alone gives Game settings > Display > Fill (the screen's own shape); 21:9 on the top screen
+# and 8:7 on the second screen were seen on an AYN Thor with aspect rows, since taken out (the note).
+aspect_plan	a6ce40dc3aedb1becacd2f1ff4515307	width_movz	m0x747408	08f080d2
+# PEANUTS end
+
+# ---- Shader split (shader_split.py; BNSH in HAL's .cmp containers, the loose shader/ files and main) ----
+shader_groups	/gfx/=gfx /ptcl/=ptcl /lyt/=lyt /shader/=shader
+shader_note	Kirby and the Forgotten Land shaders

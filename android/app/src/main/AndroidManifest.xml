@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- All files access: the host opens the game folder and the pack folder by their /storage paths (POSIX open, not the Storage Access Framework) -->
+    <!-- Vibrate: the game's rumble on the phone's motor when the controller has none (Rumble.java) -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />   <!-- PEANUTS: the game hold (dev.peanuts.GameHold) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />   <!-- PEANUTS -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <!-- Internet: the launcher's driver download (DriverFetch), on the user's tap, and the release app's update check (Updater) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- The in-app updater installs a newer release's APK through PackageInstaller (Updater); Android asks the player to allow it and to confirm each install -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- PEANUTS begin: Android 12: the app's own broadcast receivers require this signature-level permission there (dev.peanuts.InternalBroadcast; from API 33
+         they are not exported instead). Its name follows the application ID, so the dev build and the release each have their own -->
+    <permission android:name="${applicationId}.permission.INTERNAL_BROADCAST" android:protectionLevel="signature" />
+    <uses-permission android:name="${applicationId}.permission.INTERNAL_BROADCAST" />
+    <!-- PEANUTS end -->
+    <uses-feature android:name="android.hardware.vulkan.version" android:version="0x402000" android:required="false" />
+    <!-- allowNativeHeapPointerTagging off: the host hands malloc'd blocks to guest code, which must see untagged pointers (also turned off in nxhost_main) -->
+    <!-- hasFragileUserData: the app's storage holds the saves and the packs (AppStorage); uninstalling asks whether to keep it -->
+    <!-- NxApp: every process opens a .nup picked in place (PickedNup) -->
+    <application
+        android:name=".NxApp"
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:theme="@android:style/Theme.DeviceDefault"
+        android:extractNativeLibs="false"
+        android:allowNativeHeapPointerTagging="false"
+        android:largeHeap="true"
+        android:appCategory="game"
+        android:hasFragileUserData="true">
+        <service android:name="dev.peanuts.GameHold" android:exported="false" android:process=":game" android:foregroundServiceType="mediaPlayback" />   <!-- PEANUTS: keeps the game's process in the foreground group while the Thor's lid is closed -->
+        <activity android:name="dev.peanuts.CompanionScreen" android:exported="false" android:process=":game" android:taskAffinity="dev.peanuts.companion" android:launchMode="singleInstance" android:excludeFromRecents="true" android:noHistory="true" android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen" android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode|density" />   <!-- PEANUTS: the companion on the built-in display while Swap screens moved the game (dev.peanuts.Screens, #131) -->
+        <activity android:name="dev.peanuts.mii.MiiActivity" android:label="Peanuts Miis" android:exported="false" android:theme="@style/Theme.Banana" />   <!-- PEANUTS: the player's own Miis (Settings › Miis) -->
+        <activity android:name="dev.peanuts.users.PictureActivity" android:label="Picture" android:exported="false" android:theme="@style/Theme.Banana" />   <!-- PEANUTS: a user's profile picture -->
+        <activity android:name="dev.peanuts.users.WhoPlaysActivity" android:label="Who's playing?" android:exported="false" android:theme="@style/Theme.Banana" android:taskAffinity="" android:excludeFromRecents="true" />   <!-- PEANUTS: Who's playing? when the app opens, and before a game a shortcut or a frontend starts (a task of its own then, so Home never shows in between) -->
+        <activity android:name="dev.peanuts.mii.MiiEditor" android:label="Mii editor" android:exported="false" android:theme="@style/Theme.Banana" />   <!-- PEANUTS: the Mii editor, opened for a result -->
+        <activity android:name="dev.peanuts.CatalogActivity" android:label="Dual-screen companions" android:exported="false" android:theme="@style/Theme.Banana" />   <!-- PEANUTS: the companion catalog (Settings › Library › Companions) -->
+        <activity android:name="dev.peanuts.ui.DriverActivity" android:label="GPU driver" android:exported="false" android:theme="@style/Theme.Banana" />   <!-- PEANUTS: Settings › GPU driver (dev.peanuts.ui.DriverActivity) -->
+        <!-- PEANUTS: the adb control interface's one door (peanuts/docs/CONTROL.md). Exported, and guarded by android.permission.DUMP: Android checks it against
+             whoever starts the activity; adb's shell holds it, an ordinary app cannot. A real activity, not an alias, so the guard is this component's own.
+             It draws nothing and finishes at once -->
+        <activity
+            android:name="dev.peanuts.ctl.Command"
+            android:exported="true"
+            android:permission="android.permission.DUMP"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.NoDisplay" />
+        <activity
+            android:name=".MainActivity"
+            android:theme="@style/Theme.Banana"
+            android:launchMode="singleTask"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <!-- Emulator frontends (FRONTENDS.md): reached only by the exported alias <application ID>.Launch (hernandez.kiwinative.live/.Launch); draws nothing of its own -->
+        <activity
+            android:name=".FrontendLaunch"
+            android:exported="false"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <!-- No intent filters: Android 15 checks an explicit intent against an exported component's filters when it has any (and never matches one with no
+             action, Daijisho's -e game {file.path}), so the frontends' alias has none and takes every form (FRONTENDS.md) -->
+        <activity-alias
+            android:name="${applicationId}.Launch"
+            android:targetActivity=".FrontendLaunch"
+            android:exported="true" />
+        <!-- PEANUTS: a second alias for emulator frontends (peanuts/docs/LAUNCHERS.md), same contract and no intent filters (FRONTENDS.md's Android-15 note
+             applies here too), but under a fixed name that does not embed the applicationId: a frontend's player template names it once and only ever
+             has to substitute the package before the "/", never the alias itself across the test app, -PnxApp builds and the release app -->
+        <activity-alias
+            android:name="dev.peanuts.launch.LaunchActivity"
+            android:targetActivity=".FrontendLaunch"
+            android:exported="true" />
+        <!-- A .nup a file manager opens ("Open with"): its own alias, so the filter never restricts the frontends' one -->
+        <activity-alias
+            android:name="${applicationId}.Open"
+            android:targetActivity=".FrontendLaunch"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="file" />
+                <data android:scheme="content" />
+                <data android:host="*" />
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.nup" />
+            </intent-filter>
+        </activity-alias>
+        <!-- The game runs in a process of its own: the host starts once per process and ends it when it stops, the launcher stays. sensorLandscape is for a phone: GameActivity.fitOrientation drops the request on a large screen (GameOrientation), where it would letterbox the window -->
+        <activity
+            android:name=".GameActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:process=":game"
+            android:screenOrientation="sensorLandscape"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode|density" />
+        <!-- The graphics selftest (nxhost_vk_selftest), in a process of its own so it never meets a running game's Vulkan device -->
+        <activity
+            android:name=".SelftestActivity"
+            android:exported="false"
+            android:process=":selftest"
+            android:screenOrientation="sensorLandscape"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode|density" />
+        <!-- The readiness check (ReadinessActivity), in a process of its own: it loads a host and the GPU driver to ask Vulkan what the phone has -->
+        <activity
+            android:name=".ReadinessActivity"
+            android:exported="false"
+            android:process=":readiness"
+            android:theme="@style/Theme.Banana"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden" />
+        <provider
+            android:name=".LogProvider"
+            android:authorities="${applicationId}.logs"
+            android:exported="false"
+            android:grantUriPermissions="true" />
+        <!-- PEANUTS begin: Share build log's bundles, read-only (dev.peanuts.build.BuildLogProvider) -->
+        <provider
+            android:name="dev.peanuts.build.BuildLogProvider"
+            android:authorities="${applicationId}.buildlog"
+            android:exported="false"
+            android:grantUriPermissions="true" />
+        <!-- PEANUTS end -->
+    </application>
+</manifest>

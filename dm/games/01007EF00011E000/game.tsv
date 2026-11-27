@@ -1,0 +1,128 @@
+# Game profile of The Legend of Zelda: Breath of the Wild (Switch, base game v0 + update 1.9.0 = v1114112). In bring-up
+# Format: see dm/games/README.md
+# Nintendo EPD's engine (sead / agl / gsys / ksys, NintendoWare G3d / Ui2d / Vfx / Atk, Havok), SDK 20.5.22, NVN; modules main + subsdk0 (NintendoSDK_movie) + sdk.
+# RomFS is almost all Yaz0 (.s* extensions) and SARC (Pack/*.pack). Shaders: Shader/*.sbfsha (BNSH) and the gsys / ksys resource packs in Pack/Bootup_Graphics.pack, the terrain resource pack in TitleBG.pack, particle effects in Effect/*.sesetlist, layouts in .sblarc
+
+# ---- Identity ----
+title_id	01007EF00011E000
+program_id	01007EF00011E000
+
+# ---- App ----
+# Game name: only a label for profile listings and the Mac window title; the iOS app name is the game name in the base NSP, and the bundle ID comes from the base game title ID (build_ipa.sh / NSP script)
+name	The Legend of Zelda: Breath of the Wild
+# The 3D views' base size, docked then handheld (README.md, Render scale): what DM_RENDER_SCALE scales, shown in pixels by a front end
+render_base	1600x900 1280x720
+ipa	ZeldaBreathOfTheWild.ipa
+app_category	public.app-category.adventure-games
+# the virtual gamepad starts in the 3D layout (D-pad, right stick, L3 / R3): the right stick turns the camera
+pad_layout	full
+
+# ---- Graphics ----
+# The frame-interval controller (60 fps cuts in patches.py) and dynamic resolution read the GPU time between the frame's two timestamp reports: each report takes its segment's GPU start / end
+gpu_timestamps	segment
+# 60 fps (30 on the Switch): the host decides each frame's step in whole vsyncs and holds the frame that long (rewriter stubs at setWaitVsyncInterval and VFR::updateInterval,
+# patches.py FRAME_STEP); 30 when 60 does not hold, game time = real time. DM_FPS_TARGET=30 (Documents/env.txt on the iPhone) saves power; 0 runs the game's own
+# interval controller (with the 60 fps cuts, which also serve while the game's VFR override is set)
+fps_target	60
+# Tested defaults for this game (iPhone 17 Pro Max, iOS 27.0.1, docked, 60 fps target; GitHub issues #142 / #159): present snapshots keep the GPU from idling between frames,
+# which iOS's clock governor reads as headroom (30 fps without them, a steady 60 for 300 s with them and the encode thread); render pipelines through MTL4Compiler give the
+# pipeline archive, the prepare step and the hybrid pipelines on the iPhone too (5,100 prewarm lines prepared in 0.28 s at start instead of compiling on first use)
+present_snap	on
+pso_mtl4	on
+
+# ---- Versions ----
+# PEANUTS: the frame-step patches are specific to 1.9.0. Android selects an FPSLocker plan by main build.
+build	v1114112	1.9.0	main=cd57b23fa4bbad65803d9788c01821ee	subsdk0=f39f4c431234c72eb520cfdd1001bbcf	sdk=574284b40c06cf1821a44857939083be
+build	v786432	1.6.0	main=8e9978d50bdd20b4c8395a106c27ffde	subsdk0=93ff8252d975adf07230cb86c83301c5	sdk=fcf93a41b08c5193a1410d262602dc62
+package	v1114112
+shader_versions	v1114112 v786432
+
+# ---- Files ----
+modules	main subsdk0 sdk
+romfs_marker	Pack/Bootup_Graphics.pack
+zip_store	.sstera:.sbactorpack:.bfstm:.sbfres:.sbmaptex:.bars:.sbitemico:.shknm2:.shktmrb:.sbeventpack:.pack:.sblwp:.sstats:.shksc:.smubin:.ssarc:.sesetlist:.webm:.jpg:.metallib
+
+# ---- Memory ----
+# The NPDM declares no system resource (META +0x14 = 0): the game uses SetHeapSize. Starts from 13 Sentinels' partition (4 GB block = 256 MB in front + 256 MB alias region + 256 MB stack region + 3.25 GB heap region) until measured
+mem_reserve	0x100000000
+mem_alias	0x10000000
+mem_stack	0x10000000
+app_pool	0xCD500000
+
+# ---- Shader split (shader_split.py) ----
+shader_groups	/Shader/=shader /Effect/=effect /Layout/=layout /System/=gsys /Terrain/=terrain
+shader_note	Breath of the Wild shaders
+
+present_interval	display
+fps_limit	60
+fps_limit_max	120
+fpslocker	cd57b23fa4bbad65803d9788c01821ee	time_ratio_f32	%0x0	1	30:2
+fpslocker	cd57b23fa4bbad65803d9788c01821ee	target_scaled_f32	%0x8	1	30:100
+fpslocker	cd57b23fa4bbad65803d9788c01821ee	inverse_f32	@0x1dad0e0	1	30:1
+fpslocker	cd57b23fa4bbad65803d9788c01821ee	flag_cap_u8	%0x10	1	0:30
+
+# Reviewed FPSLocker code plan: exact main build and expected bytes; no pack-file mutation.
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	clock	-	1
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	r0x112670c	4041201e	6041201e
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	r0x1126710	7f070071	7f0b0071
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	r0x112665c	58008052	78008052
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	r0x1126748	1f090071	1f0d0071
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	r0x1126794	3f090071	3f0d0071
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	r0x112691c	03000014	c00000b4
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	r0x1126974	03000014	c00000b4
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	m0xe93dc8	61f64239	21008052
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	m0x12670a4	0859a852	p8:0x8
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	m0x12670a8	0308211e	0308211e
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	m0x12670ac	0101271e	010940bd
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	m0x151d448	a8010034	t0x151d454
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	m0x151d46c	6218221e	p9:0x0
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	m0x151d470	4108211e	210140bd
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	m0x1280ed8	01102c1e	p7:0x0
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	m0x1280ee4	0008211e	e00040bd
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	m0xd13910	3edeff97	l0x0
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	m0xd140d0	4edcff97	l0x0
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	c0x0	-	p7:0x10
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	c0x4	-	e1400039
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	c0x8	-	t0xd0b208
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	d0x0	-	0000803f
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	d0x8	-	0000c842
+fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	d0x10	-	01000000
+
+# PEANUTS: 1.6.0 fractional timing from the Android host, with version-specific Warehouse sites.
+fpslocker	8e9978d50bdd20b4c8395a106c27ffde	time_ratio_f32	%0x0	1	30:2
+fpslocker	8e9978d50bdd20b4c8395a106c27ffde	target_scaled_f32	%0x8	1	30:0.001
+fpslocker	8e9978d50bdd20b4c8395a106c27ffde	flag_cap_u8	%0x10	1	0:30
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	clock	-	1
+# Select three presentation buffers.
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	m0xe557e8	2905891a	69008052
+# GPU timing factor for dynamic resolution.
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	m0x150ab50	28880090	p8:0x8
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	m0x150ab54	018542bd	010940bd
+# Refresh the VFR ratio even when the integer interval stays the same.
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	m0x1c011d0	a1010034	t0x1c011dc
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	m0x1c011e8	6218221e	p9:0x0
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	m0x1c011f4	4108211e	210140bd
+# Use the same ratio for the UI and its other interval-derived step.
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	m0x18522fc	01102c1e	p10:0x0
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	m0x1852300	0008211e	400140bd
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	m0x1821574	0001231e	p10:0x0
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	m0x1821588	00082b1e	400140bd
+# Keep the stock ragdoll solver step.
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	m0x1618480	090140bd	09102e1e
+# Preserve both video transition calls and pass their inverse playing flag to the host.
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	m0xfaf62c	1de34594	l0x0
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	m0xfafe5c	11e14594	l0x0
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	c0x0	-	p7:0x10
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	c0x4	-	e0000039
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	c0x8	-	t0x21282a0
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	d0x0	-	0000803f
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	d0x8	-	6f12833a
+fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	d0x10	-	01000000
+# PEANUTS begin: picture shapes without code of the game's own (aspect_plan, dm/host/aspect_plan.h): Game settings > Display > Fill, 1.6.0 only
+# The three sites of the community's any-aspect patch for 1.6.0 (BOTW-AAR by Fayaz), read on the 1.6.0 pack's main: two fdiv s0,s0,s1 that make the ratio from the
+# width and the height (main+0xe0ad68, main+0x15c2148) and the getter's ldr s0,[x0,#0xb0] (main+0x1271870) become fmov s0,#imm8, the nearest value that instruction
+# holds (within 3.2 % of the picture's shape). The 3D view follows; the 2D layer is still drawn for 16:9 and takes the picture's shape with it. 1.9.0 has no rows.
+aspect_plan	8e9978d50bdd20b4c8395a106c27ffde	ratio_fmov	m0xe0ad68	0018211e
+aspect_plan	8e9978d50bdd20b4c8395a106c27ffde	ratio_fmov	m0x1271870	00b040bd
+aspect_plan	8e9978d50bdd20b4c8395a106c27ffde	ratio_fmov	m0x15c2148	0018211e
+# PEANUTS end

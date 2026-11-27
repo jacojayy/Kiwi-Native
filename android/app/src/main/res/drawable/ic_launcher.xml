@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Legacy (non-adaptive) icon: the Kiwi Native logo with the variant's badge. The manifest uses @mipmap/ic_launcher (adaptive) -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/kiwi_logo_bg" />
+    <item android:drawable="@drawable/ic_launcher_badge" />
+</layer-list>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Kiwi Native mark (android/images/kiwi_pixel_logo.png, the kiwi cut out of its sky): the launcher's header badge and empty game list, and the main screen's drifting background tile. The art keeps to the middle 58% of the 108 dp canvas, as the vector art before it did, so it stays inside the 66 dp safe circle. filter=false keeps the pixels square -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetLeft="21%" android:insetTop="21%" android:insetRight="21%" android:insetBottom="21%">
+    <bitmap android:src="@drawable/kiwi_sprite" android:filter="false" />
+</inset>
