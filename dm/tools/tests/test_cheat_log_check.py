@@ -5,12 +5,12 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
 spec = importlib.util.spec_from_file_location('cheat_log_check', REPO / 'scripts/cheat_log_check.py')
-# PEANUTS(upstream-candidate): this fixture requires a loadable script before executing it.
+# KIWI(upstream-candidate): this fixture requires a loadable script before executing it.
 assert spec is not None and spec.loader is not None
 clc = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(clc)
 
-# PEANUTS begin: the two cheat files this test read (Ocarina of Time's and Fire Emblem Fortune's Weave's, Switch 2 profiles) are not carried; two synthetic
+# KIWI begin: the two cheat files this test read (Ocarina of Time's and Fire Emblem Fortune's Weave's, Switch 2 profiles) are not carried; two synthetic
 # profiles of the same shape (notes and section labels, chains, a master-less list) stand in, in a temporary tree that clc.REPO points at
 import shutil   # noqa: E402
 import tempfile   # noqa: E402
@@ -38,7 +38,7 @@ def setUpModule():
 def tearDownModule():
     clc.REPO = _real_repo
     shutil.rmtree(_tmp, ignore_errors=True)
-# PEANUTS end
+# KIWI end
 
 
 def log_for(title_id, skip=(), extra=()):

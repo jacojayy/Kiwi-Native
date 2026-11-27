@@ -188,7 +188,7 @@ static void pin_fast_cores(void) {
 }
 #endif
 
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_PackNative_init0(JNIEnv *e, jclass c, jstring home) {
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_PackNative_init0(JNIEnv *e, jclass c, jstring home) {
     pin_fast_cores();
     const char *h = (*e)->GetStringUTFChars(e, home, NULL);
     int r = dm_pack_init(h);
@@ -196,7 +196,7 @@ JNIEXPORT jint JNICALL Java_dev_nxnative_android_PackNative_init0(JNIEnv *e, jcl
     return r;
 }
 
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_PackNative_run0(JNIEnv *e, jclass c, jstring tool, jobjectArray args, jobjectArray env, jstring log) {
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_PackNative_run0(JNIEnv *e, jclass c, jstring tool, jobjectArray args, jobjectArray env, jstring log) {
     pin_fast_cores();   // again per tool: Android resets a process's mask when it changes foreground state
     int argc; char **argv = strings(e, args, &argc), **envv = strings(e, env, NULL);
     const char *t = (*e)->GetStringUTFChars(e, tool, NULL), *l = log ? (*e)->GetStringUTFChars(e, log, NULL) : NULL;
@@ -206,5 +206,5 @@ JNIEXPORT jint JNICALL Java_dev_nxnative_android_PackNative_run0(JNIEnv *e, jcla
     return r;
 }
 
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_PackNative_interrupt0(JNIEnv *e, jclass c) { return dm_pack_interrupt(); }
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_PackNative_interrupt0(JNIEnv *e, jclass c) { return dm_pack_interrupt(); }
 #endif

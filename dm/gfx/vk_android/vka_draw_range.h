@@ -1,4 +1,4 @@
-// PEANUTS: byte ranges consumed by Vulkan draw input, independent of device state.
+// KIWI: byte ranges consumed by Vulkan draw input, independent of device state.
 #pragma once
 #include <stdint.h>
 

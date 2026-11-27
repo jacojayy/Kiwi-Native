@@ -6,11 +6,11 @@
 // so the next start builds from it. Layouts follow dmsh_abi_vk.h: set 0 the per-draw records of every stage (push descriptors when they fit), set 1 the pools (vka_tex.c)
 #if defined(__ANDROID__)
 #include "vka.h"
-#include "vk_android.h"   // PEANUTS: startup pipeline prewarm
+#include "vk_android.h"   // KIWI: startup pipeline prewarm
 #include "vka_memu_abi.h"
 #include "vka_pwlist.h"
 #include "vka_psogate.h"
-#include "vka_psosync.h"   // PEANUTS: the draws that are not skipped while their pipeline is made in the background (vka_gfx_pipeline_now, below)
+#include "vka_psosync.h"   // KIWI: the draws that are not skipped while their pipeline is made in the background (vka_gfx_pipeline_now, below)
 #include "vk_prewarm_seed.h"   // the profile's seed list (dm/games/<id>/vk_prewarm.bin; dm/games/game.py seed): dm_vk_prewarm_seed, dm_vk_prewarm_seed_len (0: none)
 #include "../nvn/nvn_mtl.h"
 #include <stdlib.h>
@@ -91,7 +91,7 @@ int vka_layout_of(vka_shader *const sh[VKA_NSTAGE], int compute, vka_layout *out
 }
 static int layout_slow(vka_shader *const sh[VKA_NSTAGE], int compute, vka_layout *out) {
     lkey k; memset(&k, 0, sizeof k);
-    vka_tex_bindless_ready();   // PEANUTS: the layout holds the pool's sets: made first (vka_tex.c)
+    vka_tex_bindless_ready();   // KIWI: the layout holds the pool's sets: made first (vka_tex.c)
     uint32_t ndesc = 0;
     for (int st = 0; st < VKA_NSTAGE; st++) {
         const vka_shader *s = sh[st];
@@ -160,21 +160,21 @@ static uint64_t g_pc_lib;   // the library this run's cache file is stamped with
 static vka_pck_stamp g_pck;   // the shaders the file was read with that this library has the same, and the stale estimate (the stamp's; written again with this run's)
 static uint64_t pck_hash_of(void *ctx, uint64_t key) { (void)ctx; return vka_shader_content(key); }
 static VkPipelineCache g_pc; static char g_pc_path[1024], g_pw_path[1100]; static uint64_t g_made, g_saved_at, g_save_ns; static double g_create_ms;
-static size_t g_pc_bytes;   // PEANUTS: the pipeline cache file's size at its last read or save (vka_pso_save)
+static size_t g_pc_bytes;   // KIWI: the pipeline cache file's size at its last read or save (vka_pso_save)
 static uint64_t g_ngfx, g_ncs, g_nfail, g_ncs_over, g_create_ns, g_frame_made;   // all pipelines made (frame path, background and prewarm); g_frame_made / g_create_ns: on the frame path only
 static uint64_t g_probe_hit, g_probe_miss, g_probe_miss_ns;          // GPL: the cache-only try before a link (VK_PIPELINE_CREATE_FAIL_ON_PIPELINE_COMPILE_REQUIRED_BIT)
 static _Atomic uint64_t g_save_ns_total, g_hy_draws, g_pw_wait_ns;
-// PEANUTS: startup pipeline prewarm and its progress counters.
+// KIWI: startup pipeline prewarm and its progress counters.
 static void pw_load(void); static void pw_start(int wait); static int pw_save(void);
-static void cw_start(void);   // PEANUTS: the compute warm-up (cw_main)
-static void pcl_open(void); static void pcl_save(int force); static void pp_prepare(void); static _Atomic int g_pcl_due;   // PEANUTS: the shader parts' cache and the preparing step (below)
+static void cw_start(void);   // KIWI: the compute warm-up (cw_main)
+static void pcl_open(void); static void pcl_save(int force); static void pp_prepare(void); static _Atomic int g_pcl_due;   // KIWI: the shader parts' cache and the preparing step (below)
 static int g_pw_startup;
 static _Atomic int g_pw_start_total = -1;   // -1 before the startup phase is decided
 static _Atomic uint32_t g_pw_processed;
 static pthread_t g_pw_workers[4];
 static int g_pw_threads;
-static _Atomic int g_pp_skip;   // PEANUTS: Play anyway (nxhost_prewarm_skip): the startup prewarm and the preparing step stop where they are
-static _Atomic int g_pw_running;   // PEANUTS: prewarm threads not yet returned (pp_prepare waits for them before it drops the shader modules)
+static _Atomic int g_pp_skip;   // KIWI: Play anyway (nxhost_prewarm_skip): the startup prewarm and the preparing step stop where they are
+static _Atomic int g_pw_running;   // KIWI: prewarm threads not yet returned (pp_prepare waits for them before it drops the shader modules)
 static pthread_mutex_t g_pw_start_mu = PTHREAD_MUTEX_INITIALIZER;
 
 static void pw_path(char *out, size_t n) {
@@ -200,7 +200,7 @@ static void pc_open_once(void) {
         unlink(olds);
     }
     // The prewarm list (pw_*): the pipeline keys of earlier runs, whatever the driver (a key names shaders and state, not driver code). DM_VK_PREWARM_FILE overrides
-    pw_path(g_pw_path, sizeof g_pw_path);   // PEANUTS: share cache key path selection
+    pw_path(g_pw_path, sizeof g_pw_path);   // KIWI: share cache key path selection
     void *data = NULL; size_t n = 0;
     FILE *f = g_pc_path[0] ? fopen(g_pc_path, "rb") : NULL;
     if (f) {
@@ -247,20 +247,20 @@ static void pc_open_once(void) {
     VkPipelineCacheCreateInfo ci = {VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO, .initialDataSize = n, .pInitialData = n ? data : NULL};
     VkResult r = vk.vkCreatePipelineCache(V.dev, &ci, NULL, &g_pc);
     if (r && n) { ci.initialDataSize = 0; ci.pInitialData = NULL; r = vk.vkCreatePipelineCache(V.dev, &ci, NULL, &g_pc); vka_pck_free(&g_pck); n = 0; }   // (started empty after all)
-    if (!r) __atomic_store_n(&g_pc_bytes, n, __ATOMIC_RELAXED);   // PEANUTS: g_pc_bytes
+    if (!r) __atomic_store_n(&g_pc_bytes, n, __ATOMIC_RELAXED);   // KIWI: g_pc_bytes
     if (r) { g_pc = VK_NULL_HANDLE; VRED("vkCreatePipelineCache %d: pipelines are built without a cache", r); }
     else VLOG("pipeline cache %s: %zu bytes read (its stamp lists %zu shaders, %llu stale)", g_pc_path[0] ? g_pc_path : e && !strcmp(e, "0") ? "(none: DM_VK_PCACHE=0)" : vka_fp_guest() ? "(none: DM_VK_GUEST_FPCR=1)" : "(not kept: no DM_TEMP or HOME)", n,
               g_pck.n, (unsigned long long)g_pck.dead);
     free(data);
-    pcl_open();   // PEANUTS
+    pcl_open();   // KIWI
     pw_load();
     pthread_t th;
     if (!pthread_create(&th, NULL, saver_main, NULL)) { pthread_detach(th); g_sv_up = 1; }
-    pw_start(g_pw_startup && !n && g_pc && g_pc_path[0]);   // PEANUTS: wait only for a cold cache that can be saved
-    cw_start();   // PEANUTS
+    pw_start(g_pw_startup && !n && g_pc && g_pc_path[0]);   // KIWI: wait only for a cold cache that can be saved
+    cw_start();   // KIWI
 }
 static void pc_open(void) { static pthread_once_t once = PTHREAD_ONCE_INIT; pthread_once(&once, pc_open_once); }   // (the prewarm threads it starts call it too: they wait for it)
-// PEANUTS(upstream-candidate): fclose consumes the stream even on failure; close once before renaming, and retain the old file on any failure.
+// KIWI(upstream-candidate): fclose consumes the stream even on failure; close once before renaming, and retain the old file on any failure.
 static int pc_write_atomic(const char *path, const char *tmp, const void *data, size_t len) {
     FILE *f = data ? fopen(tmp, "wb") : NULL;
     if (f) {
@@ -289,21 +289,21 @@ static void save_now(void) {
         if (gr != VK_SUCCESS) { free(d); d = NULL; n = 0; static _Atomic int k; if (atomic_fetch_add(&k, 1) < 4) VRED("pipeline cache not saved: vkGetPipelineCacheData %d after 3 tries (pipelines being added meanwhile); the next save tries again", (int)gr); }
         if (d) {
             char tmp[1100]; snprintf(tmp, sizeof tmp, "%s.tmp", g_pc_path);
-            if (pc_write_atomic(g_pc_path, tmp, d, n)) {   // PEANUTS(upstream-candidate): one close on every save path
-                g_saved_at = made; __atomic_store_n(&g_pc_bytes, n, __ATOMIC_RELAXED);   // PEANUTS: g_pc_bytes
+            if (pc_write_atomic(g_pc_path, tmp, d, n)) {   // KIWI(upstream-candidate): one close on every save path
+                g_saved_at = made; __atomic_store_n(&g_pc_bytes, n, __ATOMIC_RELAXED);   // KIWI: g_pc_bytes
                 // Its stamp after it: the shaders it was read with that this library keeps, and those this run made. Written whole or not at all (a stamp that
                 // cannot be written is removed, and the next run starts empty)
                 char sp[1100], st[1200]; snprintf(sp, sizeof sp, "%s.lib", g_pc_path); snprintf(st, sizeof st, "%s.lib.tmp", g_pc_path);
                 size_t nr = 0, tl = 0; vka_pck_ent *run = g_pc_lib ? vka_shader_made(&nr) : NULL;
                 char *txt = g_pc_lib ? vka_pck_format(g_pc_lib, g_pck.dead, g_pck.ent, g_pck.n, run, nr, &tl) : NULL; free(run);
-                if (!pc_write_atomic(sp, st, txt, tl)) unlink(sp);   // PEANUTS(upstream-candidate): a failed stamp invalidates the newly replaced cache
+                if (!pc_write_atomic(sp, st, txt, tl)) unlink(sp);   // KIWI(upstream-candidate): a failed stamp invalidates the newly replaced cache
                 free(txt);
             }
-            else { static _Atomic int k; if (atomic_fetch_add(&k, 1) < 2) VRED("pipeline cache not written to %s", g_pc_path); free(d); d = NULL; n = 0; }   // PEANUTS(upstream-candidate): retain neither the failed blob nor a closed stream
+            else { static _Atomic int k; if (atomic_fetch_add(&k, 1) < 2) VRED("pipeline cache not written to %s", g_pc_path); free(d); d = NULL; n = 0; }   // KIWI(upstream-candidate): retain neither the failed blob nor a closed stream
         }
     }
     int keys = pw_save();
-    pcl_save(atomic_exchange(&g_pcl_due, 0));   // PEANUTS: the learned programs; the shader parts' cache when due
+    pcl_save(atomic_exchange(&g_pcl_due, 0));   // KIWI: the learned programs; the shader parts' cache when due
     uint64_t dt = now_ns() - t; atomic_fetch_add(&g_save_ns_total, dt);
     if (d || keys > 0) VLOG("pipeline cache: %zu bytes written to %s (%llu pipelines made this run), prewarm list %d keys, %.0f ms (on the saver thread)", n, g_pc_path[0] ? g_pc_path : "(none)",
                             (unsigned long long)made, keys, dt / 1e6);
@@ -327,16 +327,16 @@ void vka_pso_save(int force) {
     if (!g_pc) return;
     uint64_t t = now_ns();
     if (force != 1) {
-        uint64_t made = __atomic_load_n(&g_made, __ATOMIC_RELAXED);   // PEANUTS: below
-        if (made == g_saved_at && !atomic_load(&g_pcl_due)) return;   // PEANUTS: g_pcl_due (the shader parts' cache has something to save)
-        // PEANUTS: a large cache (over PC_BIG_MB at its last read or save) with fewer than PC_FEW new pipelines since the last save waits DM_VK_PCACHE_SAVE_BIG_S (150 s; 0
+        uint64_t made = __atomic_load_n(&g_made, __ATOMIC_RELAXED);   // KIWI: below
+        if (made == g_saved_at && !atomic_load(&g_pcl_due)) return;   // KIWI: g_pcl_due (the shader parts' cache has something to save)
+        // KIWI: a large cache (over PC_BIG_MB at its last read or save) with fewer than PC_FEW new pipelines since the last save waits DM_VK_PCACHE_SAVE_BIG_S (150 s; 0
         // = no longer wait), or DM_VK_PCACHE_SAVE_S if longer. A save copies and writes the whole cache: Hogwarts Legacy's is 72 MB, and on a Galaxy S24 Ultra short of memory
         // each save of 2 or 3 new pipelines took 4.5 s and stopped the game for 2.8 s while the player walked through Hogsmeade (2026-11-24). A save of the shader parts' cache
         // alone (no new pipeline) and a small cache keep DM_VK_PCACHE_SAVE_S; the save at suspend (Home, another app) and at the end of the run stay forced, and a slow
         // pipeline is saved within seconds (force 2)
         enum { PC_FEW = 32, PC_BIG_MB = 32 };
         int s = force == 2 ? VKA_ENV("DM_VK_PCACHE_SAVE_SLOW_S", 3) : VKA_ENV("DM_VK_PCACHE_SAVE_S", 20); if (s < 1) s = 1;
-        if (force != 2 && made != g_saved_at && made - g_saved_at < PC_FEW && __atomic_load_n(&g_pc_bytes, __ATOMIC_RELAXED) > (size_t)PC_BIG_MB << 20) {   // PEANUTS: above
+        if (force != 2 && made != g_saved_at && made - g_saved_at < PC_FEW && __atomic_load_n(&g_pc_bytes, __ATOMIC_RELAXED) > (size_t)PC_BIG_MB << 20) {   // KIWI: above
             int big = VKA_ENV("DM_VK_PCACHE_SAVE_BIG_S", 150); if (big > s) s = big;
         }
         if (t - g_save_ns < (uint64_t)s * 1000000000ull) return;
@@ -344,10 +344,10 @@ void vka_pso_save(int force) {
         if (g_sv_up) { pthread_mutex_lock(&g_sv_mu); g_sv_want = 1; pthread_cond_signal(&g_sv_cv); pthread_mutex_unlock(&g_sv_mu); return; }
     }
     g_save_ns = t;
-    if (force == 1) atomic_store(&g_pcl_due, 1);   // PEANUTS: the shader parts' cache too
+    if (force == 1) atomic_store(&g_pcl_due, 1);   // KIWI: the shader parts' cache too
     pthread_mutex_lock(&g_save_mu); save_now(); pthread_mutex_unlock(&g_save_mu);
 }
-// PEANUTS: the Android front end calls this after the profile and pack are loaded, before entering guest code.
+// KIWI: the Android front end calls this after the profile and pack are loaded, before entering guest code.
 void vka_pso_prepare_launch(void) {
     const char *enabled = getenv("DM_VK_PREWARM");
     int seed = dm_vk_prewarm_seed_len && VKA_ENV("DM_VK_PREWARM_SEED", 1);
@@ -361,11 +361,11 @@ void vka_pso_prepare_launch(void) {
             VLOG("startup prewarm complete: %u keys processed before guest entry", (unsigned)atomic_load(&g_pw_processed));
         }
     }
-    pp_prepare();   // PEANUTS: the shader parts of the profile's programs, before the game starts (below)
+    pp_prepare();   // KIWI: the shader parts of the profile's programs, before the game starts (below)
     atomic_store(&g_pw_start_total, 0);
 }
 
-// PEANUTS: the launcher's Play anyway on the Preparing shaders screen: what is prepared so far is kept, the rest is prepared at the next start
+// KIWI: the launcher's Play anyway on the Preparing shaders screen: what is prepared so far is kept, the rest is prepared at the next start
 void nxhost_prewarm_skip(void) { atomic_store(&g_pp_skip, 1); }
 
 int64_t nxhost_prewarm_progress(void) {
@@ -375,15 +375,15 @@ int64_t nxhost_prewarm_progress(void) {
 
 void vka_gpl_line(char *out, size_t n);
 void vka_pso_async_line(char *out, size_t n);
-void vka_pso_prefetch_line(char *out, size_t n);   // PEANUTS
+void vka_pso_prefetch_line(char *out, size_t n);   // KIWI
 void mtl_pso_line(char *out, size_t n) {
     if (!n) return;
     int k = snprintf(out, n, "%llu graphics + %llu compute pipelines (%llu failed, %llu compute (program, layout) pairs not made for shared memory, %llu on the frame path), %llu set layouts, %.0f ms creating", (unsigned long long)g_ngfx, (unsigned long long)g_ncs,
                      (unsigned long long)g_nfail, (unsigned long long)g_ncs_over, (unsigned long long)g_frame_made, (unsigned long long)g_nlayouts, g_create_ms);
     if (V.gpl && k > 0 && (size_t)k + 3 < n) { memcpy(out + k, "; ", 3); vka_gpl_line(out + k + 2, n - (size_t)k - 2); }
-    size_t o = strlen(out); char a[960]; vka_pso_async_line(a, sizeof a);   // PEANUTS: 960, was 200: the line was cut before the counts of the draws not skipped (vka_gfx_pipeline_now)
+    size_t o = strlen(out); char a[960]; vka_pso_async_line(a, sizeof a);   // KIWI: 960, was 200: the line was cut before the counts of the draws not skipped (vka_gfx_pipeline_now)
     if (a[0] && o + 2 < n) snprintf(out + o, n - o, "; %s", a);
-    // PEANUTS: the prefetch and the frame path's links on a line of their own, when they changed (the line above is already cut by some callers)
+    // KIWI: the prefetch and the frame path's links on a line of their own, when they changed (the line above is already cut by some callers)
     { static char last[520]; char b[520]; vka_pso_prefetch_line(b, sizeof b); if (b[0] && strcmp(b, last)) { memcpy(last, b, sizeof last); VLOG("%s", b); } }
 }
 
@@ -410,7 +410,7 @@ typedef struct {
     VkPipelineShaderStageCreateInfo ss[5]; uint32_t ns; VkPipelineShaderStageRequiredSubgroupSizeCreateInfo rsg[5];
     VkBool32 gl_true; uint32_t afunc; VkSpecializationMapEntry me, ae; VkSpecializationInfo spec, aspec;
     VkVertexInputBindingDescription vb[33]; VkVertexInputAttributeDescription va[32]; VkVertexInputBindingDivisorDescription vd[33];
-    VkPipelineVertexInputDivisorStateCreateInfo vds; VkPipelineVertexInputStateCreateInfo vi; VkPipelineInputAssemblyStateCreateInfo ia; VkPipelineTessellationStateCreateInfo ts; VkPipelineTessellationDomainOriginStateCreateInfo tdo;   /* PEANUTS(upstream-candidate): tdo */
+    VkPipelineVertexInputDivisorStateCreateInfo vds; VkPipelineVertexInputStateCreateInfo vi; VkPipelineInputAssemblyStateCreateInfo ia; VkPipelineTessellationStateCreateInfo ts; VkPipelineTessellationDomainOriginStateCreateInfo tdo;   /* KIWI(upstream-candidate): tdo */
     VkPipelineViewportStateCreateInfo vp; VkPipelineRasterizationStateCreateInfo rs; VkPipelineMultisampleStateCreateInfo ms; VkPipelineDepthStencilStateCreateInfo ds;
     VkPipelineColorBlendAttachmentState cb[8]; VkPipelineColorBlendStateCreateInfo bs; VkDynamicState dyn[24]; VkPipelineDynamicStateCreateInfo dy;
     VkFormat cf[8]; VkPipelineRenderingCreateInfo ri; VkGraphicsPipelineCreateInfo ci; int tess, mesh;   // mesh: a task / mesh pipeline (pstate_fill)
@@ -449,13 +449,13 @@ static int pstate_fill(pstate *P, vka_shader *const sh[VKA_NSTAGE], const vka_la
         vka_shader *s = sh[order[i]]; if (!s) continue;
         int fs = order[i] == 1, gl = k->gl_depth && order[i] == last_pre && (s->e->flags & DMSH_VK_F_GL_DEPTH);
         uint32_t fu = 0, fsm = 0; if (fs && k->fs_variant == VKA_FS_RETYPE) fout_masks(s, k, &fu, &fsm);
-        int variant = fs ? k->fs_variant : DMSH_VK_MOD_BASE; // PEANUTS (PR #164)
+        int variant = fs ? k->fs_variant : DMSH_VK_MOD_BASE; // KIWI (PR #164)
         if (fs && variant == DMSH_VK_MOD_UINT_MIXED && k->samples <= 1 && s->key == UINT64_C(0x8094803e3085cb63) &&
             V.driver_id == VK_DRIVER_ID_MESA_TURNIP && strstr(V.props.deviceName, "Adreno (TM) 740"))
             variant = VKA_MOD_TERRAIN_NORMAL;
         VkShaderModule mod = order[i] == 0 && (k->vin_u | k->vin_s) ? vka_shader_vin_module(s, k->vin_u, k->vin_s) : order[i] == 2 && k->gs_fx ? vka_shader_gs_module(s)
                            : fs && k->fs_variant == VKA_FS_RETYPE ? (fu | fsm ? vka_shader_fout_module(s, fu, fsm) : vka_shader_module(s, DMSH_VK_MOD_BASE))
-                           : vka_shader_module(s, variant); // PEANUTS (PR #164)
+                           : vka_shader_module(s, variant); // KIWI (PR #164)
         if (!mod && order[i] == 2 && k->gs_fx) mod = vka_shader_module(s, DMSH_VK_MOD_BASE);   // no module with the claim (logged): the shader as it is
         if (mod && order[i] == 2 && sh[1]) {   // the pixel shader's inputs the geometry shader does not write, added (vka_shader_gs_link_module); none: the module above
             VkShaderModule lm = vka_shader_gs_link_module(s, sh[0], sh[1], k->gs_fx && mod == vka_shader_gs_module(s));
@@ -496,10 +496,10 @@ static int pstate_fill(pstate *P, vka_shader *const sh[VKA_NSTAGE], const vka_la
     P->vi = (VkPipelineVertexInputStateCreateInfo){VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO, .pNext = nvd ? &P->vds : NULL, .vertexBindingDescriptionCount = nvb, .pVertexBindingDescriptions = P->vb,
                                                    .vertexAttributeDescriptionCount = nva, .pVertexAttributeDescriptions = P->va};
     P->ia = (VkPipelineInputAssemblyStateCreateInfo){VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO, .topology = (VkPrimitiveTopology)k->topo};
-    // PEANUTS(upstream-candidate): the translated domain shaders take OpenGL's tessellation coordinates (Ryujinx's Vulkan backend draws them with a lower-left domain
+    // KIWI(upstream-candidate): the translated domain shaders take OpenGL's tessellation coordinates (Ryujinx's Vulkan backend draws them with a lower-left domain
     // origin): with Vulkan's default, upper-left, the vertex order the module declares (the control section's, vk_android_build.py tess_modes_set) comes out reversed
     P->tdo = (VkPipelineTessellationDomainOriginStateCreateInfo){VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_DOMAIN_ORIGIN_STATE_CREATE_INFO, .domainOrigin = VK_TESSELLATION_DOMAIN_ORIGIN_LOWER_LEFT};
-    P->ts = (VkPipelineTessellationStateCreateInfo){VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO, .pNext = &P->tdo, .patchControlPoints = k->patch_cp ? k->patch_cp : 3};   // PEANUTS(upstream-candidate): the game's patch size (OP_PATCH_SIZE, vka_gkey.patch_cp)
+    P->ts = (VkPipelineTessellationStateCreateInfo){VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO, .pNext = &P->tdo, .patchControlPoints = k->patch_cp ? k->patch_cp : 3};   // KIWI(upstream-candidate): the game's patch size (OP_PATCH_SIZE, vka_gkey.patch_cp)
     P->vp = (VkPipelineViewportStateCreateInfo){VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO, .viewportCount = 1, .scissorCount = 1};   // one viewport, as nvn_mtl.m draws
     P->rs = (VkPipelineRasterizationStateCreateInfo){VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO, .depthClampEnable = k->depth_clamp && V.depth_clamp,
         .polygonMode = (VkPolygonMode)k->poly_mode, .lineWidth = 1.0f};
@@ -518,7 +518,7 @@ static int pstate_fill(pstate *P, vka_shader *const sh[VKA_NSTAGE], const vka_la
     for (size_t i = 0; i < sizeof base / sizeof *base; i++)   // (a mesh pipeline may not name the primitive topology or restart: it has no input assembly)
         if (!mesh || (base[i] != VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY && base[i] != VK_DYNAMIC_STATE_PRIMITIVE_RESTART_ENABLE)) P->dyn[nd++] = base[i];
     if (!k->vin_static && !mesh) P->dyn[nd++] = VK_DYNAMIC_STATE_VERTEX_INPUT_EXT;
-    if (V.fb_loop) P->dyn[nd++] = VK_DYNAMIC_STATE_ATTACHMENT_FEEDBACK_LOOP_ENABLE_EXT;   // PEANUTS: set at each draw (vka_draw.c: a draw sampling its own attachment)
+    if (V.fb_loop) P->dyn[nd++] = VK_DYNAMIC_STATE_ATTACHMENT_FEEDBACK_LOOP_ENABLE_EXT;   // KIWI: set at each draw (vka_draw.c: a draw sampling its own attachment)
     P->dy = (VkPipelineDynamicStateCreateInfo){VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO, .dynamicStateCount = nd, .pDynamicStates = P->dyn};
     for (int i = 0; i < k->ncolor; i++) P->cf[i] = (VkFormat)k->cfmt[i];
     P->ri = (VkPipelineRenderingCreateInfo){VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO, .colorAttachmentCount = k->ncolor, .pColorAttachmentFormats = P->cf,
@@ -572,7 +572,7 @@ static void heavy_add(uint64_t k, int save) {
     pthread_mutex_unlock(&g_heavy_mu);
 }
 static void heavy_load(void) {
-    static _Atomic int once; if (!g_pc_path[0] || atomic_exchange(&once, 1)) return;   // PEANUTS: once (pw_start and cw_main)
+    static _Atomic int once; if (!g_pc_path[0] || atomic_exchange(&once, 1)) return;   // KIWI: once (pw_start and cw_main)
     pthread_mutex_lock(&g_heavy_mu); snprintf(g_heavy_path, sizeof g_heavy_path, "%s.heavy", g_pc_path); pthread_mutex_unlock(&g_heavy_mu);
     FILE *f = fopen(g_heavy_path, "r"); if (!f) return;
     char ln[64]; while (fgets(ln, sizeof ln, f)) { uint64_t k = strtoull(ln, NULL, 16); if (k) heavy_add(k, 0); }
@@ -690,18 +690,18 @@ static int gpl_on(void) { return V.gpl && !atomic_load(&g_gpl_off); }
 #define LIB_REFUSED ((void *)(uintptr_t)1)
 #define LIB_BUSY ((void *)(uintptr_t)2)
 static pthread_cond_t g_lib_cv = PTHREAD_COND_INITIALIZER;
-// PEANUTS begin: how: LM_MAKE as before; LM_FETCH (the frame path, gfx_obtain): from the maps or the driver's cache only (FAIL_ON_PIPELINE_COMPILE_REQUIRED), never a
+// KIWI begin: how: LM_MAKE as before; LM_FETCH (the frame path, gfx_obtain): from the maps or the driver's cache only (FAIL_ON_PIPELINE_COMPILE_REQUIRED), never a
 // compile and never a wait for another thread's: VK_NULL_HANDLE then, the entry left free; LM_DISCARD (the preparing step and the prefetch, prog_parts): compiled
 // into the driver's cache and destroyed, the maps untouched (a game has tens of thousands of shader parts and draws with a few hundred). The shader parts go into
 // their own cache (g_pcl, pcl_open), saved apart from the pipelines' cache (pcl_save: every 30 s of the preparing step and at its end, then when the background thread has caught up)
 enum { LM_MAKE, LM_FETCH, LM_DISCARD };
 static VkPipelineCache g_pcl; static _Atomic uint64_t g_pcl_made, g_ft_n, g_ft_miss, g_ft_ns, g_ft_max_ns;
 #define GPL_YES ((VkPipeline)(uintptr_t)1)
-// PEANUTS end
-static VkPipeline lib_make(int kind, const void *key, size_t klen, VkGraphicsPipelineCreateInfo *ci, VkGraphicsPipelineLibraryFlagsEXT part, int *refused, uint64_t vs, uint64_t fs, int how) {   // PEANUTS: how
+// KIWI end
+static VkPipeline lib_make(int kind, const void *key, size_t klen, VkGraphicsPipelineCreateInfo *ci, VkGraphicsPipelineLibraryFlagsEXT part, int *refused, uint64_t vs, uint64_t fs, int how) {   // KIWI: how
     uint64_t h = fnv(key, klen, 1469598103934665603ull);
     int shp = kind == L_PRE || kind == L_PREFS;
-    // PEANUTS begin
+    // KIWI begin
     VkPipelineCache pc = (shp || kind == L_FS) && g_pcl ? g_pcl : g_pc;
     if (how == LM_DISCARD) {
         VkGraphicsPipelineLibraryCreateInfoEXT li = {VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_LIBRARY_CREATE_INFO_EXT, .pNext = shp && (g_pre_adapt & A_NORI) ? NULL : ci->pNext, .flags = part};
@@ -722,25 +722,25 @@ static VkPipeline lib_make(int kind, const void *key, size_t klen, VkGraphicsPip
     if (!hit) { if (sl) *sl = LIB_BUSY; else km_put(&g_lib[kind], key, h, LIB_BUSY); }   // (an entry a fetch left free is taken again)
     pthread_mutex_unlock(&g_mu);
     if (hit) return hit == LIB_REFUSED ? VK_NULL_HANDLE : (VkPipeline)hit;
-    // PEANUTS end
+    // KIWI end
     VkGraphicsPipelineLibraryCreateInfoEXT li = {VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_LIBRARY_CREATE_INFO_EXT, .pNext = shp && (g_pre_adapt & A_NORI) ? NULL : ci->pNext, .flags = part};
     ci->pNext = &li; ci->flags |= VK_PIPELINE_CREATE_LIBRARY_BIT_KHR | (g_pre_adapt & A_RETAIN ? VK_PIPELINE_CREATE_RETAIN_LINK_TIME_OPTIMIZATION_INFO_BIT_EXT : 0)
-                                  | (how == LM_FETCH ? VK_PIPELINE_CREATE_FAIL_ON_PIPELINE_COMPILE_REQUIRED_BIT : 0);   // PEANUTS: LM_FETCH
+                                  | (how == LM_FETCH ? VK_PIPELINE_CREATE_FAIL_ON_PIPELINE_COMPILE_REQUIRED_BIT : 0);   // KIWI: LM_FETCH
     uint64_t t0 = now_ns();
-    int bs = how == LM_FETCH ? -1 : build_begin(g_lib_name[kind], vs, fs);   // PEANUTS: (a fetch compiles nothing)
-    VkPipeline p = VK_NULL_HANDLE; VkResult r = vk.vkCreateGraphicsPipelines(V.dev, shp && (g_pre_adapt & A_NOCACHE) ? VK_NULL_HANDLE : pc, 1, ci, NULL, &p);   // PEANUTS: pc
-    if (bs >= 0) build_end(bs);   // PEANUTS
+    int bs = how == LM_FETCH ? -1 : build_begin(g_lib_name[kind], vs, fs);   // KIWI: (a fetch compiles nothing)
+    VkPipeline p = VK_NULL_HANDLE; VkResult r = vk.vkCreateGraphicsPipelines(V.dev, shp && (g_pre_adapt & A_NOCACHE) ? VK_NULL_HANDLE : pc, 1, ci, NULL, &p);   // KIWI: pc
+    if (bs >= 0) build_end(bs);   // KIWI
     ci->pNext = li.pNext;
     double ms_ = (now_ns() - t0) / 1e6;
-    int nofetch = how == LM_FETCH && (r || !p);   // PEANUTS: not in the driver's cache (VK_PIPELINE_COMPILE_REQUIRED): the entry is left free
+    int nofetch = how == LM_FETCH && (r || !p);   // KIWI: not in the driver's cache (VK_PIPELINE_COMPILE_REQUIRED): the entry is left free
     pthread_mutex_lock(&g_mu);
     if (r) p = VK_NULL_HANDLE; else g_nlib[kind]++;
-    if (how != LM_FETCH) g_lib_ms += ms_;   // PEANUTS: (the fetches are counted apart, below)
+    if (how != LM_FETCH) g_lib_ms += ms_;   // KIWI: (the fetches are counted apart, below)
     void **slot = km_slot(&g_lib[kind], key, h);   // (gone if an adaptation emptied the map while it was made: then not kept, as it was made without the adaptation)
-    if (slot) *slot = p ? (void *)p : nofetch ? NULL : LIB_REFUSED;   // PEANUTS: nofetch
+    if (slot) *slot = p ? (void *)p : nofetch ? NULL : LIB_REFUSED;   // KIWI: nofetch
     pthread_cond_broadcast(&g_lib_cv);
     pthread_mutex_unlock(&g_mu);
-    // PEANUTS begin
+    // KIWI begin
     if (how == LM_FETCH) {
         uint64_t d = now_ns() - t0, mx = atomic_load(&g_ft_max_ns);
         atomic_fetch_add(&g_ft_ns, d); while (d > mx && !atomic_compare_exchange_weak(&g_ft_max_ns, &mx, d)) {}
@@ -748,7 +748,7 @@ static VkPipeline lib_make(int kind, const void *key, size_t klen, VkGraphicsPip
         return p;
     }
     if (!r && (shp || kind == L_FS)) atomic_fetch_add(&g_pcl_made, 1);
-    // PEANUTS end
+    // KIWI end
     if (r) { if (refused) *refused = r; static _Atomic int n; if (atomic_fetch_add(&n, 1) < 8) VRED("graphics pipeline library (%s): %d; the whole pipeline is made instead", g_lib_name[kind], r); }
     else if (ms_ > 50) { static _Atomic int n; if (atomic_fetch_add(&n, 1) < 100) VLOG("graphics pipeline library (%s) took %.0f ms", g_lib_name[kind], ms_); }
     return p;
@@ -760,7 +760,7 @@ static int dyn_part(VkDynamicState d) {
     case VK_DYNAMIC_STATE_VERTEX_INPUT_EXT: case VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY: case VK_DYNAMIC_STATE_PRIMITIVE_RESTART_ENABLE: return L_VI;
     case VK_DYNAMIC_STATE_VIEWPORT: case VK_DYNAMIC_STATE_SCISSOR: case VK_DYNAMIC_STATE_LINE_WIDTH: case VK_DYNAMIC_STATE_DEPTH_BIAS: case VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE:
     case VK_DYNAMIC_STATE_CULL_MODE: case VK_DYNAMIC_STATE_FRONT_FACE: case VK_DYNAMIC_STATE_RASTERIZER_DISCARD_ENABLE: return L_PRE;
-    case VK_DYNAMIC_STATE_BLEND_CONSTANTS: case VK_DYNAMIC_STATE_ATTACHMENT_FEEDBACK_LOOP_ENABLE_EXT: return L_FO;   // PEANUTS: feedback loops: fragment output state, as the feedback loop pipeline flags are
+    case VK_DYNAMIC_STATE_BLEND_CONSTANTS: case VK_DYNAMIC_STATE_ATTACHMENT_FEEDBACK_LOOP_ENABLE_EXT: return L_FO;   // KIWI: feedback loops: fragment output state, as the feedback loop pipeline flags are
     default: return L_FS;   // depth and stencil tests, depth bounds
     }
 }
@@ -829,23 +829,23 @@ static unsigned pre_probe(const VkGraphicsPipelineCreateInfo *ci0, const pstate 
     return a;
 }
 // The parts of P, each made once; then the link. VK_NULL_HANDLE = a part failed (the caller makes the whole pipeline)
-// PEANUTS begin: mode GPL_FETCH (the frame path): the shader parts from the maps or the driver's cache only (lib_make LM_FETCH), then the link; VK_NULL_HANDLE when
+// KIWI begin: mode GPL_FETCH (the frame path): the shader parts from the maps or the driver's cache only (lib_make LM_FETCH), then the link; VK_NULL_HANDLE when
 // one of them would have to be compiled. GPL_SHADERS (prog_parts): only the shader parts, compiled into the driver's cache and destroyed; non-null when made
 enum { GPL_LINK, GPL_FETCH, GPL_SHADERS };
-// PEANUTS end
-static VkPipeline gpl_link(pstate *P, const vka_gkey *k, int mode) {   // PEANUTS: mode
-    int how = mode == GPL_FETCH ? LM_FETCH : mode == GPL_SHADERS ? LM_DISCARD : LM_MAKE;   // PEANUTS: the shader parts' (the other parts are always made)
+// KIWI end
+static VkPipeline gpl_link(pstate *P, const vka_gkey *k, int mode) {   // KIWI: mode
+    int how = mode == GPL_FETCH ? LM_FETCH : mode == GPL_SHADERS ? LM_DISCARD : LM_MAKE;   // KIWI: the shader parts' (the other parts are always made)
     const vka_shader *pre0 = P->mesh ? P->sh[7] : P->sh[0];
     uint64_t vs_key = pre0 ? pre0->key : 0;
     uint64_t fs_key = P->sh[1] ? P->sh[1]->key : 0;
     VkDynamicState dl[NLIB][24]; VkPipelineDynamicStateCreateInfo dy[NLIB];
     for (int i = 0; i < NLIB; i++) dyn_of(P, i, dl[i], &dy[i]);
     VkPipeline part[4]; uint32_t nparts = 0;
-    if (mode != GPL_SHADERS)   // PEANUTS: (the prepared parts are the shader ones)
+    if (mode != GPL_SHADERS)   // KIWI: (the prepared parts are the shader ones)
     {   vikey key; memset(&key, 0, sizeof key); key.topo = k->topo; key.vin_static = k->vin_static;
         if (k->vin_static) { memcpy(key.va, k->va, sizeof key.va); memcpy(key.vb, k->vb, sizeof key.vb); }
         VkGraphicsPipelineCreateInfo ci = {VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO, .pVertexInputState = &P->vi, .pInputAssemblyState = &P->ia, .pDynamicState = &dy[L_VI]};
-        if (!(part[nparts++] = lib_make(L_VI, &key, sizeof key, &ci, VK_GRAPHICS_PIPELINE_LIBRARY_VERTEX_INPUT_INTERFACE_BIT_EXT, NULL, 0, 0, LM_MAKE))) return VK_NULL_HANDLE; }   // PEANUTS: LM_MAKE
+        if (!(part[nparts++] = lib_make(L_VI, &key, sizeof key, &ci, VK_GRAPHICS_PIPELINE_LIBRARY_VERTEX_INPUT_INTERFACE_BIT_EXT, NULL, 0, 0, LM_MAKE))) return VK_NULL_HANDLE; }   // KIWI: LM_MAKE
     VkPipelineShaderStageCreateInfo pre[4], *fs = NULL; uint32_t npre = 0;
     for (uint32_t i = 0; i < P->ns; i++) { if (P->ss[i].stage == VK_SHADER_STAGE_FRAGMENT_BIT) fs = &P->ss[i]; else if (npre < 4) pre[npre++] = P->ss[i]; }
     VkPipelineRenderingCreateInfo ri0 = {VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO};   // the shader parts take only the view mask (0); the formats are the output's
@@ -863,13 +863,13 @@ static VkPipeline gpl_link(pstate *P, const vka_gkey *k, int mode) {   // PEANUT
         VkGraphicsPipelineCreateInfo ci = {VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO, .pNext = &ri0, .stageCount = nb, .pStages = both, .pTessellationState = P->tess ? &P->ts : NULL,
                                            .pViewportState = &P->vp, .pRasterizationState = &P->rs, .pMultisampleState = &P->ms, .pDepthStencilState = &P->ds, .pDynamicState = &dy[L_PREFS], .layout = P->ci.layout,
                                            .renderPass = rp};
-        if (!(part[nparts++] = lib_make(L_PREFS, &key, sizeof key, &ci, VK_GRAPHICS_PIPELINE_LIBRARY_PRE_RASTERIZATION_SHADERS_BIT_EXT | VK_GRAPHICS_PIPELINE_LIBRARY_FRAGMENT_SHADER_BIT_EXT, NULL, vs_key, fs_key, how))) return VK_NULL_HANDLE;   // PEANUTS: how
+        if (!(part[nparts++] = lib_make(L_PREFS, &key, sizeof key, &ci, VK_GRAPHICS_PIPELINE_LIBRARY_PRE_RASTERIZATION_SHADERS_BIT_EXT | VK_GRAPHICS_PIPELINE_LIBRARY_FRAGMENT_SHADER_BIT_EXT, NULL, vs_key, fs_key, how))) return VK_NULL_HANDLE;   // KIWI: how
     } else {
         VkGraphicsPipelineCreateInfo ci = {VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO, .pNext = &ri0, .stageCount = npre, .pStages = pre, .pTessellationState = P->tess ? &P->ts : NULL,
                                            .pViewportState = &P->vp, .pRasterizationState = &P->rs, .pDynamicState = &dy[L_PRE], .layout = P->ci.layout, .renderPass = rp};
         int refused = 0;
         VkGraphicsPipelineCreateInfo ci_probe = ci;   // (lib_make chains its own structure onto ci and restores it)
-        if (!(part[nparts++] = lib_make(L_PRE, &pk, sizeof pk, &ci, VK_GRAPHICS_PIPELINE_LIBRARY_PRE_RASTERIZATION_SHADERS_BIT_EXT, &refused, vs_key, 0, how))) {   // PEANUTS: how
+        if (!(part[nparts++] = lib_make(L_PRE, &pk, sizeof pk, &ci, VK_GRAPHICS_PIPELINE_LIBRARY_PRE_RASTERIZATION_SHADERS_BIT_EXT, &refused, vs_key, 0, how))) {   // KIWI: how
             if (refused && !__atomic_load_n(&g_nlib[L_PRE], __ATOMIC_RELAXED)) {
                 int first = 0;
                 pthread_mutex_lock(&g_mu); int nref = ++g_pre_refused; if (!g_pre_probed) { g_pre_probed = 1; first = 1; } pthread_mutex_unlock(&g_mu);
@@ -887,15 +887,15 @@ static VkPipeline gpl_link(pstate *P, const vka_gkey *k, int mode) {   // PEANUT
         }
         VkGraphicsPipelineCreateInfo cf = {VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO, .pNext = &ri0, .stageCount = fs ? 1 : 0, .pStages = fs, .pMultisampleState = &P->ms,
                                            .pDepthStencilState = &P->ds, .pDynamicState = &dy[L_FS], .layout = P->ci.layout, .renderPass = rp};
-        if (!(part[nparts++] = lib_make(L_FS, &fk, sizeof fk, &cf, VK_GRAPHICS_PIPELINE_LIBRARY_FRAGMENT_SHADER_BIT_EXT, NULL, 0, fs_key, how))) return VK_NULL_HANDLE;   // PEANUTS: how
+        if (!(part[nparts++] = lib_make(L_FS, &fk, sizeof fk, &cf, VK_GRAPHICS_PIPELINE_LIBRARY_FRAGMENT_SHADER_BIT_EXT, NULL, 0, fs_key, how))) return VK_NULL_HANDLE;   // KIWI: how
     }
-    if (mode == GPL_SHADERS) return GPL_YES;   // PEANUTS
+    if (mode == GPL_SHADERS) return GPL_YES;   // KIWI
     {   fokey key; memset(&key, 0, sizeof key);
         memcpy(key.cfmt, k->cfmt, sizeof key.cfmt); key.dfmt = k->dfmt; key.sfmt = k->sfmt; key.ncolor = k->ncolor; key.samples = (uint8_t)P->ms.rasterizationSamples; key.a2c = k->a2c;
         key.logic_en = k->logic_en; key.logic_op = k->logic_op; key.vin_static = (uint8_t)k->vin_static; memcpy(key.att, k->att, sizeof key.att);
         VkGraphicsPipelineCreateInfo ci = {VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO, .pNext = &P->ri, .pMultisampleState = &P->ms, .pColorBlendState = &P->bs, .pDynamicState = &dy[L_FO],
                                            .renderPass = rp};   // (with a render pass the formats come from it; P->ri is then ignored)
-        if (!(part[nparts++] = lib_make(L_FO, &key, sizeof key, &ci, VK_GRAPHICS_PIPELINE_LIBRARY_FRAGMENT_OUTPUT_INTERFACE_BIT_EXT, NULL, 0, 0, LM_MAKE))) return VK_NULL_HANDLE; }   // PEANUTS: LM_MAKE
+        if (!(part[nparts++] = lib_make(L_FO, &key, sizeof key, &ci, VK_GRAPHICS_PIPELINE_LIBRARY_FRAGMENT_OUTPUT_INTERFACE_BIT_EXT, NULL, 0, 0, LM_MAKE))) return VK_NULL_HANDLE; }   // KIWI: LM_MAKE
     VkPipelineLibraryCreateInfoKHR libs = {VK_STRUCTURE_TYPE_PIPELINE_LIBRARY_CREATE_INFO_KHR, .libraryCount = nparts, .pLibraries = part};
     VkGraphicsPipelineCreateInfo ci = {VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO, .pNext = &libs, .layout = P->ci.layout, .renderPass = rp};   // no LINK_TIME_OPTIMIZATION: the fast link
     uint64_t t0 = now_ns();
@@ -993,7 +993,7 @@ static uint64_t gate_hold(int tok, uint64_t key) {
 typedef struct opt_job { struct opt_job *next; gval *g; vka_shader *sh[VKA_NSTAGE]; vka_layout lay; vka_gkey k; } opt_job;
 static opt_job *g_opt_head, **g_opt_tail = &g_opt_head; static pthread_mutex_t g_opt_mu = PTHREAD_MUTEX_INITIALIZER; static pthread_cond_t g_opt_cv = PTHREAD_COND_INITIALIZER;
 static uint64_t g_opt_waiting;
-static _Atomic int g_as_depth;   // PEANUTS: the asynchronous queue's depth (defined with the queue, below), for opt_main
+static _Atomic int g_as_depth;   // KIWI: the asynchronous queue's depth (defined with the queue, below), for opt_main
 static void *opt_main(void *a) {
     (void)a; pthread_setname_np(pthread_self(), "vk-psopt"); vka_fp_host("vk-psopt");
     // Under the game's threads, as the prewarm and asynchronous threads: nothing waits for an optimized pipeline (its linked one draws meanwhile). Before 2026-11-10 it kept
@@ -1008,7 +1008,7 @@ static void *opt_main(void *a) {
         pthread_mutex_unlock(&g_opt_mu);
         const vka_shader *pre = j->sh[7] ? j->sh[7] : j->sh[0];
         uint64_t key = pre ? pre->key : (j->sh[1] ? j->sh[1]->key : 0);
-        while (atomic_load(&g_as_depth) > 0) { usleep(2000); pause_point(); }   // PEANUTS: not while a draw waits for its pipeline (Turnip compiles one at a time)
+        while (atomic_load(&g_as_depth) > 0) { usleep(2000); pause_point(); }   // KIWI: not while a draw waits for its pipeline (Turnip compiles one at a time)
         int tok = gate_enter(0, gate_heavy(pre, j->sh[1]));   // speculative: its linked pipeline draws meanwhile
         gate_hold(tok, key);
         pstate *P = malloc(sizeof *P);
@@ -1056,7 +1056,7 @@ static pthread_mutex_t g_pw_mu = PTHREAD_MUTEX_INITIALIZER;
 static uint8_t *g_pw_buf; static size_t g_pw_len, g_pw_cap; static uint32_t g_pw_n; static int g_pw_dirty;   // every record (loaded, then new), under g_pw_mu
 static uint64_t *g_pw_set; static size_t g_pw_setcap, g_pw_setn;   // their hashes
 static uint8_t *g_pw_load; static size_t g_pw_load_len; static uint32_t g_pw_load_n;   // the loaded records, read by the prewarm threads (not changed after pw_load)
-// PEANUTS: share the ordered list and track progress across the workers.
+// KIWI: share the ordered list and track progress across the workers.
 static size_t *g_pw_offsets; static uint32_t g_pw_limit, g_pw_mesh_count;   // one ordered list shared by the workers
 static _Atomic uint32_t g_pw_next, g_pw_next_mesh, g_pw_tix, g_pw_done, g_pw_made, g_pw_had, g_pw_bad; static uint64_t g_pw_t0; static uint32_t g_pw_seed_n;
 static size_t pw_size(const pwrec *r) { return vka_pw_size(r); }
@@ -1153,8 +1153,8 @@ static int pw_save(void) {   // the saver thread or a forced save: the list when
     pthread_mutex_unlock(&g_pw_mu);
     pwhdr2 h; memset(&h, 0, sizeof h); memcpy(h.magic, VKA_PW_MAGIC2, 8); h.gkey_size = sizeof(vka_gkey); h.n = n; h.layout = vka_pw_layout(); memcpy(out, &h, sizeof h);
     char tmp[1200]; snprintf(tmp, sizeof tmp, "%s.tmp", g_pw_path);
-    int ok = pc_write_atomic(g_pw_path, tmp, out, sizeof h + len);   // PEANUTS(upstream-candidate): the prewarm list uses the same close-once transaction
-    if (!ok) { static _Atomic int k; if (atomic_fetch_add(&k, 1) < 2) VRED("prewarm list not written to %s", g_pw_path); pthread_mutex_lock(&g_pw_mu); g_pw_dirty = 1; pthread_mutex_unlock(&g_pw_mu); }   // PEANUTS(upstream-candidate): failed writes stay dirty for retry
+    int ok = pc_write_atomic(g_pw_path, tmp, out, sizeof h + len);   // KIWI(upstream-candidate): the prewarm list uses the same close-once transaction
+    if (!ok) { static _Atomic int k; if (atomic_fetch_add(&k, 1) < 2) VRED("prewarm list not written to %s", g_pw_path); pthread_mutex_lock(&g_pw_mu); g_pw_dirty = 1; pthread_mutex_unlock(&g_pw_mu); }   // KIWI(upstream-candidate): failed writes stay dirty for retry
     free(out);
     return ok ? (int)n : -1;
 }
@@ -1219,7 +1219,7 @@ static int pw_memu_rec(const pwrec *r) {
 static void *pw_main(void *a) {
     (void)a; pthread_setname_np(pthread_self(), "vk-prewarm"); vka_fp_host("vk-prewarm");
     setpriority(PRIO_PROCESS, 0, 10);   // this thread (Linux: per-thread nice), under the game's threads
-    // PEANUTS: wait for the starter to publish how many threads it created.
+    // KIWI: wait for the starter to publish how many threads it created.
     pthread_mutex_lock(&g_pw_start_mu); pthread_mutex_unlock(&g_pw_start_mu);
     const size_t *offs = g_pw_offsets;
     uint32_t n = g_pw_load_n, nm = g_pw_mesh_count, limit = g_pw_limit, me = atomic_fetch_add(&g_pw_tix, 1);
@@ -1229,13 +1229,13 @@ static void *pw_main(void *a) {
     uint32_t mem_mb = (uint32_t)VKA_ENV("DM_VK_PREWARM_MEM_MB", 2048);
     // Each build goes through the gate (gate_enter: the frame's compiles first, as many at once as memory allows, a known long one alone) and holds while another build
     // of the same shader runs (gate_hold); with DM_VK_PREWARM_OVERLAP=1 each thread builds on its own and holds while any long compile runs (DM_VK_PREWARM_HEAVY_MS)
-    for (;; atomic_fetch_add(&g_pw_processed, 1)) {   // PEANUTS: report each processed key
+    for (;; atomic_fetch_add(&g_pw_processed, 1)) {   // KIWI: report each processed key
         pause_point();
         if (me > 0 && mem_mb) { uint64_t t0 = 0, av; while ((av = mem_avail_mb()) && av < mem_mb && nm < limit && atomic_load(&g_pw_next) < limit - nm) { if (!t0) t0 = now_ns(); usleep(250000); pause_point(); }
                                 if (t0) atomic_fetch_add(&g_pw_memwait_ns, now_ns() - t0); }
         uint32_t i = me == 0 ? atomic_fetch_add(&g_pw_next_mesh, 1) : nm;   // the mesh thread: the next mesh record while there is one
         if (i >= nm) { uint32_t q = atomic_fetch_add(&g_pw_next, 1); i = nm + q; }
-        if (i >= limit || atomic_load(&g_pp_skip)) break;   // PEANUTS: match the startup progress total; Play anyway
+        if (i >= limit || atomic_load(&g_pp_skip)) break;   // KIWI: match the startup progress total; Play anyway
         pwrec r; memcpy(&r, g_pw_load + offs[i], sizeof r);
         const uint8_t *kb = g_pw_load + offs[i] + sizeof r;
         vka_shader *sh[VKA_NSTAGE]; memset(sh, 0, sizeof sh); int bad = !vka_pw_rec_ok(&r, kb);
@@ -1271,11 +1271,11 @@ static void *pw_main(void *a) {
         }
         int made = 0;
         if (bad) { atomic_fetch_add(&g_pw_bad, 1); pw_mark_bad(offs[i]); }
-        else if (r.kind == VKA_PW_CS) { uint64_t m2[2] = {0, 0}; if (r.klen == 16) memcpy(m2, kb, 16); cs_obtain(sh[5], &lay, 1, &made, m2[0], m2[1], 0); }   // PEANUTS: the retyped variant's masks
+        else if (r.kind == VKA_PW_CS) { uint64_t m2[2] = {0, 0}; if (r.klen == 16) memcpy(m2, kb, 16); cs_obtain(sh[5], &lay, 1, &made, m2[0], m2[1], 0); }   // KIWI: the retyped variant's masks
         else {
             vka_gkey k; memset(&k, 0, sizeof k); memcpy(&k, kb, r.klen < sizeof k ? r.klen : sizeof k);
             if (k.vin_static != (uint32_t)!V.vin_dyn) {
-                // PEANUTS: count this as dropped on this driver, and keep the other vertex-input mode's key on disk.
+                // KIWI: count this as dropped on this driver, and keep the other vertex-input mode's key on disk.
                 bad = 1;
                 atomic_fetch_add(&g_pw_bad, 1);
             } else {
@@ -1289,14 +1289,14 @@ static void *pw_main(void *a) {
         setpriority(PRIO_PROCESS, 0, 10);   // back under the game's threads if a waiting frame path raised it (busy_wait)
     }
     if (atomic_fetch_add(&g_pw_done, 1) + 1 == (uint32_t)g_pw_threads) {
-        free(g_pw_offsets);   // PEANUTS: the last worker releases the shared list
+        free(g_pw_offsets);   // KIWI: the last worker releases the shared list
         VLOG("prewarm: %u of %u pipeline keys in %.1f s on %d threads: %u made, %u already there, %u dropped (shaders no longer in the library, another device's keys); the frame path waited %.0f ms for them; "
              "threads waited %.1f s for memory (DM_VK_PREWARM_MEM_MB), %.1f s for a long compile (DM_VK_PREWARM_HEAVY_MS)",
              (unsigned)(atomic_load(&g_pw_made) + atomic_load(&g_pw_had) + atomic_load(&g_pw_bad)), n, (now_ns() - g_pw_t0) / 1e9, g_pw_threads, (unsigned)atomic_load(&g_pw_made),
              (unsigned)atomic_load(&g_pw_had), (unsigned)atomic_load(&g_pw_bad), atomic_load(&g_pw_wait_ns) / 1e6, atomic_load(&g_pw_memwait_ns) / 1e9,
              atomic_load(&g_pw_heavywait_ns) / 1e9);
-    }   // PEANUTS: end of the last-worker block
-    atomic_fetch_sub(&g_pw_running, 1);   // PEANUTS
+    }   // KIWI: end of the last-worker block
+    atomic_fetch_sub(&g_pw_running, 1);   // KIWI
     return NULL;
 }
 // DM_VK_PREWARM threads (default 4, at most 4; 2 before 2026-11-08). With the pipeline cache warm a key costs a few milliseconds (297 in 0.1 s on 2 threads); with it
@@ -1304,7 +1304,7 @@ static void *pw_main(void *a) {
 // done before the game's first 3D frame only on more threads. They run at nice 10, under the game's threads, during logos and menus that leave most cores idle.
 // Default off on Qualcomm's driver before 512.800 (V.qcom_old): 512.676 appears to keep about 6 MB of memory outside the process per pipeline (MemAvailable against the pipeline count), and the list's ~650 pipelines
 // took MemAvailable from 3.3 GB to 1.1-1.6 GB in Fire Emblem Fortune's Weave's opening (321 made without it); the low-memory killer then ended the game in the class showcase. DM_VK_PREWARM=<n> wins
-// PEANUTS: prepare one ordered list, then either detach or join its workers.
+// KIWI: prepare one ordered list, then either detach or join its workers.
 static void pw_start(int wait) {
     int nt = VKA_ENV("DM_VK_PREWARM", V.qcom_old ? 0 : 4);
     uint32_t max = (uint32_t)VKA_ENV("DM_VK_PREWARM_MAX", 8192);
@@ -1328,11 +1328,11 @@ static void pw_start(int wait) {
     g_pw_limit = iout;
     heavy_load();   // the shaders earlier runs found long on this driver (build_end)
     g_pw_t0 = now_ns();
-    pthread_mutex_lock(&g_pw_start_mu);   // PEANUTS: publish worker count before workers enter the loop
+    pthread_mutex_lock(&g_pw_start_mu);   // KIWI: publish worker count before workers enter the loop
     for (int i = 0; i < nt; i++) {
         pthread_t *thread = &g_pw_workers[g_pw_threads];
-        atomic_fetch_add(&g_pw_running, 1);   // PEANUTS
-        if (pthread_create(thread, NULL, pw_main, NULL)) { atomic_fetch_sub(&g_pw_running, 1); continue; }   // PEANUTS: g_pw_running
+        atomic_fetch_add(&g_pw_running, 1);   // KIWI
+        if (pthread_create(thread, NULL, pw_main, NULL)) { atomic_fetch_sub(&g_pw_running, 1); continue; }   // KIWI: g_pw_running
         if (!wait) pthread_detach(*thread);
         g_pw_threads++;
     }
@@ -1363,20 +1363,20 @@ static void busy_wait(gval *g) {
 // shaders do. A skipped draw is missing from that frame only, except where the game keeps what it drew (a texture drawn once and reused): that stays wrong until redrawn.
 // Mesh pipelines are still made on the frame path; compute pipelines go through the same queue (DM_VK_CS_ASYNC, cs_obtain). Open: the cause, slow library compiles on
 // Turnip, is not addressed. cs: a compute job (sh[5] its shader, g an entry of g_cs; len, k unused)
-typedef struct as_job { struct as_job *next; gval *g; size_t len; vka_shader *sh[VKA_NSTAGE]; vka_layout lay; vka_gkey k; uint64_t t0, cost; int cs; uint64_t um, sm; } as_job;   // PEANUTS: um, sm (a retyped compute variant)
+typedef struct as_job { struct as_job *next; gval *g; size_t len; vka_shader *sh[VKA_NSTAGE]; vka_layout lay; vka_gkey k; uint64_t t0, cost; int cs; uint64_t um, sm; } as_job;   // KIWI: um, sm (a retyped compute variant)
 static as_job *g_as_head, **g_as_tail = &g_as_head; static pthread_mutex_t g_as_mu = PTHREAD_MUTEX_INITIALIZER; static pthread_cond_t g_as_cv = PTHREAD_COND_INITIALIZER;
 static _Atomic uint64_t g_as_queued, g_as_made, g_as_skips, g_as_ns, g_as_lat_max_ns; static _Atomic int g_as_depth, g_as_depth_max;
-// PEANUTS begin: whether the frame path's last lookup that returned no pipeline did so because a background thread is to make it, not because the driver refused it
+// KIWI begin: whether the frame path's last lookup that returned no pipeline did so because a background thread is to make it, not because the driver refused it
 // (the replay thread's only, as the lookups), and how many pipelines the asynchronous threads have queued or are making: vka_draw.c counts those skips apart from the
 // driver's refusals, and the "Preparing graphics" notice says while they happen (vka_warmnote.h)
 static int g_last_pending;
 int vka_pso_last_pending(void) { return g_last_pending; }
 // (a draw may also be skipped for a pipeline a prewarm thread is making, which is in no queue: counted as one while those threads run, so the notice stays up)
 int vka_pso_waiting(void) { int d = atomic_load_explicit(&g_as_depth, memory_order_relaxed); if (d < 0) d = 0; return d + (atomic_load_explicit(&g_pw_running, memory_order_relaxed) > 0 && !d ? 1 : 0); }
-// PEANUTS end
+// KIWI end
 // The queue's order (vka_psogate.h vkpg_take_oldest): the job of least predicted cost first, the oldest in its turn. DM_VK_PSO_ORDER=0 (restart): arrival order, as
 // before 2026-11-11. DM_VK_PSO_FAIR_MS (restart, 2000; 0 never): how long the oldest job waits before it takes turns with the cheapest. Under g_as_mu: g_as_credit (ns)
-// PEANUTS: the draws not skipped (vka_gfx_pipeline_now): their pipelines by reason (vka_psosync.h: a small target, memory written), the frame time they took, and
+// KIWI: the draws not skipped (vka_gfx_pipeline_now): their pipelines by reason (vka_psosync.h: a small target, memory written), the frame time they took, and
 // of them those the pipeline cache held after all and those a background thread was already making (waited for)
 static _Atomic uint64_t g_sp_n[2], g_sp_ns, g_sp_cached, g_sp_waited;
 static int g_as_order = -1; static uint64_t g_as_fair_ns; static int64_t g_as_credit; static uint64_t g_as_cheap_n, g_as_old_n, g_as_lat_cheap_ns, g_as_lat_old_ns;
@@ -1394,7 +1394,7 @@ static uint64_t as_cost(vka_shader *const sh[VKA_NSTAGE]) {
 }
 static void gfx_build(gval *g, size_t len, vka_shader *const sh[VKA_NSTAGE], const vka_layout *lay, const vka_gkey *k, int prewarm, int async, uint64_t t_make);
 static void cs_build(gval *g, vka_shader *cs, const vka_layout *lay, VkShaderModule csm, uint64_t umask, uint64_t smask, int prewarm, int async);
-// PEANUTS begin: the compute warm-up (2026-11-21, after nx2androidX's compute_warm, gfx_vk_exec_xfb.inc). A compute pipeline depends only on its shader and the layout
+// KIWI begin: the compute warm-up (2026-11-21, after nx2androidX's compute_warm, gfx_vk_exec_xfb.inc). A compute pipeline depends only on its shader and the layout
 // its bindings give, so every compute shader of the game's library can be made before the game first dispatches it, with no recording: a first dispatch otherwise made
 // it on the frame path (45-105 ms each on Adreno by nx2androidX's count, Ocarina of Time's 3d0d6d61bb9076e7 3.1 s) or, asynchronous, skipped the dispatch until it was
 // there. The prewarm list covers only what earlier runs met (none on a first run of a title without a seed). One thread at nice 10 through the gate after the frame's
@@ -1445,10 +1445,10 @@ static void *cw_main(void *a) {
     return NULL;
 }
 static void cw_start(void) {
-    if (!VKA_ENV("DM_VK_CS_WARM", V.driver_id == VK_DRIVER_ID_MESA_TURNIP)) return;   // PEANUTS: Turnip only by default (above)
+    if (!VKA_ENV("DM_VK_CS_WARM", V.driver_id == VK_DRIVER_ID_MESA_TURNIP)) return;   // KIWI: Turnip only by default (above)
     pthread_t th; if (!pthread_create(&th, NULL, cw_main, NULL)) pthread_detach(th);
 }
-// PEANUTS end
+// KIWI end
 static void *as_main(void *a) {
     (void)a; pthread_setname_np(pthread_self(), "vk-psoasync"); vka_fp_host("vk-psoasync");
     setpriority(PRIO_PROCESS, 0, 10);   // under the game's threads, as the prewarm threads: no frame waits for these builds (their draws are skipped instead)
@@ -1467,14 +1467,14 @@ static void *as_main(void *a) {
         pthread_mutex_unlock(&g_as_mu);
         const vka_shader *pre = j->cs ? j->sh[5] : j->sh[7] ? j->sh[7] : j->sh[0];
         uint64_t key = pre ? pre->key : (j->sh[1] ? j->sh[1]->key : 0);
-        pthread_mutex_lock(&g_mu); j->g->tid = gettid(); pthread_mutex_unlock(&g_mu);   // PEANUTS: a draw that is not skipped may wait for this build and raise this thread (vka_gfx_pipeline_now)
+        pthread_mutex_lock(&g_mu); j->g->tid = gettid(); pthread_mutex_unlock(&g_mu);   // KIWI: a draw that is not skipped may wait for this build and raise this thread (vka_gfx_pipeline_now)
         int tok = gate_enter(1, gate_heavy(pre, j->cs ? NULL : j->sh[1]));   // the frame's: its draws (dispatches) are skipped until it is made, so it goes before the speculative ones
         gate_hold(tok, key);
         uint64_t t0 = now_ns();
-        if (j->cs) cs_build(j->g, j->sh[5], &j->lay, j->um | j->sm ? vka_shader_img_module(j->sh[5], j->um, j->sm) : vka_shader_cs_module(j->sh[5]), j->um, j->sm, 0, 1);   // PEANUTS: a retyped variant's module
+        if (j->cs) cs_build(j->g, j->sh[5], &j->lay, j->um | j->sm ? vka_shader_img_module(j->sh[5], j->um, j->sm) : vka_shader_cs_module(j->sh[5]), j->um, j->sm, 0, 1);   // KIWI: a retyped variant's module
         else gfx_build(j->g, j->len, j->sh, &j->lay, &j->k, 0, 1, j->t0);
         gate_leave(tok);
-        setpriority(PRIO_PROCESS, 0, 10);   // PEANUTS: back under the game's threads if a waiting draw raised it (vka_gfx_pipeline_now)
+        setpriority(PRIO_PROCESS, 0, 10);   // KIWI: back under the game's threads if a waiting draw raised it (vka_gfx_pipeline_now)
         uint64_t t1 = now_ns(), lat = t1 - j->t0, cur = atomic_load(&g_as_lat_max_ns);
         while (lat > cur && !atomic_compare_exchange_weak(&g_as_lat_max_ns, &cur, lat)) {}
         pthread_mutex_lock(&g_as_mu);
@@ -1510,20 +1510,20 @@ void vka_pso_async_line(char *out, size_t n) {
     pthread_mutex_lock(&g_as_mu);
     uint64_t cn = g_as_cheap_n, on = g_as_old_n; double cl = cn ? g_as_lat_cheap_ns / 1e6 / cn : 0.0, ol = on ? g_as_lat_old_ns / 1e6 / on : 0.0;
     pthread_mutex_unlock(&g_as_mu);
-    // PEANUTS: "not skipped ..." (the pipelines of the draws that are not skipped: made on the frame path), after the skipped count so a cut line still has it
+    // KIWI: "not skipped ..." (the pipelines of the draws that are not skipped: made on the frame path), after the skipped count so a cut line still has it
     snprintf(out, n, "asynchronous: %llu queued, %llu made (%.0f ms in all, longest wait from the miss %.0f ms), deepest queue %d, draws skipped waiting %llu, "
-             "not skipped %llu pipelines of small targets + %llu writing memory (%.0f ms of frame time, %llu were in the cache, %llu waited for a background thread); "   // PEANUTS
+             "not skipped %llu pipelines of small targets + %llu writing memory (%.0f ms of frame time, %llu were in the cache, %llu waited for a background thread); "   // KIWI
              "background compiles %d at once (%s), their gate held the frame's %.0f ms and the speculative ones %.0f ms; "
              "taken %s: %llu cheapest (mean wait %.0f ms), %llu oldest (mean wait %.0f ms)",
              (unsigned long long)atomic_load(&g_as_queued), (unsigned long long)atomic_load(&g_as_made), atomic_load(&g_as_ns) / 1e6, atomic_load(&g_as_lat_max_ns) / 1e6,
              atomic_load(&g_as_depth_max), (unsigned long long)atomic_load(&g_as_skips),
-             (unsigned long long)atomic_load(&g_sp_n[0]), (unsigned long long)atomic_load(&g_sp_n[1]), atomic_load(&g_sp_ns) / 1e6,   // PEANUTS
+             (unsigned long long)atomic_load(&g_sp_n[0]), (unsigned long long)atomic_load(&g_sp_n[1]), atomic_load(&g_sp_ns) / 1e6,   // KIWI
              (unsigned long long)atomic_load(&g_sp_cached), (unsigned long long)atomic_load(&g_sp_waited), atomic_load(&g_gate_slots), pso_overlap() ? "ungated: DM_VK_PREWARM_OVERLAP=1" : "by memory, DM_VK_PSO_SLOTS",
              atomic_load(&g_gate_frame_wait_ns) / 1e6, atomic_load(&g_gate_spec_wait_ns) / 1e6,
              g_as_order ? "least cost first, the oldest in turn (DM_VK_PSO_ORDER)" : "in arrival order (DM_VK_PSO_ORDER=0)",
              (unsigned long long)cn, cl, (unsigned long long)on, ol);
 }
-// PEANUTS begin: programs prepared before they are drawn.
+// KIWI begin: programs prepared before they are drawn.
 // The build translates a game's shaders to SPIR-V, but the GPU driver still compiles each to its own code, and until 2026-11-20 it did so at a program's first draw:
 // with DM_VK_PSO_ASYNC that draw, and every draw of the program until its parts were compiled, was skipped (black or missing geometry on a first run), and without it
 // the frame waited (10-30 ms a shader part on the AYN Thor's Turnip, one compile at a time). The compile of a shader part needs the shaders and their layout, not the
@@ -1595,10 +1595,10 @@ static void *pl_slurp(const char *path, size_t *n) {
     return d;
 }
 // The shader parts' cache, the profile's pairs and the learned programs, read once (pc_open_once, after the pipelines' cache)
-// PEANUTS: the depth mode the profile's seed was made in (its graphics keys' gl_depth, the majority; 1 = near = 0), -1 without a seed or graphics keys. Before a first
+// KIWI: the depth mode the profile's seed was made in (its graphics keys' gl_depth, the majority; 1 = near = 0), -1 without a seed or graphics keys. Before a first
 // start's stamp says it, the parts were prepared for near = -w and pf_main threw them away when the game set near = 0: 18 of the 24 seeds of 2026-11-21 are near = 0
 // (Hyrule Warriors: Age of Calamity: 3,441 programs prepared in 77 s for nothing, 1,182 compiled again in the session), Super Mario Odyssey's is near = -w
-// PEANUTS: a list's graphics keys counted by gl_depth (zero: near = 0 keys, gl: near = -w keys); a list that does not read adds nothing
+// KIWI: a list's graphics keys counted by gl_depth (zero: near = 0 keys, gl: near = -w keys); a list that does not read adds nothing
 static void prep_depth_count(const uint8_t *d, size_t len, long *zero, long *gl) {
     size_t o = 0; uint32_t n = 0;
     if (!d || !len || vka_pw_header(d, len, &o, &n) != VKA_PW_OK) return;
@@ -1611,7 +1611,7 @@ static int prep_depth_seed(void) {
     prep_depth_count(dm_vk_prewarm_seed, dm_vk_prewarm_seed_len, &zero, &gl);
     return zero + gl ? zero > gl : -1;
 }
-// PEANUTS: the same from this device's prewarm list (<cache>.keys of earlier runs, or the file DM_VK_PREWARM_FILE names: a seed tried without a reinstall), -1 without
+// KIWI: the same from this device's prewarm list (<cache>.keys of earlier runs, or the file DM_VK_PREWARM_FILE names: a seed tried without a reinstall), -1 without
 // one or graphics keys. Yoshi's Crafted World run with its seed from DM_VK_PREWARM_FILE (2026-11-22) still prepared for near = -w: only the compiled-in seed was read
 static int prep_depth_list(void) {
     if (!g_pw_path[0]) return -1;
@@ -1662,11 +1662,11 @@ static void pcl_open(void) {
         else n = 0;   // another library's or another list's parts: started empty
     } else n = 0;
     free(st);
-    if (atomic_load(&g_prep_depth_zero) < 0) {   // PEANUTS: a first start: the depth mode from this device's prewarm list or the profile's seed, else near = 0, so the parts are not prepared for the other one
+    if (atomic_load(&g_prep_depth_zero) < 0) {   // KIWI: a first start: the depth mode from this device's prewarm list or the profile's seed, else near = 0, so the parts are not prepared for the other one
         int dz = VKA_ENV("DM_VK_PSO_PREP_DEPTH0", -1); const char *src = "DM_VK_PSO_PREP_DEPTH0";
-        if (dz < 0) { dz = prep_depth_list(); src = "this device's prewarm list"; }   // PEANUTS: then the list, the seed, else near = 0 (the mode of most games)
+        if (dz < 0) { dz = prep_depth_list(); src = "this device's prewarm list"; }   // KIWI: then the list, the seed, else near = 0 (the mode of most games)
         if (dz < 0) { dz = prep_depth_seed(); src = "the profile's seed"; }
-        if (dz < 0) { dz = 1; src = "no list or seed says: near = 0, the mode of 18 of the 24 seeded games; DM_VK_PSO_PREP_DEPTH0=0 for near = -w"; }   // PEANUTS
+        if (dz < 0) { dz = 1; src = "no list or seed says: near = 0, the mode of 18 of the 24 seeded games; DM_VK_PSO_PREP_DEPTH0=0 for near = -w"; }   // KIWI
         if (dz >= 0) { atomic_store(&g_prep_depth_zero, dz ? 1 : 0); VLOG("shader parts: prepared for depth mode %s (%s)", dz ? "near = 0" : "near = -w", src); }
     }
     if (pdone > g_npairs) pdone = (uint32_t)g_npairs;
@@ -1888,7 +1888,7 @@ void vka_pso_prefetch_line(char *out, size_t n) {
              atomic_load(&g_pf_ns) / 1e6, (unsigned long long)ln, atomic_load(&g_ln_ns) / 1e6, atomic_load(&g_ln_max_ns) / 1e6, (unsigned long long)un,
              (unsigned long long)fn, (unsigned long long)fm, atomic_load(&g_ft_ns) / 1e6, atomic_load(&g_ft_max_ns) / 1e6);
 }
-// PEANUTS end
+// KIWI end
 static gval *gfx_obtain(const gkey_full *fk, uint64_t h, size_t len, vka_shader *const sh[VKA_NSTAGE], const vka_layout *lay, const vka_gkey *k, int prewarm, int *made) {
     *made = 0;
     int async = !prewarm && !sh[7] && as_threads() > 0;
@@ -1907,8 +1907,8 @@ static gval *gfx_obtain(const gkey_full *fk, uint64_t h, size_t len, vka_shader 
         pc_open();
         VkPipeline p = VK_NULL_HANDLE;
         pstate *P = malloc(sizeof *P);
-        int filled = 0;   // PEANUTS: P is whole (pstate_fill counts its stages before it can fail: a count alone does not say so)
-        if (P && gpl_on() && (filled = pstate_fill(P, sh, lay, k))) {   // PEANUTS: filled   // (the cache-only try needs pipelineCreationCacheControl, which GPL is on with)
+        int filled = 0;   // KIWI: P is whole (pstate_fill counts its stages before it can fail: a count alone does not say so)
+        if (P && gpl_on() && (filled = pstate_fill(P, sh, lay, k))) {   // KIWI: filled   // (the cache-only try needs pipelineCreationCacheControl, which GPL is on with)
             P->ci.flags |= VK_PIPELINE_CREATE_FAIL_ON_PIPELINE_COMPILE_REQUIRED_BIT;
             uint64_t t0 = now_ns();
             VkResult r = vk.vkCreateGraphicsPipelines(V.dev, g_pc, 1, &P->ci, NULL, &p);
@@ -1919,7 +1919,7 @@ static gval *gfx_obtain(const gkey_full *fk, uint64_t h, size_t len, vka_shader 
             g_create_ns += dns;
             pthread_mutex_unlock(&g_mu);
         }
-        // PEANUTS begin: the cache lacks the whole pipeline, but its shader parts are in the maps or in the driver's cache (compiled by the preparing step, the
+        // KIWI begin: the cache lacks the whole pipeline, but its shader parts are in the maps or in the driver's cache (compiled by the preparing step, the
         // prefetch or an earlier run: prog_parts): fetched and linked here, on the frame path, without a compile (the link itself: 0.02 ms each in the AYN Thor's
         // Turnip logs), so the draw is neither skipped nor waited for; the optimized twin follows in the background as after any link. A part the driver would have
         // to compile: queued and skipped as before. DM_VK_PSO_LINK_NOW=0: always queued
@@ -1955,7 +1955,7 @@ static gval *gfx_obtain(const gkey_full *fk, uint64_t h, size_t len, vka_shader 
                 return g;
             }
         }
-        // PEANUTS end
+        // KIWI end
         free(P);
         if (p) {
             pw_note(VKA_PW_GFX, sh, k, (uint32_t)(len - offsetof(gkey_full, k))); pw_explain(VKA_PW_GFX, sh, k, (uint32_t)(len - offsetof(gkey_full, k)), (now_ns() - t_make) / 1e6, 0, " on the frame path");
@@ -1979,7 +1979,7 @@ static void gfx_build(gval *g, size_t len, vka_shader *const sh[VKA_NSTAGE], con
     if (P && pstate_fill(P, sh, lay, k)) {   // (else logged by vka_shader_module)
         if (async && gpl_on() && !P->mesh) {
             uint64_t t1 = now_ns();
-            p = gpl_link(P, k, GPL_LINK);   /* PEANUTS: GPL_LINK */
+            p = gpl_link(P, k, GPL_LINK);   /* KIWI: GPL_LINK */
             if (p) { linked = 1; pthread_mutex_lock(&g_mu); g_ngfx++; g_create_ms += (now_ns() - t1) / 1e6; pthread_mutex_unlock(&g_mu); }
         }
         else if (!prewarm && !async && gpl_on() && !P->mesh) {   // (a mesh pipeline is made whole: the libraries here are cut for vertex input pipelines)
@@ -1997,7 +1997,7 @@ static void gfx_build(gval *g, size_t len, vka_shader *const sh[VKA_NSTAGE], con
                 pthread_mutex_lock(&g_mu); g_probe_miss++; g_probe_miss_ns += dns; g_create_ns += dns; pthread_mutex_unlock(&g_mu);
                 p = VK_NULL_HANDLE;
                 uint64_t t1 = now_ns();
-                p = gpl_link(P, k, GPL_LINK);   /* PEANUTS: GPL_LINK */
+                p = gpl_link(P, k, GPL_LINK);   /* KIWI: GPL_LINK */
                 if (p) { uint64_t d2 = now_ns() - t1; linked = 1; pthread_mutex_lock(&g_mu); g_ngfx++; g_frame_made++; g_create_ms += d2 / 1e6; g_create_ns += d2; pthread_mutex_unlock(&g_mu); }
                 else { uint64_t d2 = now_ns() - t1; pthread_mutex_lock(&g_mu); g_create_ns += d2; pthread_mutex_unlock(&g_mu); }   // the refused parts' time is the frame's too
             }
@@ -2014,14 +2014,14 @@ static void gfx_build(gval *g, size_t len, vka_shader *const sh[VKA_NSTAGE], con
     if (linked) opt_queue(g, sh, lay, k);
 }
 static inline VkPipeline gval_use(gval *g) {
-    g_last_pending = 0;   // PEANUTS
+    g_last_pending = 0;   // KIWI
     if (!g) return VK_NULL_HANDLE;
     if (__atomic_load_n(&g->linked, __ATOMIC_ACQUIRE)) atomic_fetch_add_explicit(&g_hy_draws, 1, memory_order_relaxed);
     VkPipeline p = __atomic_load_n(&g->p, __ATOMIC_ACQUIRE);
-    if (!p && __atomic_load_n(&g->busy, __ATOMIC_ACQUIRE)) { atomic_fetch_add_explicit(&g_as_skips, 1, memory_order_relaxed); g_last_pending = 1; }   // PEANUTS: g_last_pending
+    if (!p && __atomic_load_n(&g->busy, __ATOMIC_ACQUIRE)) { atomic_fetch_add_explicit(&g_as_skips, 1, memory_order_relaxed); g_last_pending = 1; }   // KIWI: g_last_pending
     return p;
 }
-static gval *last_g;   // PEANUTS: at file scope (was vka_gfx_pipeline's own): vka_gfx_pipeline_now makes the entry of the last lookup
+static gval *last_g;   // KIWI: at file scope (was vka_gfx_pipeline's own): vka_gfx_pipeline_now makes the entry of the last lookup
 VkPipeline vka_gfx_pipeline(vka_shader *const sh[VKA_NSTAGE], const vka_layout *lay, const vka_gkey *k) {
     static gkey_full fk, last;
     // With vertex input dynamic state the key's static vertex input (va, vb: two thirds of it) stays zero: only what comes before it is hashed and compared with the
@@ -2035,7 +2035,7 @@ VkPipeline vka_gfx_pipeline(vka_shader *const sh[VKA_NSTAGE], const vka_layout *
     memcpy(&last, &fk, len); last_g = g;
     return gval_use(g);
 }
-// PEANUTS begin: the pipeline of the last vka_gfx_pipeline call made now, on the frame path, when that call returned none because a background thread is to make it
+// KIWI begin: the pipeline of the last vka_gfx_pipeline call made now, on the frame path, when that call returned none because a background thread is to make it
 // (DM_VK_PSO_ASYNC). For the draws whose result the game keeps (vka_psosync.h vkps_why, decided in vka_draw.c draw_body): skipped, they
 // left Super Mario Odyssey black for a whole first run. The queued job is taken back from the asynchronous threads and built here as with DM_VK_PSO_ASYNC=0 (the
 // cache-only try, then linked from parts); when a thread has it already, the frame waits for that build, the thread raised to the frame's priority meanwhile (as
@@ -2075,7 +2075,7 @@ VkPipeline vka_gfx_pipeline_now(vka_shader *const sh[VKA_NSTAGE], int why, long 
                    waited ? ", waited for a background thread that had it" : "", p ? "" : ", refused");
     return p;
 }
-// PEANUTS end
+// KIWI end
 
 // ---------- Compute pipelines ----------
 typedef struct { vka_shader *cs; VkPipelineLayout layout; uint64_t umask, smask; } ckey;   // masks: storage images retyped for integer textures (vka_shader_img_module)
@@ -2088,7 +2088,7 @@ static kmap g_cs = {.klen = sizeof(ckey)};
 // shot: a 3.7 s frame mid-play). A skipped dispatch leaves its outputs as they were: a particle effect is missing or frozen for those frames; work the game keeps (a
 // buffer written once, indirect arguments) stays stale until dispatched again. Pipelines with retyped images (umask / smask) stay on the frame path (the base pipeline in
 // their place would read the integer texels as floats)
-// PEANUTS begin: the compute lane (DM_VK_CS_LANE, default 2 threads). A dispatch's compute pipeline made in the background goes to a queue of its own, built by one thread outside the
+// KIWI begin: the compute lane (DM_VK_CS_LANE, default 2 threads). A dispatch's compute pipeline made in the background goes to a queue of its own, built by one thread outside the
 // graphics gate, so one compute and the gate's graphics builds run at once. On Turnip the gate has one slot (vka_psogate.h): Hyrule Warriors: Age of Calamity's
 // retyped compute variants (1.5-2.4 s each, asynchronous since DM_VK_CS_ASYNC_RETYPE) held it while the draws' graphics pipelines queued behind them, 88,553 draws skipped
 // and one waiting 16.6 s in its first battle without a seed (2026-11-21). The lane waits while the phone has less than DM_VK_CS_LANE_MEM_MB (default 1024) available
@@ -2124,16 +2124,16 @@ static void cq_start(void) {
     if (!g_cq_up) VRED("compute lane: no thread; compute pipelines go through the graphics queue"); else VLOG("compute lane: %d thread%s beside the graphics gate (DM_VK_CS_LANE)", g_cq_up, g_cq_up > 1 ? "s" : "");
 }
 static int cq_on(void) { static int on = -1; if (on < 0) on = VKA_ENV("DM_VK_CS_LANE", 2) != 0; return on; }
-// PEANUTS end
+// KIWI end
 static int cs_async_on(void) { return VKA_ENV("DM_VK_CS_ASYNC", 1) && as_threads() > 0; }
-static void cs_queue(gval *g, vka_shader *cs, const vka_layout *lay, VkShaderModule csm, uint64_t um, uint64_t sm) {   // PEANUTS: csm, um, sm
+static void cs_queue(gval *g, vka_shader *cs, const vka_layout *lay, VkShaderModule csm, uint64_t um, uint64_t sm) {   // KIWI: csm, um, sm
     as_job *j = calloc(1, sizeof *j);
     if (!j) { cs_build(g, cs, lay, csm, um, sm, 0, 0); return; }
     j->g = g; j->sh[5] = cs; j->lay = *lay; j->t0 = now_ns(); j->cost = as_cost(j->sh); j->cs = 1; j->um = um; j->sm = sm;
     int d = atomic_fetch_add(&g_as_depth, 1) + 1, m = atomic_load(&g_as_depth_max);
     while (d > m && !atomic_compare_exchange_weak(&g_as_depth_max, &m, d)) {}
     atomic_fetch_add(&g_as_queued, 1);
-    if (cq_on()) {   // PEANUTS: the compute lane
+    if (cq_on()) {   // KIWI: the compute lane
         static pthread_once_t once = PTHREAD_ONCE_INIT; pthread_once(&once, cq_start);
         if (g_cq_up) {
         pthread_mutex_lock(&g_cq_mu); j->next = g_cq_head; g_cq_head = j; pthread_cond_signal(&g_cq_cv); pthread_mutex_unlock(&g_cq_mu);
@@ -2149,7 +2149,7 @@ static VkPipeline cs_obtain(vka_shader *cs, const vka_layout *lay, int prewarm, 
     if (!csm) return VK_NULL_HANDLE;   // (a retyped module that cannot be made: the caller takes the base pipeline)
     ckey k; memset(&k, 0, sizeof k); k.cs = cs; k.layout = lay->layout; k.umask = umask; k.smask = smask;
     uint64_t h = fnv(&k, sizeof k, 1469598103934665603ull);
-    // PEANUTS: a retyped variant too (DM_VK_CS_ASYNC_RETYPE, default 1): its dispatch is skipped while it is made (vka_draw.c img_retype answers no pipeline then, not the
+    // KIWI: a retyped variant too (DM_VK_CS_ASYNC_RETYPE, default 1): its dispatch is skipped while it is made (vka_draw.c img_retype answers no pipeline then, not the
     // base one, which would read the integer texels as floats). Before 2026-11-21 it was made on the frame path: Hyrule Warriors: Age of Calamity's seven heavy compute
     // shaders froze its first battle for 1.3-2.4 s each on a first launch without a seed
     int async = frame && !prewarm && (!(umask | smask) || VKA_ENV("DM_VK_CS_ASYNC_RETYPE", 1)) && cs_async_on();
@@ -2185,7 +2185,7 @@ static VkPipeline cs_obtain(vka_shader *cs, const vka_layout *lay, int prewarm, 
             if (p) { g_ncs++; g_made++; g_frame_made++; g_probe_hit++; g_create_ms += dns / 1e6; g->p = p; g->busy = 0; pthread_cond_broadcast(&g_busy_cv); }
             else { g_probe_miss++; g_probe_miss_ns += dns; }
             pthread_mutex_unlock(&g_mu);
-            if (p) { vka_shader *s5[5] = {cs, NULL, NULL, NULL, NULL}; uint64_t m2[2] = {umask, smask}; if (umask | smask) pw_note(VKA_PW_CS, s5, m2, 16); else pw_note(VKA_PW_CS, s5, "", 0); return p; }   // PEANUTS: a retyped one's masks
+            if (p) { vka_shader *s5[5] = {cs, NULL, NULL, NULL, NULL}; uint64_t m2[2] = {umask, smask}; if (umask | smask) pw_note(VKA_PW_CS, s5, m2, 16); else pw_note(VKA_PW_CS, s5, "", 0); return p; }   // KIWI: a retyped one's masks
         }
         cs_queue(g, cs, lay, csm, umask, smask);
         atomic_fetch_add_explicit(&g_as_skips, 1, memory_order_relaxed);
@@ -2224,19 +2224,19 @@ static void cs_build(gval *g, vka_shader *cs, const vka_layout *lay, VkShaderMod
     { double ms_ = (now_ns() - t0) / 1e6; static _Atomic int n; if (!r && ms_ > 50 && atomic_fetch_add(&n, 1) < 200) VLOG("compute pipeline %016llx took %.0f ms%s", (unsigned long long)cs->key, ms_, prewarm ? " (prewarm)" : async ? " in the background (asynchronous)" : "");
       // (noted before the save, so the save that follows a long one has its key: until 2026-11-15 the save came first and the key waited for the next one)
       if (!prewarm && !over && !(umask | smask)) { vka_shader *s5[5] = {cs, NULL, NULL, NULL, NULL}; pw_note(VKA_PW_CS, s5, "", 0); }   // (one not made stays out of the prewarm list)
-      // PEANUTS: a retyped variant (integer images bound) as a record with its masks: before, it never reached the list, so no seed made it ahead and every first start built it
+      // KIWI: a retyped variant (integer images bound) as a record with its masks: before, it never reached the list, so no seed made it ahead and every first start built it
       // on the frame path (Hyrule Warriors: Age of Calamity: 7 programs, 0.8-3.9 s each, ~15 s of frozen frames at its first battle) while the prewarm made the base variant no draw used
       if (!prewarm && !over && (umask | smask) && !r) { vka_shader *s5[5] = {cs, NULL, NULL, NULL, NULL}; uint64_t m2[2] = {umask, smask}; pw_note(VKA_PW_CS, s5, m2, 16); }
       if (!prewarm && !r && ms_ > 1000) vka_pso_save(2); }
 }
 VkPipeline vka_cs_pipeline(vka_shader *cs, const vka_layout *lay) { int made; return cs_obtain(cs, lay, 0, &made, 0, 0, 0); }
-VkPipeline vka_cs_pipeline_frame(vka_shader *cs, const vka_layout *lay) {   // PEANUTS: g_last_pending, from the skips cs_obtain counted for this dispatch
+VkPipeline vka_cs_pipeline_frame(vka_shader *cs, const vka_layout *lay) {   // KIWI: g_last_pending, from the skips cs_obtain counted for this dispatch
     int made; uint64_t s0 = atomic_load_explicit(&g_as_skips, memory_order_relaxed);
     VkPipeline p = cs_obtain(cs, lay, 0, &made, 0, 0, 1);
     g_last_pending = !p && atomic_load_explicit(&g_as_skips, memory_order_relaxed) != s0;
     return p;
 }
-VkPipeline vka_cs_pipeline_img(vka_shader *cs, const vka_layout *lay, uint64_t umask, uint64_t smask) {   // PEANUTS: a dispatch's (frame 1): g_last_pending as vka_cs_pipeline_frame
+VkPipeline vka_cs_pipeline_img(vka_shader *cs, const vka_layout *lay, uint64_t umask, uint64_t smask) {   // KIWI: a dispatch's (frame 1): g_last_pending as vka_cs_pipeline_frame
     int made; uint64_t s0 = atomic_load_explicit(&g_as_skips, memory_order_relaxed);
     VkPipeline p = cs_obtain(cs, lay, 0, &made, umask, smask, 1);
     g_last_pending = !p && atomic_load_explicit(&g_as_skips, memory_order_relaxed) != s0;

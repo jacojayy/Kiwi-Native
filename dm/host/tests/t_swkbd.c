@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 Result swkbd_show(void *out, const void *arg, int (*input)(const char *, const char *, const char *, const char *, int, char *, int));
-typedef struct { int work, tc_flag, tc_cb, tc_cb_ud, tc_ud; } swkbd_layout_t;   // as hle_swkbd.c (PEANUTS: issue 292)
+typedef struct { int work, tc_flag, tc_cb, tc_cb_ud, tc_ud; } swkbd_layout_t;   // as hle_swkbd.c (KIWI: issue 292)
 extern swkbd_layout_t g_swkbd_layout;
 void swkbd_layout_read(const uint32_t *init_utf8, const uint32_t *tc_cb, const uint32_t *tc_cb_ud);
 void *guest_sym(const char *name) { (void)name; return NULL; }   // loader.c; the HLE entry asks it for the SDK's setters, which the cases below hand to swkbd_layout_read directly
@@ -14,7 +14,7 @@ static int fails, checks;
 #define CHECK(c, ...) do { checks++; if (!(c)) { fails++; printf("  ✗ "); printf(__VA_ARGS__); printf("\n"); } } while (0)
 
 // Input stub: record the arguments received and return as configured
-// PEANUTS: g_reply2, g_sub (the text check)
+// KIWI: g_reply2, g_sub (the text check)
 static const char *g_reply, *g_reply2; static int g_ret, g_called; static char g_title[256], g_init[256], g_sub[256]; static int g_max;
 static int stub(const char *t, const char *s, const char *g, const char *i, int m, char *o, int c) {
     (void)g; g_called++; snprintf(g_title, sizeof g_title, "%s", t); snprintf(g_init, sizeof g_init, "%s", i); snprintf(g_sub, sizeof g_sub, "%s", s); g_max = m;
@@ -22,7 +22,7 @@ static int stub(const char *t, const char *s, const char *g, const char *i, int 
     return g_ret;
 }
 
-// PEANUTS begin: the text check and the layout (issue 292)
+// KIWI begin: the text check and the layout (issue 292)
 // Text check callbacks (the game's, which swkbd_show calls): refuse "Bad" with a UTF-16 message, accept anything else; record what they saw
 static int g_tc_calls; static uint64_t g_tc_size; static char g_tc_text[64]; static void *g_tc_user;
 static uint32_t tc_check(void *dialog, uint64_t *len, void *text) {
@@ -42,7 +42,7 @@ static uint32_t a_strb(int t, int n, int off) { return 0x39000000u | (uint32_t)o
 static uint32_t a_mov0(int d) { return 0xAA0003E0u | (uint32_t)d; }
 #define A_RET 0xD65F03C0u
 #define A_NOP 0xD503201Fu
-// PEANUTS end
+// KIWI end
 
 static uint8_t arg[0x600], work[0x1000], sbuf[0x7d4];
 static struct { uint8_t *p; uint64_t n; } str = {sbuf, sizeof sbuf};
@@ -54,7 +54,7 @@ static void mkarg(int utf8, int maxlen, const uint16_t *init, int ilen) {
     memcpy(arg + 0x3ac, &maxlen, 4); arg[0x3bd] = (uint8_t)utf8;
     int off = 0x14; memcpy(arg + 0x3c0, &off, 4); memcpy(arg + 0x3c4, &ilen, 4);   // the way SetInitialTextUtf8 writes it
     memcpy(work + off, init, (size_t)ilen * 2);
-    uint8_t *w = work; memcpy(arg + g_swkbd_layout.work, &w, 8);   // PEANUTS: the layout's offset
+    uint8_t *w = work; memcpy(arg + g_swkbd_layout.work, &w, 8);   // KIWI: the layout's offset
     g_called = 0; g_reply2 = NULL; g_tc_calls = 0; g_tc_user = NULL;
 }
 static int bytes_eq(const uint8_t *want, size_t n) {   // the first n bytes equal the expectation, and everything after to the end of the buffer is 0
@@ -121,7 +121,7 @@ int main(void) {
     CHECK(r == 0 && bytes_eq(w7, sizeof w7) && g_called == 0, "DM_KBD path differs (input box called %d times)", g_called);
     unsetenv("DM_KBD");
 
-    // PEANUTS begin: cases 8 to 14 (issue 292)
+    // KIWI begin: cases 8 to 14 (issue 292)
     printf("8 layout read off the setters' shapes (SDK 18.3.5: work buffer +0x518, flag +0x3d0, callbacks +0x3d8 / +0x4c8, user data +0x4d0)\n");
     const uint32_t init_set[] = {A_NOP, a_mov0(20), A_NOP, 0xB983C288u /* ldrsw x8, [x20, #0x3c0]: not a 64-bit ldr */, a_ldr(9, 20, 0x518), A_RET};
     const uint32_t cb_set[] = {A_NOP, 0x52800028u /* mov w8, #1 */, a_str(1, 0, 0x3d8), a_strb(8, 0, 0x3d0), A_RET};
@@ -171,7 +171,7 @@ int main(void) {
     printf("14 an SDK without the setters keeps the first layout and no text check\n");
     swkbd_layout_read(NULL, NULL, NULL);
     CHECK(g_swkbd_layout.work == 0x4d0 && g_swkbd_layout.tc_flag == -1, "defaults: work %#x flag %d", g_swkbd_layout.work, g_swkbd_layout.tc_flag);
-    // PEANUTS end
+    // KIWI end
 
     printf("%s: %d/%d\n", fails ? "FAILED" : "all passed", checks - fails, checks);
     return fails != 0;

@@ -9,7 +9,7 @@ The global profile's keys:
 | Setting | Where | Why |
 |---|---|---|
 | Memory, `sys_resource`, `pad_layout`, `tex_flush_upload`, `tex_dirty_upload`, `present_interval display`, `gpu_timestamps segment`, `fps_target 60` | [`game.tsv`](game.tsv) | as the global profile ([its note](../010056B015FE8000/README.md#what-it-needs)) |
-| `place_join_mb 512` | `game.tsv` (Android) | as the global profile ([its note](../010056B015FE8000/README.md#what-it-needs); GitHub issues #394, #651): the same game, set for both releases rather than raising the 256 MiB default for every game <!-- PEANUTS --> |
+| `place_join_mb 512` | `game.tsv` (Android) | as the global profile ([its note](../010056B015FE8000/README.md#what-it-needs); GitHub issues #394, #651): the same game, set for both releases rather than raising the 256 MiB default for every game <!-- KIWI --> |
 | Six dynamic-resolution cuts | [`patches.py`](patches.py) | the global build's 60 fps thresholds and preset-following lower bounds. The function is the global build's, `0x13c0` further on: each original sequence matches once in this `main`, at the global address + `0x13c0` |
 | Two frame-interval defaults (`0x591198`, `0x9bc128`) | `patches.py` | 60 fps as the game's own default, as the global build's. Single instructions, matched by what the code does: the first loads the mode right before the mode setter (`0x9c0590`), the second is the interval the present-interval function stores at the device's `+0x9c160` |
 | Frame rate (`DM_FPS_TARGET`, 30 or 60) | `hle_fpslock.c` `k_nier_dr` | the host sets the frame-interval mode at the display object's `+0x504` and the device's present interval, as for the global build. The display object is `main+0x192d600`, the target of the relocation of the slot the mode setter reads (`main+0x12c2d18`) |
@@ -29,7 +29,7 @@ The global profile's keys:
 
 ## Android (Kiwi Native)
 
-PEANUTS: packed on Linux from 1.0.3 with its DLC (`0100B8E016F77001`): all 1,225 shaders and 1,476 modules valid, a 12.3 MB library; the targeted split reads 1 of 661 RomFS files (1.1 s, against 197 s for the full scan, with the same tables and package hashes). Played on an AYN Thor (Adreno 740) with Turnip v26.2.0 R5, docked mode, 2026-11-20:
+KIWI: packed on Linux from 1.0.3 with its DLC (`0100B8E016F77001`): all 1,225 shaders and 1,476 modules valid, a 12.3 MB library; the targeted split reads 1 of 661 RomFS files (1.1 s, against 197 s for the full scan, with the same tables and package hashes). Played on an AYN Thor (Adreno 740) with Turnip v26.2.0 R5, docked mode, 2026-11-20:
 
 - Title, menus, the Downloadable Content page (its items listed from the mounted DLC; their use in play is not checked), save creation, name entry through the Android text dialog, Easy with auto-chips, the opening formation cinematic and the ocean flight with combat: 60 fps, frame time 16.7 ms, GPU 7 to 14 ms, about 1.9 GB. Left stick movement and auto-fire respond. Wwise through AAudio, 48 kHz: no underruns in 56,000 callbacks. A relaunch loads the save. No crash in about 15 minutes over several runs.
 - The system driver (Qualcomm) draws the same scenes right but runs the formation cinematic at 36 to 39 fps (25.6 ms of GPU work a frame, against 13.7 on Turnip).
@@ -39,7 +39,7 @@ PEANUTS: packed on Linux from 1.0.3 with its DLC (`0100B8E016F77001`): all 1,225
 
 ## Found on this game
 
-- [A range given to the GPU across two placed parts of a pool](../../../docs/reference/memory.md#a-range-given-to-the-gpu-across-two-placed-parts-of-a-pool-android): the profile's `place_join_mb` (Android), as the global release. <!-- PEANUTS: GitHub issues #394, #651 -->
+- [A range given to the GPU across two placed parts of a pool](../../../docs/reference/memory.md#a-range-given-to-the-gpu-across-two-placed-parts-of-a-pool-android): the profile's `place_join_mb` (Android), as the global release. <!-- KIWI: GitHub issues #394, #651 -->
 - [Passthrough geometry shaders drawn by the vertex shader](../../../docs/reference/shaders.md#passthrough-geometry-shaders-drawn-by-the-vertex-shader): the lean kernels, their hoisting, and the mesh draws (Resistance Camp on an M1: 21.2 → about 17 ms a frame).
 - [Controller haptic engines without advanced players](../../../docs/reference/services.md#controller-haptic-engines-without-advanced-players): a GameSir Super Nova on the iPhone.
 

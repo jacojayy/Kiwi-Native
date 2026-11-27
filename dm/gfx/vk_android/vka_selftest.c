@@ -61,7 +61,7 @@ static uint8_t *lib_make(size_t *size) {
     return L;
 }
 
-// PEANUTS(upstream-candidate): a resident 16x16 mip copied into a new 32x32 texture, followed by a CPU fill of level 0 with no flush. Read both back through Vulkan.
+// KIWI(upstream-candidate): a resident 16x16 mip copied into a new 32x32 texture, followed by a CPU fill of level 0 with no flush. Read both back through Vulkan.
 static int streamed_mip_test(uint8_t *cmd, uint8_t *rb) {
     // A real NVN pool: it has a liveness generation and its writes go through the same dirty-page tracking as the game's.
     unsigned long bytes; const struct { const char *name; void *fn; } *api = plat_table("swnvn", &bytes);
@@ -126,7 +126,7 @@ int nxhost_vk_selftest(ANativeWindow *w, int frames) {
     uint8_t *rb = base + (32u << 20); volatile uint32_t *ev = (volatile uint32_t *)(base + (48u << 20));
 
     // The draw: a 64x64 linear RGBA8 checkerboard (8-texel cells, opaque white where the cell's x + y is even, transparent black elsewhere: the alpha test, GREATER than 0.5, drops those) registered as texture ID 300 with sampler ID 5
-    // (linear, repeat), a triangle of three vertices (position xy, uv: 16 bytes each), the vertex stage's uniform buffer (rotation cos / sin, scale) in four slots   // PEANUTS: linear, for the edge check below
+    // (linear, repeat), a triangle of three vertices (position xy, uv: 16 bytes each), the vertex stage's uniform buffer (rotation cos / sin, scale) in four slots   // KIWI: linear, for the edge check below
     uint8_t *texmem = base + (36u << 20), *vbuf = base + (40u << 20), *ubo = base + (41u << 20); uint32_t *sbuf = (uint32_t *)(base + (42u << 20));
     for (int y = 0; y < 64; y++) for (int x = 0; x < 64; x++) { uint32_t v = ((x >> 3) + (y >> 3)) & 1 ? 0x00000000u : 0xffffffffu; memcpy(texmem + 4 * (64 * y + x), &v, 4); }
     tex_t ct; memset(&ct, 0, sizeof ct);
@@ -134,9 +134,9 @@ int nxhost_vk_selftest(ANativeWindow *w, int frames) {
     ct.d.width = 64; ct.d.height = 64; ct.d.depth = 1; ct.d.levels = 1;
     nvn_tex_layout(&ct.d, &ct.L); ct.mem = texmem; ct.serial = nvn_new_serial(); mtl_tex_init(&ct);
     mtl_tex_cpu_written(&ct); mtl_reg_tex(300, &ct, NULL);
-    samp_par sp; memset(&sp, 0, sizeof sp); sp.minf = NVN_MIN_FILTER_LINEAR; sp.magf = NVN_MAG_FILTER_LINEAR; sp.ws = sp.wt = sp.wr = NVN_WRAP_MODE_REPEAT; sp.lod_max = 1000; sp.aniso = 1;   // PEANUTS: sampler chosen by the view format
+    samp_par sp; memset(&sp, 0, sizeof sp); sp.minf = NVN_MIN_FILTER_LINEAR; sp.magf = NVN_MAG_FILTER_LINEAR; sp.ws = sp.wt = sp.wr = NVN_WRAP_MODE_REPEAT; sp.lod_max = 1000; sp.aniso = 1;   // KIWI: sampler chosen by the view format
     mtl_reg_samp(5, &sp);
-    // PEANUTS: a direct binding needs this sampler before any submission has made the bindless tables.
+    // KIWI: a direct binding needs this sampler before any submission has made the bindless tables.
     if (!vka_samp_id_rec(5, VK_FORMAT_R8G8B8A8_UNORM)) { VRED("selftest: no linear sampler for a direct texture binding"); bad++; }
     // uv = position / 2 + 0.8125: the triangle's centre (the origin, the window's centre) samples texel (52, 52), the middle of an even cell
     static const float tri[3][2] = {{-0.7f, -0.6f}, {0.7f, -0.6f}, {0.0f, 0.8f}};
@@ -172,7 +172,7 @@ int nxhost_vk_selftest(ANativeWindow *w, int frames) {
         p_copy_b2t r2 = r1; r2.src = (uintptr_t)rb + 16; r2.r.xoffset = 100; r2.r.yoffset = 100;
         p_copy_b2t r3 = r1; r3.src = (uintptr_t)rb + 32; r3.r.xoffset = 640; r3.r.yoffset = 360;
         p_copy_b2t r4 = r1; r4.src = (uintptr_t)rb + 48; r4.r.xoffset = 685; r4.r.yoffset = 360;   // one cell to the right of the centre: a dropped (transparent) cell at frame 0
-        p_copy_b2t edge = r3; edge.src = (uintptr_t)rb + 64; edge.r.xoffset = 661;   // u*64 = 52 + 21.5*32/180: between white texel 55 and transparent texel 56   // PEANUTS: sampler chosen by the view format
+        p_copy_b2t edge = r3; edge.src = (uintptr_t)rb + 64; edge.r.xoffset = 661;   // u*64 = 52 + 21.5*32/180: between white texel 55 and transparent texel 56   // KIWI: sampler chosen by the view format
         uint8_t se[16]; uint64_t ea = (uintptr_t)ev; uint32_t m = NVN_EVENT_SIGNAL_MODE_WRITE, val = (uint32_t)f + 1; memcpy(se, &ea, 8); memcpy(se + 8, &m, 4); memcpy(se + 12, &val, 4);
         // The draw's state, as hle_nvn.c records it
         p_bind_program bp = {&gp, 0x3}, bc = {&cp, 0x20};
@@ -196,7 +196,7 @@ int nxhost_vk_selftest(ANativeWindow *w, int frames) {
         if (f == 0) {
             p = rec(p, OP_BIND_PROGRAM, &bc, sizeof bc); p = rec(p, OP_BIND_SSBO, &sb, sizeof sb); p = rec(p, OP_DISPATCH, &dp, sizeof dp);
             p = rec(p, OP_COPY_T2B, &r1, sizeof r1); p = rec(p, OP_COPY_T2B, &r2, sizeof r2); p = rec(p, OP_COPY_T2B, &r3, sizeof r3); p = rec(p, OP_COPY_T2B, &r4, sizeof r4);
-            p = rec(p, OP_COPY_T2B, &edge, sizeof edge);   // PEANUTS: sampler chosen by the view format
+            p = rec(p, OP_COPY_T2B, &edge, sizeof edge);   // KIWI: sampler chosen by the view format
         }
         p = rec(p, OP_SIGNAL_EVENT, se, sizeof se); p = rec(p, OP_END, NULL, 0);
         mtl_queue_activate(q);
@@ -214,7 +214,7 @@ int nxhost_vk_selftest(ANativeWindow *w, int frames) {
             VLOG("selftest: dispatch: %llu run; storage words 5 and 255: %u, %u (want 4005, 4255)", (unsigned long long)nc, sbuf[5], sbuf[255]);
             bad += !ok || a_ != want || b_ != white || *ev != 1;
             bad += nd != 1 || t_ != magenta || h_ != want;
-            uint32_t e; memcpy(&e, rb + 64, 4); int red = (int)(e & 255);   // PEANUTS: sampler chosen by the view format
+            uint32_t e; memcpy(&e, rb + 64, 4); int red = (int)(e & 255);   // KIWI: sampler chosen by the view format
             VLOG("selftest: linear checker edge (661,360) red %d (want 173 +/- 2, nearest gives 255)", red);
             bad += red < 171 || red > 175;
             bad += nc != 1 || sbuf[5] != 4005 || sbuf[255] != 4255;
@@ -224,7 +224,7 @@ int nxhost_vk_selftest(ANativeWindow *w, int frames) {
         last = tk;
     }
     mtl_present_flush(); mtl_finish();
-    bad += streamed_mip_test(cmd, rb + 64);   // PEANUTS(upstream-candidate)
+    bad += streamed_mip_test(cmd, rb + 64);   // KIWI(upstream-candidate)
     // DM_VK_SHLIB=<a game's dmsh_vk.lib>: every shader of it through this device's compiler (any game's library: the chain must match, the game is not checked)
     const char *gl = getenv("DM_VK_SHLIB");
     if (gl && *gl) {

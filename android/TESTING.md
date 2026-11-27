@@ -17,7 +17,7 @@ android/ondevice/build.sh $W/packer                                             
 cd android/app && ./gradlew -PnxPackStage=$W/packer/stage apk && cd ../..      # → android/app/out/nxnative-android.apk
 ```
 
-Without a pack from the Mac, the app prepares one from the dump on the phone: copy only the dump (step 3 without `android-pack`), then in step 5 **Add game** finds no pack and offers **Prepare** (about 30-45 minutes in the background, ONDEVICE.md). Kill it (`adb shell am force-stop dev.nxnative.android`) or restart the phone halfway: **Resume** on the main screen goes on from the shader it had reached.
+Without a pack from the Mac, the app prepares one from the dump on the phone: copy only the dump (step 3 without `android-pack`), then in step 5 **Add game** finds no pack and offers **Prepare** (about 30-45 minutes in the background, ONDEVICE.md). Kill it (`adb shell am force-stop hernandez.kiwinative`) or restart the phone halfway: **Resume** on the main screen goes on from the shader it had reached.
 
 ## 2. Install the APK
 
@@ -115,7 +115,7 @@ A crash prints `[dm] CRASH sig=… pc=… lr=…` with module offsets (`main+0x�
 
 ## Saves
 
-A game's save is in the app's own storage (`AppStorage`, as Eden keeps its user folder): `/sdcard/Android/data/<app>/files/saves/<title ID>/`, its device save `saves/<title ID>_device/` beside it. Each app (test `dev.nxnative.android`, play `hernandez.kiwinative.play`, release `hernandez.kiwinative.live`) has its own. A save folder picked in the game's ⋯ › Folders is used as it is instead. Android deletes the app's storage with the app; the manifest's `hasFragileUserData` makes uninstalling ask whether to keep it. **Back up saves** writes to shared storage (`/sdcard/Switch2/save-backups/<title ID>/`, below), which an uninstall never touches.
+A game's save is in the app's own storage (`AppStorage`, as Eden keeps its user folder): `/sdcard/Android/data/<app>/files/saves/<title ID>/`, its device save `saves/<title ID>_device/` beside it. Each app (test `hernandez.kiwinative`, play `hernandez.kiwinative.play`, release `hernandez.kiwinative.live`) has its own. A save folder picked in the game's ⋯ › Folders is used as it is instead. Android deletes the app's storage with the app; the manifest's `hasFragileUserData` makes uninstalling ask whether to keep it. **Back up saves** writes to shared storage (`/sdcard/Switch2/save-backups/<title ID>/`, below), which an uninstall never touches.
 
 Up to 0.1.0 the default was on shared storage, beside the game (the folder holding the game folder or the `.nup`, `/sdcard/Switch2`):
 
@@ -171,7 +171,7 @@ The `chmod` is needed: a file `adb shell` writes there belongs to the shell user
 
 `DM_SVC=1` logs the memory SVCs, `DM_THR=1` the thread SVCs, `DM_FS=1` file opens, `DM_NVN_LOG=1` NVN objects, `DM_WATCH_STALL=<s>` dumps every thread when the game stops making progress for that long ([03-bringup.md](../docs/agents/03-bringup.md)).
 
-**A test crash** (test app only): `DM_TEST_CRASH=java` throws an exception on the game's main thread 10 s after the start, `DM_TEST_CRASH=native` faults on a thread of its own; the game's screen goes and the launcher shows "The game stopped unexpectedly" with the cause and Share log ([README, When the game stops unexpectedly](README.md#the-launcher)). The log has `[RED] crash:` lines (java) or `CRASH sig=11` (native); `adb shell run-as dev.nxnative.android cat files/last-exit.txt` shows the record. Remove the line afterwards.
+**A test crash** (test app only): `DM_TEST_CRASH=java` throws an exception on the game's main thread 10 s after the start, `DM_TEST_CRASH=native` faults on a thread of its own; the game's screen goes and the launcher shows "The game stopped unexpectedly" with the cause and Share log ([README, When the game stops unexpectedly](README.md#the-launcher)). The log has `[RED] crash:` lines (java) or `CRASH sig=11` (native); `adb shell run-as hernandez.kiwinative cat files/last-exit.txt` shows the record. Remove the line afterwards.
 
 ## Frame capture and replay on the phone
 

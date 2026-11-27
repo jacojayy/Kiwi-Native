@@ -1,4 +1,4 @@
-# Game profile of The Hundred Line -Last Defense Academy- (Switch, update 1.2.1 = v589824, no add-on content). PEANUTS: a Kiwi Native profile (Kiwi Native has none for this title).
+# Game profile of The Hundred Line -Last Defense Academy- (Switch, update 1.2.1 = v589824, no add-on content). KIWI: a Kiwi Native profile (Kiwi Native has none for this title).
 # Format: see dm/games/README.md
 # Media.Vision's engine (MVGL) on NVN, SDK 18.3.2, CRIWARE sound and movies; the game files are in MVGL archives (*.nx64.mvgl, the 64-bit layout with 24-byte data entries:
 # mvgl.py data_entry) and seven CRI CPK archives. The shaders are the archives' 'shad' entries, NXVS / NXFS containers (shader_split.py mvgl_jobs), and 179 more in main.
@@ -39,7 +39,7 @@ shader_groups	/=romfs
 shader_note	The Hundred Line -Last Defense Academy- shaders
 
 # ---- Frame rate ----
-# PEANUTS: the game holds itself to 30 fps with its own limiter (present interval 1): main+0x6a8310 sets the frame rate (main+0xc97ce4, i32, 60 in the image, 30 set at start by
+# KIWI: the game holds itself to 30 fps with its own limiter (present interval 1): main+0x6a8310 sets the frame rate (main+0xc97ce4, i32, 60 in the image, 30 set at start by
 # main+0x4533ec) and main+0x6c7ef0 the frame time in us (main+0xc97d18, round(1000000 / fps)); the main loop (main+0x6c7c50) sleeps the frame time less the frame's elapsed time.
 # The game has a 30 / 60 'FPS' debug item (main+0x3e0c74) and per-frame code that checks for 60 (main+0x41549c, +0x487354); its game clock steps by the measured time, at most 1/30 s
 # (main+0x506e7c). Reviewed rows of our own (no FPSLocker Warehouse config for this build), main 1.2.1 only: the host's frame limit picks the rate, 30 by default (what the game

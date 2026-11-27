@@ -1,4 +1,4 @@
-# PEANUTS: nxnative ARH2 and mixed HCPS regressions, aa9e0ff71d93.
+# KIWI: nxnative ARH2 and mixed HCPS regressions, aa9e0ff71d93.
 """Monolith archive boundaries and multi-stage programs, without game data."""
 from pathlib import Path
 import struct
@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 import shader_split as split
 
 
-# PEANUTS: synthesize both Maxwell and NVN2 program layouts.
+# KIWI: synthesize both Maxwell and NVN2 program layouts.
 def program(stages, extra=0, nvn2=False):
     controls, codes = [], []
     for stage in stages:
@@ -45,7 +45,7 @@ def program(stages, extra=0, nvn2=False):
 
 
 class MonolithTests(unittest.TestCase):
-    # PEANUTS: an asset can mix the two program control layouts.
+    # KIWI: an asset can mix the two program control layouts.
     def test_asset_with_maxwell_and_nvn2_programs(self):
         maxwell, mc, mk = program(['vs', 'ps'], extra=-0x30)
         nvn2, nc, nk = program(['vs', 'ps'], nvn2=True)
@@ -153,7 +153,7 @@ class MonolithTests(unittest.TestCase):
         data = header + enc(strings) + enc(trie) + struct.pack('<Q4I', 32, 100, 200, 2, 0)
         self.assertEqual(split.arh_entries(data), [('a.bin', 32, 148)])
 
-    # PEANUTS: ARH2 index alignment, empty entries and bounded decoding.
+    # KIWI: ARH2 index alignment, empty entries and bounded decoding.
     def test_arh2_reads_aligned_bounded_members(self):
         shader, controls, codes = program(['vs', 'ps'])
         packed = zlib.compress(shader)

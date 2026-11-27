@@ -3,18 +3,18 @@
 # All are linked for 16 KB pages (Android 15+ devices may use them; NDK 28 does this by default, the flag keeps it explicit)
 cmake_minimum_required(VERSION 3.22)
 project(nxlaunch C)
-if(NOT NX_GAMES AND NOT NX_GENERIC_HOST)   # PEANUTS: or the generic host (-PnxGenericHost=true)
+if(NOT NX_GAMES AND NOT NX_GENERIC_HOST)   # KIWI: or the generic host (-PnxGenericHost=true)
   message(FATAL_ERROR "NX_GAMES is not set: -DNX_GAMES=<title ID>,… (build.gradle passes nxGames), or -DNX_GENERIC_HOST=ON (-PnxGenericHost=true)")
 endif()
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384")
-# PEANUTS: source paths in the libraries (__FILE__ in log lines, debug info) relative to the repository, not the build machine's folders
+# KIWI: source paths in the libraries (__FILE__ in log lines, debug info) relative to the repository, not the build machine's folders
 get_filename_component(NX_REPO_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../../../.. ABSOLUTE)
-add_compile_options(-ffile-prefix-map=${NX_REPO_ROOT}/=)   # PEANUTS: see above
+add_compile_options(-ffile-prefix-map=${NX_REPO_ROOT}/=)   # KIWI: see above
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../../host ${CMAKE_CURRENT_BINARY_DIR}/host)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../../../dm/peanuts/import ${CMAKE_CURRENT_BINARY_DIR}/nximport)   # PEANUTS: the importer (libnximport.so, dev.peanuts.importer.Native)
-# PEANUTS: -PnxGenericHost=true links one libnxlaunch.so against the one libnxhost.so instead of a pair per title
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../../../dm/kiwi/import ${CMAKE_CURRENT_BINARY_DIR}/nximport)   # KIWI: the importer (libnximport.so, hernandez.kiwinative.kiwi.importer.Native)
+# KIWI: -PnxGenericHost=true links one libnxlaunch.so against the one libnxhost.so instead of a pair per title
 if(NX_GENERIC_HOST)
-  add_library(nxlaunch SHARED nxlaunch.c ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../dm/peanuts/peanuts_jni.c)
+  add_library(nxlaunch SHARED nxlaunch.c ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../dm/kiwi/kiwi_jni.c)
   target_include_directories(nxlaunch PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../dm/host/android ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../dm/gfx/vk_android)
   target_compile_options(nxlaunch PRIVATE -O2 -g -Wall -Wextra -Wno-unused-parameter)
   target_link_options(nxlaunch PRIVATE -Wl,--no-undefined)
@@ -22,7 +22,7 @@ if(NX_GENERIC_HOST)
 else()
   string(REPLACE "," ";" games "${NX_GAMES}")
   foreach(g ${games})
-    add_library(nxlaunch_${g} SHARED nxlaunch.c ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../dm/peanuts/peanuts_jni.c)   # PEANUTS: the companion page's JNI
+    add_library(nxlaunch_${g} SHARED nxlaunch.c ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../dm/kiwi/kiwi_jni.c)   # KIWI: the companion page's JNI
     target_include_directories(nxlaunch_${g} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../dm/host/android ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../dm/gfx/vk_android)   # the host's launcher interface
     target_compile_options(nxlaunch_${g} PRIVATE -O2 -g -Wall -Wextra -Wno-unused-parameter)
     target_link_options(nxlaunch_${g} PRIVATE -Wl,--no-undefined)

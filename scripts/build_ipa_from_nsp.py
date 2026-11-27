@@ -474,7 +474,7 @@ def check_versions_aarch64(dirs, logs, g, name):   # every extracted version of 
 
 
 def survey_nros(folder):
-    """PEANUTS(upstream-candidate): {name: path} of the NRO files the survey's manifest pass copied into folder. Files only: The Binding of Isaac: Afterbirth+ keeps its
+    """KIWI(upstream-candidate): {name: path} of the NRO files the survey's manifest pass copied into folder. Files only: The Binding of Isaac: Afterbirth+ keeps its
     two NROs in a RomFS folder that is itself named `.nro`, which rglob('*.nro') matches too, and the survey then read a folder as a module (IsADirectoryError)"""
     return {p.name: p for p in sorted(Path(folder).rglob('*.nro')) if p.is_file()}
 
@@ -540,7 +540,7 @@ def survey(dump, app, fam, repo, py, env):
     # What it means for a port
     G = pg.guess(F)   # the provisional profile's keys (write_profile writes the same)
     keep = G['modules'][0].split()   # how the build will get the shaders (decided again from the extraction at build time; the survey has only a RomFS manifest, so Unreal paks are guessed from main's markers)
-    nros = survey_nros(ex / 'romfs_nro')   # PEANUTS(upstream-candidate): files only (survey_nros); the manifest pass writes the NROs (their imports decide the API and the modules: Portal 2's main is SDL with EGL, its Source engine NROs draw with NVN)
+    nros = survey_nros(ex / 'romfs_nro')   # KIWI(upstream-candidate): files only (survey_nros); the manifest pass writes the NROs (their imports decide the API and the modules: Portal 2's main is SDL with EGL, its Source engine NROs draw with NVN)
     nro_add = pg.nro_modules(ex / 'ExeFS', nros, keep) if nros else {}
     S = pg.shader_sources(mods['main']['imports'], F['glsl_src'], [m for m in sorted({*keep, *nro_add}, key=pg.load_order) if 'glslcCompile' in mods[m]['exports']], rom['mags']['SPIR-V'],
                           rom['exts'].get('.pak', 0) if F.get('main_markers', set()) & {'Unreal', 'Unreal 4'} else 0, rom['mags']['Trinity pack'], gl_names=F.get('gl_names', 0),

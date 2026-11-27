@@ -1,4 +1,4 @@
-// PEANUTS: bounded draw ranges (dm/gfx/vk_android/vka_draw_range.h).
+// KIWI: bounded draw ranges (dm/gfx/vk_android/vka_draw_range.h).
 #include <assert.h>
 #include <stdio.h>
 #include "../../gfx/vk_android/vka_draw_range.h"

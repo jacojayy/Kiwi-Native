@@ -4,13 +4,13 @@
 #include "../hle.h"
 #undef HLE_FORCE
 #define HLE_FORCE(mangled, why, ret, cname, ...) static ret cname(__VA_ARGS__)
-#undef HLE_FORCE_BIG   // PEANUTS: the asm take-over does not link in the test
-#define HLE_FORCE_BIG HLE_FORCE   // PEANUTS
+#undef HLE_FORCE_BIG   // KIWI: the asm take-over does not link in the test
+#define HLE_FORCE_BIG HLE_FORCE   // KIWI
 #include "../hle_sf.c"
 
 static int checks, fails, events;
 #define CHECK(c, msg) do { checks++; if (!(c)) { fails++; fprintf(stderr, "FAIL: %s (line %d)\n", msg, __LINE__); } } while (0)
-Result dm_audren_serve(sf_req *r) { (void)r; return 0; } int dm_audren_served(void) { return 0; }   // PEANUTS: hle_sf.c's audio renderer service (hle_audren_svc.c), not served here
+Result dm_audren_serve(sf_req *r) { (void)r; return 0; } int dm_audren_served(void) { return 0; }   // KIWI: hle_sf.c's audio renderer service (hle_audren_svc.c), not served here
 uint32_t hle_new_event(uint32_t *write_end) { events++; if (write_end) *write_end = 0x2000 + events; return 0x1000 + events; }
 
 // A CMIF request for command cmd on a non-domain session (HIPC type 4, no special header, no descriptors): the data words from +8, "SFCI" at +0x10

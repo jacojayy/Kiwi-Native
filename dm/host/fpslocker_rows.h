@@ -1,5 +1,5 @@
-// PEANUTS begin: restricted reviewed memory-row evaluator and dynamic timing extensions.
-// PEANUTS: reviewed FPSLocker Warehouse operations; no runtime YAML or
+// KIWI begin: restricted reviewed memory-row evaluator and dynamic timing extensions.
+// KIWI: reviewed FPSLocker Warehouse operations; no runtime YAML or
 // arbitrary expression evaluation.
 #ifndef DM_FPSLOCKER_ROWS_H
 #define DM_FPSLOCKER_ROWS_H
@@ -13,11 +13,11 @@
 struct fpw_row {
   uint64_t offset, chain[4]; // Four offsets after the module-relative pointer.
   unsigned nchain, kind, copies, direct, aux;
-  union { // PEANUTS: keep integer tick scales exact.
+  union { // KIWI: keep integer tick scales exact.
     float a;
     uint32_t ticks;
   };
-  union { // PEANUTS: an elapsed tick row has an exact integer ceiling.
+  union { // KIWI: an elapsed tick row has an exact integer ceiling.
     float b;
     uint32_t ticks_max;
   };
@@ -87,8 +87,8 @@ static inline int fpw_parse(const char *spec, const char *build,
                            "frame_scaled_f32", "target_scaled_f32",
                            "time_ratio_f32",   "flag_cap_u8", "target_i32", "zero_u16",
                            "time_step_pair_f32", "constant_i32",
-                           "elapsed_fps_f32", "flag_cap_u32_gt", "step_ticks_u32", // PEANUTS: integer fixed step
-                           "target_offset_f32", "frame_offset_ms_f32"}; // PEANUTS: (fps + a) * b and b * 1000 / (fps + a)
+                           "elapsed_fps_f32", "flag_cap_u32_gt", "step_ticks_u32", // KIWI: integer fixed step
+                           "target_offset_f32", "frame_offset_ms_f32"}; // KIWI: (fps + a) * b and b * 1000 / (fps + a)
     for (unsigned i = 0; i < sizeof kinds / sizeof *kinds; i++)
       if (!strcmp(f[1], kinds[i]))
         r.kind = i + 1;
@@ -121,7 +121,7 @@ static inline int fpw_parse(const char *spec, const char *build,
     if (!r.copies || (r.kind == 13 && r.copies != 1) ||
         (r.kind == 13 && r.direct && (r.offset & 7)))
       return -1;
-    if (r.kind == 17) { // PEANUTS: ticks per second, then 1 for a fixed step or the maximum elapsed step in ticks.
+    if (r.kind == 17) { // KIWI: ticks per second, then 1 for a fixed step or the maximum elapsed step in ticks.
       size_t digits = strspn(f[4], "0123456789");
       if (!digits || f[4][digits] != ':')
         return -1;
@@ -143,7 +143,7 @@ static inline int fpw_parse(const char *spec, const char *build,
       if ((r.kind == 14 || r.kind == 16) &&
           (r.a > 16777215 || truncf(r.a) != r.a))
         return -1;
-      // PEANUTS: an offset added to the rate keeps fps + a above zero for every
+      // KIWI: an offset added to the rate keeps fps + a above zero for every
       // supported rate (15 to 120)
       if ((r.kind == 18 || r.kind == 19) && (r.a <= -15 || r.a > 1000 || r.b == 0))
         return -1;
@@ -294,7 +294,7 @@ static inline unsigned fpw_apply_context_storage(const struct fpw_rows *rows,
     uint32_t value = 0;
     if (r->kind == 14)
       value = (uint32_t)r->a;
-    else if (r->kind == 17) { // PEANUTS: integer ticks per frame
+    else if (r->kind == 17) { // KIWI: integer ticks per frame
       value = r->ticks / (unsigned)fps;
       if (r->ticks_max > 1 && isfinite(elapsed) && elapsed > 0) {
         double measured = elapsed * r->ticks;
@@ -316,9 +316,9 @@ static inline unsigned fpw_apply_context_storage(const struct fpw_rows *rows,
         f = r->a * (1000.f / (float)fps) * r->b;
       if (r->kind == 8)
         f = ((float)fps / r->a) * r->b;
-      if (r->kind == 18) // PEANUTS: target_offset_f32
+      if (r->kind == 18) // KIWI: target_offset_f32
         f = ((float)fps + r->a) * r->b;
-      if (r->kind == 19) // PEANUTS: frame_offset_ms_f32
+      if (r->kind == 19) // KIWI: frame_offset_ms_f32
         f = r->b * (1000.f / ((float)fps + r->a));
       if (r->kind == 9) {
         double v = elapsed * r->a, lo = r->a / fps;
@@ -362,4 +362,4 @@ static inline unsigned fpw_apply(const struct fpw_rows *rows, uint64_t base,
 }
 #endif
 
-// PEANUTS end
+// KIWI end

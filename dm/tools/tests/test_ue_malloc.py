@@ -20,7 +20,7 @@ def put(img, at, *words): struct.pack_into('<' + 'I' * len(words), img, at, *wor
 def store_vt(at): return [ADRP(8, at, VT), ADDI(8, 8, VT & 0xfff), STRX(8, 0), RET]   # the vtable into [x0]
 
 
-def image(slot=19, calls=1, relocated=False, name=True, rtti_name=None):  # PEANUTS: optional relocated type information
+def image(slot=19, calls=1, relocated=False, name=True, rtti_name=None):  # KIWI: optional relocated type information
     img = bytearray(END)
     if name: img[NAME:NAME + 16] = 'Binned3'.encode('utf-16-le') + b'\0\0'
     put(img, GETTER, ADRP(0, GETTER, NAME), ADDI(0, 0, NAME & 0xfff), RET)
@@ -34,7 +34,7 @@ def image(slot=19, calls=1, relocated=False, name=True, rtti_name=None):  # PEAN
     # The vtable's words are 0 in place: R_AARCH64_RELATIVE relocations (RELA, in ro as the linker puts them) give them
     struct.pack_into('<I', img, 4, 0x20); img[0x20:0x24] = b'MOD0'; struct.pack_into('<i', img, 0x24, 0xb800 - 0x20)
     rela = 0x9000
-    entries = [(VT + 8 * k, v) for k, v in enumerate(slots)]  # PEANUTS: also relocate the RTTI and its name
+    entries = [(VT + 8 * k, v) for k, v in enumerate(slots)]  # KIWI: also relocate the RTTI and its name
     if rtti_name is not None:
         rtti, type_name = 0xa400, 0x8200
         entries.extend([(VT - 8, rtti), (rtti + 8, type_name)])
@@ -52,17 +52,17 @@ def find(img): return ue_malloc.find(bytes(img), TEXT, RO, DATA)
 class FindTest(unittest.TestCase):
     def test_found_in_place(self):
         call, vt, slot, why = find(image())
-        self.assertEqual((call, vt, slot), ((CALLER + 4,), VT, 19), why)   # PEANUTS: a tuple of calls (#290)
+        self.assertEqual((call, vt, slot), ((CALLER + 4,), VT, 19), why)   # KIWI: a tuple of calls (#290)
 
     def test_found_through_relocations(self):
         call, vt, slot, why = find(image(slot=26, relocated=True))
-        self.assertEqual((call, vt, slot), ((CALLER + 4,), VT, 26), why)   # PEANUTS: a tuple of calls (#290)
+        self.assertEqual((call, vt, slot), ((CALLER + 4,), VT, 26), why)   # KIWI: a tuple of calls (#290)
 
-    def test_found_with_relocated_rtti(self):  # PEANUTS: Captain Tsubasa 2 uses RTTI at its primary address point.
+    def test_found_with_relocated_rtti(self):  # KIWI: Captain Tsubasa 2 uses RTTI at its primary address point.
         call, vt, slot, why = find(image(slot=26, relocated=True, rtti_name=b'14FMallocBinned3\0'))
-        self.assertEqual((call, vt, slot), ((CALLER + 4,), VT, 26), why)   # PEANUTS: a tuple of calls (#290)
+        self.assertEqual((call, vt, slot), ((CALLER + 4,), VT, 26), why)   # KIWI: a tuple of calls (#290)
 
-    def test_reject_wrong_rtti(self):  # PEANUTS: only a proven FMallocBinned3 header permits the constructor cut.
+    def test_reject_wrong_rtti(self):  # KIWI: only a proven FMallocBinned3 header permits the constructor cut.
         call, _, _, why = find(image(slot=26, relocated=True, rtti_name=b'7FMalloc\0'))
         self.assertIsNone(call)
         self.assertIn('RTTI does not name FMallocBinned3', why)
@@ -77,7 +77,7 @@ class FindTest(unittest.TestCase):
         self.assertIsNone(call)
         self.assertTrue(why.startswith('[RED] ') and 'slot 20' in why, why)
 
-    def test_two_calls_found(self):  # PEANUTS: DRAGON BALL: Sparking! ZERO calls FMallocBinned3's constructor twice.
+    def test_two_calls_found(self):  # KIWI: DRAGON BALL: Sparking! ZERO calls FMallocBinned3's constructor twice.
         calls, vt, slot, why = find(image(calls=2))
         self.assertEqual((calls, vt, slot), ((CALLER + 4, CALLER + 12), VT, 19), why)
 

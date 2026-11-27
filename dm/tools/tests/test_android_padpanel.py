@@ -8,16 +8,16 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-JAVA = REPO / 'android/app/src/main/java/dev/nxnative/android'
+JAVA = REPO / 'android/app/src/main/java/hernandez/kiwinative'
 SRC = [JAVA / 'PadPanel.java', JAVA / 'PadMap.java']
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/PadPanelJvmTest.java'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/PadPanelJvmTest.java'
 
 
 class Wiring(unittest.TestCase):
     def test_activity(self):
         t = (JAVA / 'GameActivity.java').read_text()
-        self.assertIn('InGamePanel.key(this, combo,', t)   # every pad key goes through the combination first  # PEANUTS: through InGamePanel.key (Home held)
-        self.assertIn('combo.key(', (JAVA / 'InGamePanel.java').read_text())   # PEANUTS
+        self.assertIn('InGamePanel.key(this, combo,', t)   # every pad key goes through the combination first  # KIWI: through InGamePanel.key (Home held)
+        self.assertIn('combo.key(', (JAVA / 'InGamePanel.java').read_text())   # KIWI
         self.assertIn('panel.padMotion(e)', t)          # sticks and the hat move through the open panel, never the game
         self.assertIn('releaseGameInput', t)            # the game's held buttons are released when the panel opens
         self.assertIn('PadPanel.confirmBack(', t)       # confirm / back from the game's mapping
@@ -26,9 +26,9 @@ class Wiring(unittest.TestCase):
         t = (JAVA / 'SidePanel.java').read_text()
         for s in ('boolean padKey(KeyEvent e)', 'boolean padMotion(MotionEvent e)', 'requestFocusFromTouch', 'TAB_NAMES'):
             self.assertIn(s, t)
-        # PEANUTS: the focus frame's listener goes through dev.peanuts.ingame.Look.focusListener (kept from window to window)
-        self.assertIn('Look.focusListener(this, this::focusMoved)', t)   # PEANUTS
-        self.assertIn('OnGlobalFocusChangeListener', (JAVA.parents[1] / 'peanuts/ingame/Look.java').read_text())   # PEANUTS
+        # KIWI: the focus frame's listener goes through hernandez.kiwinative.kiwi.ingame.Look.focusListener (kept from window to window)
+        self.assertIn('Look.focusListener(this, this::focusMoved)', t)   # KIWI
+        self.assertIn('OnGlobalFocusChangeListener', (JAVA / 'kiwi/ingame/Look.java').read_text())   # KIWI
 
     def test_settings(self):
         self.assertIn('PadPanel.OPEN_NAMES', (JAVA / 'MainActivity.java').read_text())
@@ -41,7 +41,7 @@ class PadPanelJvm(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             c = subprocess.run(['javac', '-Xlint:all', '-Werror', '-encoding', 'UTF-8', '-d', d, *map(str, SRC), str(TEST)], capture_output=True, text=True)
             self.assertEqual(c.returncode, 0, c.stderr)
-            r = subprocess.run(['java', '-cp', d, 'dev.nxnative.android.PadPanelJvmTest'], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', d, 'hernandez.kiwinative.PadPanelJvmTest'], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertEqual(r.stdout.strip(), 'ok')
 

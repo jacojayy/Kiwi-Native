@@ -1,4 +1,4 @@
-"""Saved frame-limit values and opt-in high-rate choices, using the production Java policy (FrameRateCaps.java with Profile.java). PEANUTS: also the rules of the
+"""Saved frame-limit values and opt-in high-rate choices, using the production Java policy (FrameRateCaps.java with Profile.java). KIWI: also the rules of the
 fps cap audit fixes (2026-11-24): saved caps moved between the two lists (migrate), caps above the display (B5), the fps_target list's 40 and 45 and the host's answer,
 the profile's fps_target as the default (B3), opt-in present pacing up to 60 (B1). Per release game: test_android_frame_rate_games.py."""
 from pathlib import Path
@@ -8,10 +8,10 @@ import tempfile
 import unittest
 
 REPO = Path(__file__).resolve().parents[3]
-SOURCE = REPO / 'android/app/src/main/java/dev/nxnative/android/FrameRateCaps.java'
-PROFILE = REPO / 'android/app/src/main/java/dev/nxnative/android/Profile.java'
-STUB = 'package dev.nxnative.android;\npublic final class BuildConfig { public static final String NX_PROFILES = ""; }\n'
-MAIN = '''package dev.nxnative.android;
+SOURCE = REPO / 'android/app/src/main/java/hernandez/kiwinative/FrameRateCaps.java'
+PROFILE = REPO / 'android/app/src/main/java/hernandez/kiwinative/Profile.java'
+STUB = 'package hernandez.kiwinative;\npublic final class BuildConfig { public static final String NX_PROFILES = ""; }\n'
+MAIN = '''package hernandez.kiwinative;
 import java.util.Arrays;
 public class FrameRateCapsTest {
     static void check(boolean ok) { if (!ok) throw new AssertionError(); }
@@ -42,7 +42,7 @@ public class FrameRateCapsTest {
         check(FrameRateCaps.contains(FrameRateCaps.rates(120, 30), 30));
         check(FrameRateCaps.contains(FrameRateCaps.rates(120, 30), 120));
 
-        // PEANUTS: B1, opt-in present pacing: fps_limit_present with no fps_limit, whatever fps_limit_max (before 0.1.8: only above 60)
+        // KIWI: B1, opt-in present pacing: fps_limit_present with no fps_limit, whatever fps_limit_max (before 0.1.8: only above 60)
         Profile trails1 = profile("17=1"), ycw = profile("17=1;35=20,30,45,60"), dave = profile("17=1;31=120"), limit = profile("15=60;31=120"), plain = profile("41=60");
         check(FrameRateCaps.limited(trails1) && !FrameRateCaps.legacyLimited(trails1));
         check(FrameRateCaps.limited(ycw) && !FrameRateCaps.legacyLimited(ycw));
@@ -137,14 +137,14 @@ class FrameRateCaps(unittest.TestCase):
             main.write_text(MAIN)
             (path / 'BuildConfig.java').write_text(STUB)
             subprocess.run(['javac', '-encoding', 'UTF-8', '-d', str(path), str(SOURCE), str(PROFILE), str(path / 'BuildConfig.java'), str(main)], check=True, capture_output=True)
-            run = subprocess.run(['java', '-ea', '-cp', str(path), 'dev.nxnative.android.FrameRateCapsTest'], capture_output=True, text=True)
+            run = subprocess.run(['java', '-ea', '-cp', str(path), 'hernandez.kiwinative.FrameRateCapsTest'], capture_output=True, text=True)
             self.assertEqual(run.returncode, 0, run.stderr)
 
 
 class MigrationInPrefs(unittest.TestCase):
     """Prefs.migrateFpsCap is Android code (SharedPreferences): its shape, so the rule above is what it runs, once per game"""
     def test_prefs_migrates_once_per_game(self):
-        src = (REPO / 'android/app/src/main/java/dev/nxnative/android/Prefs.java').read_text(encoding='utf-8')
+        src = (REPO / 'android/app/src/main/java/hernandez/kiwinative/Prefs.java').read_text(encoding='utf-8')
         body = src[src.index('    static void migrateFpsCap('):]
         body = body[:body.index('\n    }\n') + 6]
         self.assertIn('FrameRateCaps.migrateSaved(Profile.of(titleId), sp.getString(marker, null), saved ? sp.getInt(key, -1) : null)', body)

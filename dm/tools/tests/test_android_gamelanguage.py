@@ -9,9 +9,9 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android/GameLanguage.java'
-NACP = REPO / 'android/app/src/main/java/dev/nxnative/android/Nacp.java'   # PEANUTS: #639
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/GameLanguageJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative/GameLanguage.java'
+NACP = REPO / 'android/app/src/main/java/hernandez/kiwinative/Nacp.java'   # KIWI: #639
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/GameLanguageJvmTest.java'
 T_OE = REPO / 'dm/host/tests/t_oe.c'
 HOST = REPO / 'dm/host/hle_oe.c'
 
@@ -21,14 +21,14 @@ class GameLanguage(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.tmp = Path(tempfile.mkdtemp(prefix='gamelang_'))
-        subprocess.run(['javac', '-Xlint:all', '-Werror', '-d', str(cls.tmp), str(SRC), str(NACP), str(TEST)], check=True)   # PEANUTS: #639
+        subprocess.run(['javac', '-Xlint:all', '-Werror', '-d', str(cls.tmp), str(SRC), str(NACP), str(TEST)], check=True)   # KIWI: #639
 
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def run_on(self, *args):
-        r = subprocess.run(['java', '-cp', str(self.tmp), 'dev.nxnative.android.GameLanguageJvmTest', *args], capture_output=True, text=True)
+        r = subprocess.run(['java', '-cp', str(self.tmp), 'hernandez.kiwinative.GameLanguageJvmTest', *args], capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)
         return [l.split('\t') for l in r.stdout.splitlines()]
 
@@ -41,9 +41,9 @@ class GameLanguage(unittest.TestCase):
             ['DM_LANG=pl', "Phone's language · Polish"],
             ['DM_LANG=th', "Phone's language · Thai"]])
 
-    def test_nacp_languages(self):   # a language the game's NACP lacks becomes one it has: Xenoblade Chronicles 3 (EU, flags 0x70de) has en-GB, not en-US   # PEANUTS: #639
+    def test_nacp_languages(self):   # a language the game's NACP lacks becomes one it has: Xenoblade Chronicles 3 (EU, flags 0x70de) has en-GB, not en-US   # KIWI: #639
         self.assertEqual([g[0] for g in self.run_on('- en-US 70de', 'en-US x 70de', 'fr-CA x 70de', 'ru x 70de', '- en-US 0', '- en-US 3', 'pl x 70de', '- id-ID 70de', '- id-ID 0')],
-                         ['DM_LANG=en-GB', 'DM_LANG=en-GB', 'DM_LANG=fr', 'DM_LANG=en-GB', 'DM_LANG=en-US', 'DM_LANG=en-US', 'DM_LANG=pl', 'DM_LANG=en-GB', '-'])   # PEANUTS: #639 review: a phone language with no console code
+                         ['DM_LANG=en-GB', 'DM_LANG=en-GB', 'DM_LANG=fr', 'DM_LANG=en-GB', 'DM_LANG=en-US', 'DM_LANG=en-US', 'DM_LANG=pl', 'DM_LANG=en-GB', '-'])   # KIWI: #639 review: a phone language with no console code
 
     def test_same_mapping_as_host(self):   # every tag t_oe.c checks maps to the same console code here
         pairs = re.findall(r'\{"([^"]+)", "([^"]+)"\}', T_OE.read_text(encoding='utf-8').split('static const char *const lang_in')[1].split('};')[0])
@@ -54,10 +54,10 @@ class GameLanguage(unittest.TestCase):
     def test_codes_are_the_hosts(self):   # the picker offers only codes the host's settings table has (hle_sdk16.c k_lang_code, zh-CN / zh-TW as zh-Hans / zh-Hant)
         src = SRC.read_text(encoding='utf-8')
         match = re.search(r'CODES = \{([^}]*)\}', src)
-        assert match is not None   # PEANUTS(upstream-candidate): require the source pattern before reading it.
+        assert match is not None   # KIWI(upstream-candidate): require the source pattern before reading it.
         codes = re.findall(r'"([^"]+)"', match.group(1))
         match = re.search(r'k_lang_code\[\] = \{([^}]*)\}', (REPO / 'dm/host/hle_sdk16.c').read_text(encoding='utf-8'))
-        assert match is not None   # PEANUTS(upstream-candidate): require the source pattern before reading it.
+        assert match is not None   # KIWI(upstream-candidate): require the source pattern before reading it.
         table = re.findall(r'"([^"]+)"', match.group(1))
         self.assertEqual(sorted(set(codes) - set(table)), [])
         self.assertEqual(len(codes), 18)

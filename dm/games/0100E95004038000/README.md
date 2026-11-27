@@ -22,7 +22,7 @@ the save was created with the isolated winding diagnostic and reloaded with
 the production path. The final fixed host also loads it and walks in Argentum.
 
 
-<!-- PEANUTS: #645, tapionallanaire -->
+<!-- KIWI: #645, tapionallanaire -->
 ## Android (AYN Thor, Turnip v27.0.0-R1, 2026-11-25)
 
 The profile works on Android as it is: no host or profile change was needed. Built

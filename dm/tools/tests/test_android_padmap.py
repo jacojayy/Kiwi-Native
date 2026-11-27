@@ -8,8 +8,8 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android/PadMap.java'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/PadMapJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative/PadMap.java'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/PadMapJvmTest.java'
 HOST = REPO / 'dm/host/android/input_map.c'
 
 
@@ -30,7 +30,7 @@ class PadMapJvm(unittest.TestCase):
     def test_jvm(self):
         with tempfile.TemporaryDirectory() as d:
             subprocess.run(['javac', '-Xlint:all', '-Werror', '-encoding', 'UTF-8', '-d', d, str(SRC), str(TEST)], check=True, capture_output=True, text=True)
-            r = subprocess.run(['java', '-cp', d, 'dev.nxnative.android.PadMapJvmTest'], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', d, 'hernandez.kiwinative.PadMapJvmTest'], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertEqual(r.stdout.strip(), 'ok')
 

@@ -224,7 +224,7 @@ def scandir(path):
 
 
 def walk(top, topdown=True, onerror=None, followlinks=False):
-    # PEANUTS(upstream-candidate) begin: by the image's nodes. Each entry's is_dir was a stat of its whole path, which a .nup resolves again from its root
+    # KIWI(upstream-candidate) begin: by the image's nodes. Each entry's is_dir was a stat of its whole path, which a .nup resolves again from its root
     # (nup.find, a binary search a level): a walk of Animal Crossing's 103,400 RomFS files took about 10 s on an AYN Thor, and the split walks it three times
     # (its files, runtime_nros, the Unreal check). The same names, in the same order, and the dirs a caller leaves in the list it was given are the ones walked
     # (os.walk's)
@@ -256,7 +256,7 @@ def walk(top, topdown=True, onerror=None, followlinks=False):
             yield from visit(_os.path.join(path, name), c, sub)
         if not topdown: yield str(path), dirs, files
     yield from visit(top, top_node, relative)
-    # PEANUTS end
+    # KIWI end
 
 
 class Path(type(_Path())):

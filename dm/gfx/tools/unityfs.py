@@ -182,7 +182,7 @@ PPtr<Shader>: int m_FileID; SInt64 m_PathID
 PPtr<Texture>: int m_FileID; SInt64 m_PathID
 Shader: string m_Name; SerializedShader m_ParsedForm; vector<data:unsigned int> platforms; vector<data:vector<data:unsigned int>> offsets; vector<data:vector<data:unsigned int>> compressedLengths; vector<data:vector<data:unsigned int>> decompressedLengths; vector<data:UInt8> compressedBlob; vector<data:PPtr<Shader>> m_Dependencies; map<data:pair(string,PPtr<Texture>)>~ m_NonModifiableTextures; bool! m_ShaderIsBaked
 '''
-# PEANUTS(upstream-candidate): the Unity 2021.3.26f1 Shader (My Time at Sandrock: every serialized file is stripped, its asset bundles too, 3,000 of the 34,325 looked
+# KIWI(upstream-candidate): the Unity 2021.3.26f1 Shader (My Time at Sandrock: every serialized file is stripped, its asset bundles too, 3,000 of the 34,325 looked
 # at, so no bundle lends a tree), from Unity 2021.3.26f1's type tree as AssetRipper's TypeTreeDumps records it (StructsDump/release/2021.3.26f1.dump). It is the 2021.2
 # layout with a program's player subprograms and parameter blob indices and the Shader's stage counts, each as the 2022.3 layout has it; the pass keeps 2021.2's
 # serialized keyword state mask. Checked node for node with the alignment flags (2,304 nodes), and the dump's tree gives the hash below (Unity's type hash: MD4 over each
@@ -288,7 +288,7 @@ COMPUTE_6000_3 = COMPUTE_2022_3.replace('int texDimension', 'int texDimension; i
 CLASS_COMPUTE_SHADER = 72
 KNOWN_TREES = {(CLASS_SHADER, bytes.fromhex('ea424a5fc1e48db62144df956f9e1005')): ('Shader', SHADER_2022_3),
                (CLASS_SHADER, bytes.fromhex('d8236c9bd87d85edb203acf352348124')): ('Shader', SHADER_2021_2),
-               (CLASS_SHADER, bytes.fromhex('f0c184272a05e54447e36366ec4876a6')): ('Shader', SHADER_2021_3),   # PEANUTS(upstream-candidate): Unity 2021.3.26f1 (above)
+               (CLASS_SHADER, bytes.fromhex('f0c184272a05e54447e36366ec4876a6')): ('Shader', SHADER_2021_3),   # KIWI(upstream-candidate): Unity 2021.3.26f1 (above)
                (CLASS_SHADER, bytes.fromhex('2ec7223dce3af4232b14ae1441bd7999')): ('Shader', SHADER_6000_0),
                (CLASS_SHADER, bytes.fromhex('a30e3dcf6c6d25153d6f64e5e41caf4e')): ('Shader', SHADER_2020_3),
                (CLASS_SHADER, bytes.fromhex('ed2a06ce7fb8203f6efb5ab5e0ce20d5')): ('Shader', SHADER_2019_4),

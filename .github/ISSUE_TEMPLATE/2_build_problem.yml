@@ -1,4 +1,4 @@
-# Written by peanuts/scripts/issue_forms.py: change that script, then run it.
+# Written by kiwi/scripts/issue_forms.py: change that script, then run it.
 name: "Build problem"
 description: "Adding a game went wrong: the import, Prepare or the companion failed, stopped or never finished, or the app closed during it"
 labels: ["bug"]

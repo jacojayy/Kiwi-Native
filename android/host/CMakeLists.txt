@@ -13,7 +13,7 @@ project(nxhost C ASM)
 if(NOT ANDROID OR NOT CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
   message(FATAL_ERROR "libnxhost is built for Android arm64-v8a only: use the NDK toolchain file with -DANDROID_ABI=arm64-v8a")
 endif()
-option(NX_GENERIC_HOST "PEANUTS: one libnxhost.so that loads any title's profile at run time (-PnxGenericHost=true), instead of one host per title" OFF)
+option(NX_GENERIC_HOST "KIWI: one libnxhost.so that loads any title's profile at run time (-PnxGenericHost=true), instead of one host per title" OFF)
 if(NX_GENERIC_HOST)
   # no GAME / NX_GAMES needed: the generic host is not built for any one title
 elseif(NX_GAMES)
@@ -71,22 +71,22 @@ endif()
 # Audio (AAudio, in hle_audio.c), AAC and H.264 (AMediaCodec), input, motion, rumble and the JNI bindings: dm/host/android
 file(GLOB HOST_ANDROID_C CONFIGURE_DEPENDS ${HOST}/android/*.c)
 list(APPEND HOST_C ${HOST_ANDROID_C})
-list(APPEND HOST_C ${ROOT}/dm/peanuts/peanuts.c)   # PEANUTS: the companion's reader (PEANUTS.md)
-list(APPEND HOST_C ${ROOT}/dm/peanuts/peanuts_nup.c)   # PEANUTS: the companion runtime's RomFS provider over a .nup (peanuts_nup.h)
-list(APPEND HOST_C ${ROOT}/dm/peanuts/peanuts_services.c)   # PEANUTS: the host's side of the companion runtime's battery, frame totals and add-on content (rt/shim/shim_services.cpp)
-list(APPEND HOST_C ${ROOT}/dm/peanuts/peanuts_graph.c)   # PEANUTS: the overlay graph's bars painted by the host on every game frame (Bridge.graphRect)
-list(APPEND HOST_C ${ROOT}/dm/peanuts/peanuts_frametime.c)   # PEANUTS: the time between the game's presented frames, for the launcher's frame-time graph (Bridge.frameTimes)
-list(APPEND HOST_C ${ROOT}/dm/peanuts/peanuts_audiosync.c)   # PEANUTS: the audio renderer's output follows the game's pace (peanuts_audiosync.h)
-list(APPEND HOST_C ${ROOT}/dm/peanuts/peanuts_audiovoice.c)   # PEANUTS: the game's voice play-state changes for the audio follower (peanuts_audiovoice.c)
-list(APPEND HOST_C ${ROOT}/dm/peanuts/peanuts_gpufloor.c)   # PEANUTS: the GPU clock floor on "highest only" KGSL kernels and an earlier first part (peanuts_gpufloor.c)
-# PEANUTS begin: the RomFS read straight from the player's dumps (DM_ROMFS=nsp:..., dm/peanuts/peanuts_nsp.h, DM_NSP_DIRECT below): the image over the dumps and
-# the three files of the importer that read them (keys, containers, NCA sections, AES, LZ4; dm/peanuts/import). Their AES and SHA paths for arm64 are picked at
+list(APPEND HOST_C ${ROOT}/dm/kiwi/kiwi.c)   # KIWI: the companion's reader (KIWI.md)
+list(APPEND HOST_C ${ROOT}/dm/kiwi/kiwi_nup.c)   # KIWI: the companion runtime's RomFS provider over a .nup (kiwi_nup.h)
+list(APPEND HOST_C ${ROOT}/dm/kiwi/kiwi_services.c)   # KIWI: the host's side of the companion runtime's battery, frame totals and add-on content (rt/shim/shim_services.cpp)
+list(APPEND HOST_C ${ROOT}/dm/kiwi/kiwi_graph.c)   # KIWI: the overlay graph's bars painted by the host on every game frame (Bridge.graphRect)
+list(APPEND HOST_C ${ROOT}/dm/kiwi/kiwi_frametime.c)   # KIWI: the time between the game's presented frames, for the launcher's frame-time graph (Bridge.frameTimes)
+list(APPEND HOST_C ${ROOT}/dm/kiwi/kiwi_audiosync.c)   # KIWI: the audio renderer's output follows the game's pace (kiwi_audiosync.h)
+list(APPEND HOST_C ${ROOT}/dm/kiwi/kiwi_audiovoice.c)   # KIWI: the game's voice play-state changes for the audio follower (kiwi_audiovoice.c)
+list(APPEND HOST_C ${ROOT}/dm/kiwi/kiwi_gpufloor.c)   # KIWI: the GPU clock floor on "highest only" KGSL kernels and an earlier first part (kiwi_gpufloor.c)
+# KIWI begin: the RomFS read straight from the player's dumps (DM_ROMFS=nsp:..., dm/kiwi/kiwi_nsp.h, DM_NSP_DIRECT below): the image over the dumps and
+# the three files of the importer that read them (keys, containers, NCA sections, AES, LZ4; dm/kiwi/import). Their AES and SHA paths for arm64 are picked at
 # run time and carry their own target attributes, so no file needs a flag for them; -O2 as the importer's own build (the cipher and the decoder are the cost of a read)
-set(NSP_C ${ROOT}/dm/peanuts/peanuts_nsp.c ${ROOT}/dm/peanuts/import/nx_nca.c ${ROOT}/dm/peanuts/import/nx_crypto.c ${ROOT}/dm/peanuts/import/nx_lz4.c)
+set(NSP_C ${ROOT}/dm/kiwi/kiwi_nsp.c ${ROOT}/dm/kiwi/import/nx_nca.c ${ROOT}/dm/kiwi/import/nx_crypto.c ${ROOT}/dm/kiwi/import/nx_lz4.c)
 set_source_files_properties(${NSP_C} PROPERTIES COMPILE_OPTIONS -O2)
 list(APPEND HOST_C ${NSP_C})
-# PEANUTS end
-add_subdirectory(${ROOT}/dm/peanuts/rt ${CMAKE_CURRENT_BINARY_DIR}/peanuts_rt)   # PEANUTS: the companion runtime (C++), linked into every host below
+# KIWI end
+add_subdirectory(${ROOT}/dm/kiwi/rt ${CMAKE_CURRENT_BINARY_DIR}/kiwi_rt)   # KIWI: the companion runtime (C++), linked into every host below
 # dm/gfx without Metal: the NVN front (hle_nvn.c and its C helpers), nn::vi, nvdrv, the CPU texture code; android_stub.c answers for nvn_mtl.m, hle_vk.m, hle_gl.m and the other .m files
 file(GLOB GFX_C CONFIGURE_DEPENDS ${GFX}/*.c ${GFX}/nvn/*.c ${GFX}/tex/*.c ${GFX}/vk_android/*.c)   # vk_android: the NVN → Vulkan replay
 # Lossless Scaling frame generation (dm/gfx/vk_android/lsfg, ported from Eden): GPL-3.0-or-later, so a libnxhost.so built with it (the default) is GPL-3.0-or-later as a whole
@@ -133,11 +133,11 @@ function(nxhost_add tgt game)
   add_custom_target(${tgt}_seed COMMAND ${Python3_EXECUTABLE} ${ROOT}/dm/games/game.py seed ${game} ${SEED_H} BYPRODUCTS ${SEED_H} COMMENT "prewarm seed ${game}")
   add_library(${tgt} SHARED ${HOST_C} ${GFX_C} ${ASM_OUT} ${GAME_H} ${SEED_H})
   add_dependencies(${tgt} ${tgt}_seed)
-  target_link_libraries(${tgt} PRIVATE peanuts_rt)   # PEANUTS: the companion runtime
-  set_target_properties(${tgt} PROPERTIES LINKER_LANGUAGE CXX)   # PEANUTS: link with the C++ driver so libc++ comes in (the host is C)
+  target_link_libraries(${tgt} PRIVATE kiwi_rt)   # KIWI: the companion runtime
+  set_target_properties(${tgt} PROPERTIES LINKER_LANGUAGE CXX)   # KIWI: link with the C++ driver so libc++ comes in (the host is C)
   target_include_directories(${tgt} PRIVATE ${GEN}/${game} ${GFX}/nvn/include ${TP}/vulkan-headers/include ${TP}/libvpx ${TP}/libvpx/config ${TP}/dav1d/include ${TP}/stb_vorbis ${HOST} ${NX_COOP_VENDOR_DIR})
   # DM_NUP_ZSTD: compressed files of a NUP container are decompressed with zstddec (dm/host/nup_image.h)
-  target_compile_definitions(${tgt} PRIVATE _GNU_SOURCE DM_NUP_ZSTD DM_NSP_DIRECT NX_COOP_VENDOR=${NX_COOP_VENDOR} $<$<BOOL:${NX_LSFG}>:NX_LSFG>)   # PEANUTS: DM_NSP_DIRECT (the reader of dumps is linked: NSP_C above)
+  target_compile_definitions(${tgt} PRIVATE _GNU_SOURCE DM_NUP_ZSTD DM_NSP_DIRECT NX_COOP_VENDOR=${NX_COOP_VENDOR} $<$<BOOL:${NX_LSFG}>:NX_LSFG>)   # KIWI: DM_NSP_DIRECT (the reader of dumps is linked: NSP_C above)
   # As the Mac host (-O1 -g -Wall -Wno-unused-function). Hidden visibility: the assembly reaches C symbols with adrp, which a shared library allows only for symbols it binds itself
   # -Wno-format: the host prints uint64_t with %ll* (unsigned long long on Darwin, unsigned long on Linux: the same 64 bits)
   target_compile_options(${tgt} PRIVATE -O1 -g -Wall -Wno-unused-function -Wno-format -fvisibility=hidden)
@@ -149,12 +149,12 @@ function(nxhost_add tgt game)
   target_link_libraries(${tgt} PRIVATE vpx dav1d zstddec aaudio mediandk android log m dl z)   # libvulkan.so is opened at run time (vka_dev.c)
 endfunction()
 
-# PEANUTS: one libnxhost.so for every title (-PnxGenericHost=true), no per-title game_profile.h/vk_prewarm_seed.h custom
-# command: the include path points at dm/peanuts/profile's fixed stand-ins instead (game_profile_generic.h, vk_prewarm_seed_generic.h, both named
+# KIWI: one libnxhost.so for every title (-PnxGenericHost=true), no per-title game_profile.h/vk_prewarm_seed.h custom
+# command: the include path points at dm/kiwi/profile's fixed stand-ins instead (game_profile_generic.h, vk_prewarm_seed_generic.h, both named
 # game_profile.h / vk_prewarm_seed.h on that path so dm.h's #include "game_profile.h" and vka_pso.c's #include "vk_prewarm_seed.h" need no edit), and
-# dm/peanuts/profile/profile_rt.c (the runtime loader) plus a schema stamp (one per build, not per title) are compiled in.
+# dm/kiwi/profile/profile_rt.c (the runtime loader) plus a schema stamp (one per build, not per title) are compiled in.
 function(nxhost_add_generic tgt)
-  set(PROFILE_DIR ${ROOT}/dm/peanuts/profile)
+  set(PROFILE_DIR ${ROOT}/dm/kiwi/profile)
   set(GEN_INC ${GEN}/generic)
   # configure_file (not file(COPY)) re-runs whenever the source changes, even on an incremental build with no reconfigure, so editing
   # game_profile_generic.h/vk_prewarm_seed_generic.h cannot silently leave a stale copy on the include path (found in review).
@@ -166,10 +166,10 @@ function(nxhost_add_generic tgt)
     DEPENDS ${PROFILE_DIR}/gen_runtime_profile.py ${ROOT}/dm/games/game.py
     COMMENT "generic host schema stamp")
   add_library(${tgt} SHARED ${HOST_C} ${GFX_C} ${ASM_OUT} ${PROFILE_DIR}/profile_rt.c ${SCHEMA_H})
-  target_link_libraries(${tgt} PRIVATE peanuts_rt)
+  target_link_libraries(${tgt} PRIVATE kiwi_rt)
   set_target_properties(${tgt} PROPERTIES LINKER_LANGUAGE CXX)
   target_include_directories(${tgt} PRIVATE ${GEN_INC} ${GEN} ${PROFILE_DIR} ${GFX}/nvn/include ${TP}/vulkan-headers/include ${TP}/libvpx ${TP}/libvpx/config ${TP}/dav1d/include ${TP}/stb_vorbis ${HOST} ${NX_COOP_VENDOR_DIR})   # (the co-op module, as the per-title hosts)
-  target_compile_definitions(${tgt} PRIVATE _GNU_SOURCE DM_NUP_ZSTD DM_NSP_DIRECT NX_COOP_VENDOR=${NX_COOP_VENDOR} $<$<BOOL:${NX_LSFG}>:NX_LSFG>)   # PEANUTS: DM_NSP_DIRECT (the reader of dumps is linked: NSP_C above)
+  target_compile_definitions(${tgt} PRIVATE _GNU_SOURCE DM_NUP_ZSTD DM_NSP_DIRECT NX_COOP_VENDOR=${NX_COOP_VENDOR} $<$<BOOL:${NX_LSFG}>:NX_LSFG>)   # KIWI: DM_NSP_DIRECT (the reader of dumps is linked: NSP_C above)
   target_compile_options(${tgt} PRIVATE -O1 -g -Wall -Wno-unused-function -Wno-format -fvisibility=hidden)
   file(GLOB VKA_C ${GFX}/vk_android/*.c)
   set_source_files_properties(${VKA_C} PROPERTIES COMPILE_OPTIONS -O2)

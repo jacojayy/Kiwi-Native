@@ -85,7 +85,7 @@ def fde_ranges(img):
     return sorted(out)
 
 
-def data_blocks(img, text_end, md, map_pieces=None):   # PEANUTS(upstream-candidate): map_pieces
+def data_blocks(img, text_end, md, map_pieces=None):   # KIWI(upstream-candidate): map_pieces
     """Sorted [(start, end)] of the data blocks in text [0, text_end) (see the module docstring). md: a capstone AArch64 disassembler.
     map_pieces([(s, e)]) → [count_undecodable(img, s, e, md)], optional: counts the pieces elsewhere (patch_nso.py: in worker processes)"""
     # An NRO's text includes its header: the build ID at +0x40 is arbitrary bytes, not instructions. FFX/X-2's magic_0898_2015.nro has a literal ldr x18 there.
@@ -99,7 +99,7 @@ def data_blocks(img, text_end, md, map_pieces=None):   # PEANUTS(upstream-candid
     if last < text_end: gaps.append((last, text_end))
     out = [(8, 0x80)] if nro else []
     gaps = [(s, e) for s, e in (((s + 3) & ~3, e & ~3) for s, e in gaps) if e - s >= DATA_MIN]
-    # PEANUTS(upstream-candidate): the gaps in pieces of at most 4 MB, whose counts add up; map_pieces (patch_nso.py in_parallel) counts them in worker processes
+    # KIWI(upstream-candidate): the gaps in pieces of at most 4 MB, whose counts add up; map_pieces (patch_nso.py in_parallel) counts them in worker processes
     pieces = [(p, min(p + 0x400000, e)) for s, e in gaps for p in range(s, e, 0x400000)]
     counts = map_pieces(pieces) if map_pieces else [count_undecodable(img, p, q, md) for p, q in pieces]
     per = dict.fromkeys(gaps, 0); k = 0
@@ -110,7 +110,7 @@ def data_blocks(img, text_end, md, map_pieces=None):   # PEANUTS(upstream-candid
     return out
 
 
-# PEANUTS(upstream-candidate): the words capstone cannot decode in [s, e), counted in runs. An AArch64 word decodes on its own, so a run of disasm_lite over the
+# KIWI(upstream-candidate): the words capstone cannot decode in [s, e), counted in runs. An AArch64 word decodes on its own, so a run of disasm_lite over the
 # range stops exactly at the next undecodable word: the same count as asking word by word, with one call per undecodable word instead of one per word. Before,
 # the per-word calls were 83 % of the rewriter's load phase on Minecraft Dungeons II's main (115 MB of text, 51.7 million calls: 388 of 469 s under cProfile)
 def count_undecodable(img, s, e, md):

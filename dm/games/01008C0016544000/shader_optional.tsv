@@ -1,6 +1,6 @@
 # key <TAB> which dumps have it: the map is the union of 1.0.45861 (v0) and 3.0.60151 (v983040) (shader_versions); these shaders of v0
 # are not in v786432 (2.0.59001) or v983040 (3.0.60151), and as the first version's rows they carry no version tag
-# PEANUTS: added for Sea of Stars v0 + v786432 + v983040 support
+# KIWI: added for Sea of Stars v0 + v786432 + v983040 support
 000ab4e7c39f751d	1.0.45861 (v0) only
 000b6babafbaa616	1.0.45861 (v0) only
 000d5af20f3e2f0c	1.0.45861 (v0) only

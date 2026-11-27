@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="status" src="https://img.shields.io/badge/release-0.1.9-brightgreen"> <!-- PEANUTS -->
+  <img alt="status" src="https://img.shields.io/badge/release-0.1.9-brightgreen"> <!-- KIWI -->
   <img alt="license" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue">
   <img alt="platform" src="https://img.shields.io/badge/platform-Android%2013%2B-green">
   <img alt="package" src="https://img.shields.io/badge/package-hernandez.kiwinative-6aaf2a">
@@ -33,7 +33,7 @@ The app is called **Kiwi Native** and its Android package is `hernandez.kiwinati
 
 ## Supported games
 
-<!-- PEANUTS begin: the Supported games table, written by peanuts/scripts/games_catalog.py from peanuts/games.tsv, peanuts/release-titles.txt and the profiles. Edit peanuts/games.tsv, not this table -->
+<!-- KIWI begin: the Supported games table, written by kiwi/scripts/games_catalog.py from kiwi/games.tsv, kiwi/release-titles.txt and the profiles. Edit kiwi/games.tsv, not this table -->
 
 Kiwi Native 0.1.9 includes 87 games. The Companion column shows whether a game appears in the Eden Duo Companions catalog, and the Contributor column the community members who brought a game to Kiwi Native. Updates are shown as version numbers or numeric update IDs.
 
@@ -127,7 +127,7 @@ Kiwi Native 0.1.9 includes 87 games. The Companion column shows whether a game a
 | Batman: Arkham Knight | `0100ACD0163D0000` | 1.0.5 | No | ⭐<br><a href="https://github.com/tapionallanaire"><img src="https://img.shields.io/badge/tapionallanaire-181717?style=flat-square&logo=github&logoColor=white" style="vertical-align: middle;" alt="tapionallanaire"></a> |
 | OCTOPATH TRAVELER | `010057D006492000` | 1.0.5 | No | ⭐<br><a href="https://github.com/Alliance-Sky"><img src="https://img.shields.io/badge/Alliance--Sky-181717?style=flat-square&logo=github&logoColor=white" style="vertical-align: middle;" alt="Alliance-Sky"></a> |
 
-<!-- PEANUTS end: the Supported games table -->
+<!-- KIWI end: the Supported games table -->
 
 ## What you need
 
@@ -136,10 +136,10 @@ Kiwi Native 0.1.9 includes 87 games. The Companion column shows whether a game a
 - Android 13 or later, a Snapdragon GPU with Vulkan 1.3, and 12 GB of RAM or more. A Turnip Vulkan driver is
   recommended; the app can download one.
 - Android 12 (experimental): the app installs and opens, and the library, settings, imports and saves work, but games
-  need Android 13. Starting a game says so. <!-- PEANUTS: Android 12 support (app only) -->
+  need Android 13. Starting a game says so. <!-- KIWI: Android 12 support (app only) -->
 - Free storage for the game and its build. Plan for the size of the game plus a few GB.
 - Your own `prod.keys`, your own firmware dump (a folder or a `.zip`) and your own game dump (NSP, XCI, either compressed
-  as NSZ or XCZ, or a dump folder), with its update. <!-- PEANUTS: .nsz and .xcz (issue #149) -->
+  as NSZ or XCZ, or a dump folder), with its update. <!-- KIWI: .nsz and .xcz (issue #149) -->
 
 ## Your keys and games
 
@@ -172,10 +172,10 @@ After an app update, rebuilding every game is strongly recommended: hold the cov
   from the game's next start, and each mod has a switch and a delete button. A mod that changes the game's code gets
   a build with mods, which starts by itself (it waits while another build runs). Until that build is ready, **Play**
   says when it will be, so the game never opens your modded save without its mod. After a failed build, tap **Build
-  with mods** to try again. <!-- PEANUTS: issue #514 -->
+  with mods** to try again. <!-- KIWI: issue #514 -->
 - **Saves**: back up, restore, import and **Delete save data** on the game's **Saves** tab.
 
-A game can also be built on a computer and pushed to the device: see [BUILDER.md](peanuts/docs/BUILDER.md). The builder is tested
+A game can also be built on a computer and pushed to the device: see [BUILDER.md](kiwi/docs/BUILDER.md). The builder is tested
 on macOS and Linux. Windows is written but not tested yet. On Linux it also builds four games whose shaders are
 Oodle-compressed or in Unreal archives; for the Oodle ones it compiles a separate open-source decoder (ooz,
 GPL-3.0-or-later), which is used on the computer only and is not part of the app.
@@ -207,12 +207,12 @@ from a game, and point other players to their own dump instead.
 **Does the companion slow the game down?** Very little. The games above hold their frame rate with the companion
 running.
 
-More questions and troubleshooting: [FAQ.md](peanuts/docs/FAQ.md).
+More questions and troubleshooting: [FAQ.md](kiwi/docs/FAQ.md).
 
 ## Contributing
 
-See [CONTRIBUTING.md](peanuts/docs/CONTRIBUTING.md) for adding a game, fixing a bug and testing on a device. Run
-`sh peanuts/scripts/install-hooks.sh` once after cloning.
+See [CONTRIBUTING.md](kiwi/docs/CONTRIBUTING.md) for adding a game, fixing a bug and testing on a device. Run
+`sh kiwi/scripts/install-hooks.sh` once after cloning.
 
 
 ## Credits and license
@@ -221,18 +221,18 @@ Kiwi Native, with its name, logo and package (`hernandez.kiwinative`), is mainta
 real work of running Switch games natively on Android and is built on [nxnative](https://github.com/seedds/nxnative)
 by seedds (MIT). Some fixes are adapted from [nx2android](https://github.com/shirai91/nx2android) (MIT).
 The Miis are drawn with the colour tables and face layout of [vee](https://github.com/j0lol/vee) (MIT) and their textures decoded with
-[bcdec](https://github.com/iOrange/bcdec) (MIT). <!-- PEANUTS: the Mii drawing's sources (android/NOTICE.md) -->
+[bcdec](https://github.com/iOrange/bcdec) (MIT). <!-- KIWI: the Mii drawing's sources (android/NOTICE.md) -->
 Animal Crossing: New Horizons' 60 fps choice uses [ACNH 60 FPS + SpeedFix](https://github.com/tmouh/acnh-60fps) v1.4.5 by tmouh
-(CC BY-NC 4.0), converted to rows of changed bytes (`dm/games/01006F8002326000/speedfix60/NOTICE.md`). <!-- PEANUTS -->
+(CC BY-NC 4.0), converted to rows of changed bytes (`dm/games/01006F8002326000/speedfix60/NOTICE.md`). <!-- KIWI -->
 
 
 The companion runtime and package format come from [Eden Duo](https://github.com/igawa6/eden-duo).
 
-Contributors: <!-- PEANUTS begin: the contributor list of this fork -->
+Contributors: <!-- KIWI begin: the contributor list of this fork -->
 
-- [intermission88](https://github.com/intermission88): the builder for PC, Mac and Linux (`peanuts/docs/BUILDER.md`, pull request #13), the profiles of Kirby's Return to Dream Land Deluxe, Kirby and the Forgotten Land, Super Mario 3D World + Bowser's Fury, Tetris Effect: Connected and Digimon Story Time Stranger (pull requests #34, #84, #83, #330 and #269), the guide for adding a game (`peanuts/docs/NEW-GAME.md`, pull request #34), total play time and the stats page on the bottom screen (pull requests #282 and #289), names in STORY OF SEASONS: Grand Bazaar, EA SPORTS FC 27's second controller and the NVN sampler builder's getters (pull requests #354, #284 and #268), the PC tools on Windows (pull request #328), fixes to the on-device packer, the release notes popup and the Unreal shader step (pull requests #37, #35 and #71), the profiles of 13 Sentinels: Aegis Rim, Captain Toad: Treasure Tracker, Advance Wars 1+2: Re-Boot Camp, Super Mario RPG, WarioWare: Get It Together!, LEGO 2K Drive, LEGO CITY UNDERCOVER, LEGO MARVEL Super Heroes and Minecraft Dungeons II (pull requests #384, #380, #382, #443, #430, #460, #368, #469 and #479), the overlay's pill and the stats page's console mode and frame rate cap (pull requests #538, #516 and #523), packs built on Windows on every thread (pull request #481), Oodle and Unreal shaders in the builder on macOS (pull requests #70 and #72), Sort beside Find on Home (pull request #557), Kirby and the Forgotten Land's frame limits on the game's own clock (pull request #624), small Unreal heap blocks that PhysX can use (pull request #551), multisample resolves into a smaller texture (pull request #629), LEGO MARVEL Super Heroes' streets no longer drawn as noise (pull request #729), and Resolution scale for integer render targets (pull request #734).
+- [intermission88](https://github.com/intermission88): the builder for PC, Mac and Linux (`kiwi/docs/BUILDER.md`, pull request #13), the profiles of Kirby's Return to Dream Land Deluxe, Kirby and the Forgotten Land, Super Mario 3D World + Bowser's Fury, Tetris Effect: Connected and Digimon Story Time Stranger (pull requests #34, #84, #83, #330 and #269), the guide for adding a game (`kiwi/docs/NEW-GAME.md`, pull request #34), total play time and the stats page on the bottom screen (pull requests #282 and #289), names in STORY OF SEASONS: Grand Bazaar, EA SPORTS FC 27's second controller and the NVN sampler builder's getters (pull requests #354, #284 and #268), the PC tools on Windows (pull request #328), fixes to the on-device packer, the release notes popup and the Unreal shader step (pull requests #37, #35 and #71), the profiles of 13 Sentinels: Aegis Rim, Captain Toad: Treasure Tracker, Advance Wars 1+2: Re-Boot Camp, Super Mario RPG, WarioWare: Get It Together!, LEGO 2K Drive, LEGO CITY UNDERCOVER, LEGO MARVEL Super Heroes and Minecraft Dungeons II (pull requests #384, #380, #382, #443, #430, #460, #368, #469 and #479), the overlay's pill and the stats page's console mode and frame rate cap (pull requests #538, #516 and #523), packs built on Windows on every thread (pull request #481), Oodle and Unreal shaders in the builder on macOS (pull requests #70 and #72), Sort beside Find on Home (pull request #557), Kirby and the Forgotten Land's frame limits on the game's own clock (pull request #624), small Unreal heap blocks that PhysX can use (pull request #551), multisample resolves into a smaller texture (pull request #629), LEGO MARVEL Super Heroes' streets no longer drawn as noise (pull request #729), and Resolution scale for integer render targets (pull request #734).
 - [davdxpx](https://github.com/davdxpx): the issue and discussion forms rebuilt from the ground up, with a game catalog that also keeps the Supported games table up to date (pull request #175), building from .nsz and .xcz files, the launcher and companion on the second screen, Swap screens, the GPU driver page, Share build log, game icons that outlive their NSP, companion release notes, mod folders left out of the library and Import pack (pull requests #249 and #260), Settings in ten sections with one search (pull requests #315 and #312), users with pictures, Miis and Who's playing? (pull request #321), the Mali PanVK pointer (pull request #296), Tomodachi Life's clock and boot crash fixes (pull requests #336 and #345), the build queue (pull request #448), cheats for every game and the in-game Mods tab (pull requests #436 to #441), the game page's areas (pull requests #445 to #447), saves for each user (pull requests #432 and #442), TV and monitors (pull request #407), sound that follows the game's pace (pull request #399), the GPU clock floor on Snapdragon 8 Gen 2 and 8 Gen 3 (pull request #457), a build queue that a game which crashes, hangs or fills the storage never holds up (pull request #555), several game, update and DLC folders in one library (pull request #696), a quick Y on a cover that opens the game page (pull request #704), a build watchdog that lets a long shader step on a slow phone finish (pull request #813), the Mods switch under App in Settings (pull request #827), the in-game menus: a game menu, a quick menu with its tabs on a rail, one menu at the right or on the bottom screen, and a quick menu button of your own (pull requests #678 to #680), and many smaller fixes across the app.
-  The largest of it is incremental builds (`peanuts/docs/INCREMENTAL-BUILD.md`): each stage of the phone's build keeps what an earlier build made, addressed by the exact inputs it came from (a shader by its part of the profile, a code module by the patches its build ID takes, a game file by its SHA-256), checks a sample of it against a fresh translation byte for byte, and makes again only what changed. An Import again of Animal Crossing: New Horizons on an AYN Thor went from 7 min 31 s to 1 min 2 s, with the same pack to the byte. <!-- PEANUTS -->
+  The largest of it is incremental builds (`kiwi/docs/INCREMENTAL-BUILD.md`): each stage of the phone's build keeps what an earlier build made, addressed by the exact inputs it came from (a shader by its part of the profile, a code module by the patches its build ID takes, a game file by its SHA-256), checks a sample of it against a fresh translation byte for byte, and makes again only what changed. An Import again of Animal Crossing: New Horizons on an AYN Thor went from 7 min 31 s to 1 min 2 s, with the same pack to the byte. <!-- KIWI -->
 - [elliott-groves](https://github.com/elliott-groves): development builds that install beside the Kiwi Native app (pull request #60).
 - [tapionallanaire](https://github.com/tapionallanaire): building the APK on Windows (pull request #54), the Hogwarts Legacy, Trails in the Sky 1st Chapter, Trails in the Sky 2nd Chapter and Double Dragon Revive profiles (pull requests #95, #221, #164 and #197), the shader readers for Level-5 archives (pull requests #230 and #243), the Unreal 4.27 allocator's page alignment (pull request #236), the Advance Wars 1+2: Re-Boot Camp memory pool and FINAL FANTASY TACTICS update 1.2.0 (pull requests #231 and #228), the FANTASY LIFE i: The Girl Who Steals Time profile (pull request #224), the translator fix for bindless handles reloaded from local memory (pull request #572), texture and sampler handles resolved against the executing pools (pull request #785), Hogwarts Legacy's opt-in thermal cap (pull request #513), Trails in the Sky 1st Chapter update 1.0.8 and FANTASY LIFE i: The Girl Who Steals Time update 2.2.0 (pull requests #783 and #800), the occlusion and flush game options (pull request #818), a game language the game lacks becoming one it has (pull request #639), and profiles, code builds and notes for more games, some still being brought up (pull requests #575, #578, #579, #645 and #657).
 - [dnyan007](https://github.com/dnyan007): the DRAGON BALL: Sparking! ZERO profile, its allocator start-up fix and 60 fps, the sync of GPU-written terrain into block-compressed textures (pull requests #168, #167, #290 and #302), and the Stray and Viewfinder profiles at 60 fps (pull requests #379 and #426).
@@ -255,7 +255,7 @@ Contributors: <!-- PEANUTS begin: the contributor list of this fork -->
 - [marojiro](https://github.com/marojiro): a new game's profile (pull request #747).
 - [codetz7](https://github.com/codetz7): a new game's profile (pull request #714).
 - [ArchOwlen](https://github.com/ArchOwlen): the first issue and discussion forms (pull request #5).
-<!-- PEANUTS end -->
+<!-- KIWI end -->
 
 The project as a whole is licensed GPL-3.0-or-later. Frame generation (ported from Eden and lsfg-vk) and other
 components carry their own licenses; see `android/NOTICE.md` and `dm/third_party/README.md`.

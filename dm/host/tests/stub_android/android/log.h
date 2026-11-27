@@ -1,4 +1,4 @@
-// PEANUTS: <android/log.h> for the tests that build an Android-side file on a Linux PC (t_peanuts_host.c): the log goes to stderr
+// KIWI: <android/log.h> for the tests that build an Android-side file on a Linux PC (t_kiwi_host.c): the log goes to stderr
 #pragma once
 #include <stdarg.h>
 #include <stdio.h>

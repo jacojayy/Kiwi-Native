@@ -3,7 +3,7 @@
 // ADPCM / PCM decoding, resampling, mixing, reverb / delay / biquad / limiter / compressor ...) into the application, for the "CPU rendering + manual execution" mode (AudioRendererParameter
 // +0x2c renderingDevice = 1 CPU, +0x30 executionMode = 1 manual). In this mode OpenAudioRenderer goes through the in-process DFC manager (CreateAudioRendererManagerByDfc),
 // RequestUpdate is parsed in-process, and rendering happens on the CPU of whichever thread calls nn::audio::ExecuteAudioRendererRendering, which then signals the renderer event (the renderer's own: ar_open).
-// PEANUTS(upstream-candidate): nxnative 18b435ac38 / a334797d12, more than one audio renderer
+// KIWI(upstream-candidate): nxnative 18b435ac38 / a334797d12, more than one audio renderer
 // A game can open more than one renderer, as on Horizon (Mario & Luigi: Brothership: one at 48 kHz and Unreal's mixer at 32 kHz): each gets its own
 // state (ar_t), PCM blocks, render thread and output, and the sound card mixes them.
 // The host does three things:
@@ -20,7 +20,7 @@
 #include <time.h>
 #include <unistd.h>
 #if PLAT_ANDROID
-#include <sys/resource.h>   // PEANUTS: setpriority for the render thread (render_main)
+#include <sys/resource.h>   // KIWI: setpriority for the render thread (render_main)
 #endif
 
 void *dm_guest_thread_spawn(void (*fn)(void *), void *arg, int prio, size_t stack_size);
@@ -31,11 +31,11 @@ void dm_pcmout_start(void *k);
 int dm_pcmout_append(void *k, void *b);
 void *dm_pcmout_released(void *k);
 void dm_pcmout_wait(void *k, int ms);
-__attribute__((weak)) int pn_audio_follow(int index, int16_t *buf, int n, int cap);   // PEANUTS: absent in a build without dm/peanuts
+__attribute__((weak)) int pn_audio_follow(int index, int16_t *buf, int n, int cap);   // KIWI: absent in a build without dm/kiwi
 
 // P_SIZE: bytes of the game's AudioRendererParameter copied before the two fields are changed. SDK 16's struct is 0x38 bytes; SDK 8's (Link's Awakening) has one more word,
 // its revision at +0x38: copying only 0x38 left the revision uninitialized and the SDK rejected it (CheckValidRevision, Result 0x499). The SDK reads only its own size of the copy
-// PEANUTS(upstream-candidate): clock-paced render thread, general fix for AAudio's bursty release cadence, not Peanuts-specific.
+// KIWI(upstream-candidate): clock-paced render thread, general fix for AAudio's bursty release cadence, not Kiwi-specific.
 // NBUF: blocks in flight. Android's AAudio stream without a fast track releases a 20 ms burst (four blocks at once), so more than one burst must be queued for the clock-paced
 // renders below to run ahead of the output
 enum { P_DEVICE = 0x2c, P_MODE = 0x30, P_SIZE = 0x40, WORK_PAGE = 0x1000, FRAME_MAX = 1024, NBUF = PLAT_APPLE ? 4 : 8, FRAME_NS = 5000000 };
@@ -83,14 +83,14 @@ static size_t ar_service_work_size(const uint8_t *p) {
     return ar_align(size + commands + 0x7e, WORK_PAGE);
 }
 
-// PEANUTS: an SDK with no renderer of its own (SDK 1.3.1: no ExecuteAudioRendererRendering, only the IPC client) keeps its own client: its calls go to the SDK, whose requests
+// KIWI: an SDK with no renderer of its own (SDK 1.3.1: no ExecuteAudioRendererRendering, only the IPC client) keeps its own client: its calls go to the SDK, whose requests
 // reach the audio renderer service the host answers (hle_audren_svc.c), not the CPU renderer below
 int dm_audren_served(void);
 
 HLE_FORCE("_ZN2nn5audio30GetAudioRendererWorkBufferSizeERKNS0_22AudioRendererParameterE", "renderer work buffer: DSP service budget, with extra local CPU backend storage supplied by the host",
           size_t, h_ar_WorkSize, const uint8_t *param) {
     static size_t (*orig)(const uint8_t *); if (!orig) orig = gsym("_ZN2nn5audio30GetAudioRendererWorkBufferSizeERKNS0_22AudioRendererParameterE");
-    if (dm_audren_served()) return orig(param);   // PEANUTS: the SDK asks the host's service (hle_audren_svc.c)
+    if (dm_audren_served()) return orig(param);   // KIWI: the SDK asks the host's service (hle_audren_svc.c)
     uint8_t p[P_SIZE]; cpu_manual(p, param); size_t n = orig(p);
     size_t service = *(int32_t *)(param + P_DEVICE) == 0 ? ar_service_work_size(p) : 0;
     size_t guest_n = service ? service : n;
@@ -98,7 +98,7 @@ HLE_FORCE("_ZN2nn5audio30GetAudioRendererWorkBufferSizeERKNS0_22AudioRendererPar
     return guest_n;
 }
 // ---------- rendering and output ----------
-// PEANUTS: one renderer's state (nxnative 18b435ac38 / a334797d12). Only the render thread and the updates of this renderer touch it, apart from the one lock over all renderers' rendering
+// KIWI: one renderer's state (nxnative 18b435ac38 / a334797d12). Only the render thread and the updates of this renderer touch it, apart from the one lock over all renderers' rendering
 // (g_render_mu). This was one set of globals: a second renderer got no render thread, its updates rendered catch-up frames into the first one's output queue, about 10% of its frames
 // (Mario & Luigi: Brothership), and its own frames were never rendered otherwise
 enum { CQ = 4, AR_MAX = 4 };   // AR_MAX as g_rev below
@@ -135,15 +135,15 @@ static ar_t *ar_of_sys(uint8_t *sys) {
     pthread_mutex_unlock(&g_ar_mu);
     return found;
 }
-// PEANUTS(upstream-candidate): render lock widened to a recursive one guarding the whole catch-up/clock-pacing path above; general fix, not Peanuts-specific.
+// KIWI(upstream-candidate): render lock widened to a recursive one guarding the whole catch-up/clock-pacing path above; general fix, not Kiwi-specific.
 // The render lock (recursive): the render thread holds it from its choice (a queued catch-up frame, or a render of its own) through the render, an update from its catch-up render
 // through queuing it, so the two never cross. The thread used to decide on an empty queue, wait for the catch-up render in progress, and append its own, later, frame first: two 5 ms
 // blocks swapped, a click
-// PEANUTS: one lock over all renderers (nxnative 18b435ac38): the header layout is worked out once from whichever list comes first, by trying each layout in turn (capture), and
+// KIWI: one lock over all renderers (nxnative 18b435ac38): the header layout is worked out once from whichever list comes first, by trying each layout in turn (capture), and
 // capture's downmix buffer is shared; a frame takes hundredths of a millisecond
 static pthread_mutex_t g_render_mu; static pthread_once_t g_render_mu_once = PTHREAD_ONCE_INIT;
 static void render_mu_init(void) { pthread_mutexattr_t a; pthread_mutexattr_init(&a); pthread_mutexattr_settype(&a, PTHREAD_MUTEX_RECURSIVE); pthread_mutex_init(&g_render_mu, &a); pthread_mutexattr_destroy(&a); }
-// PEANUTS: a guest thread that waits for this lock counts as blocked (dm_host_mutex_lock, hle_thread.c's same-core wake handoff): the render thread holds it through the SDK's signal of
+// KIWI: a guest thread that waits for this lock counts as blocked (dm_host_mutex_lock, hle_thread.c's same-core wake handoff): the render thread holds it through the SDK's signal of
 // the game's renderer event, the signal wakes the game's sound thread (a higher priority on the same core), and the handoff waits until that thread blocks. The sound thread's update
 // then waited for this lock for its catch-up render (a timer-driven update just before the event's own, nothing rendered since the one before), a wait the host counted as running:
 // neither side ever went on, the renderer stopped for good and the game's cutscene clock with it (Metroid Dread, issue #8: the game's 45,692nd render)
@@ -151,13 +151,13 @@ static void render_lock(void) { pthread_once(&g_render_mu_once, render_mu_init);
 static void render_unlock(void) { pthread_mutex_unlock(&g_render_mu); }
 
 static void render_main(void *arg) {
-    ar_t *a = arg; t_ar = a;   // PEANUTS: the thread's renderer (gbuf moved up to ar_t)
+    ar_t *a = arg; t_ar = a;   // KIWI: the thread's renderer (gbuf moved up to ar_t)
     void (*exec)(void *, void *) = gsym("_ZN2nn5audio29ExecuteAudioRendererRenderingENS0_19AudioRendererHandleE");
     void *out = dm_pcmout_open(2);
-    gbuf *free_list[NBUF]; int nfree = NBUF;   // PEANUTS: the renderer's own blocks (a334797d12): in statics, every render thread filled the same ones, and a block queued for one output was rewritten by the other renderer's thread before it played
+    gbuf *free_list[NBUF]; int nfree = NBUF;   // KIWI: the renderer's own blocks (a334797d12): in statics, every render thread filled the same ones, and a block queued for one output was rewritten by the other renderer's thread before it played
     for (int i = 0; i < NBUF; i++) { a->bufs[i] = (gbuf){a->pcm[i], sizeof a->pcm[i], 0}; free_list[i] = &a->bufs[i]; }
     dm_pcmout_start(out);
-    // PEANUTS: every guest thread (this one included) is started at the same OS priority, Android's THREAD_PRIORITY_DISPLAY (nice -4; hle_thread.c prio_qos, DM_QOS_MAP off
+    // KIWI: every guest thread (this one included) is started at the same OS priority, Android's THREAD_PRIORITY_DISPLAY (nice -4; hle_thread.c prio_qos, DM_QOS_MAP off
     // by default): fine for game logic, but this thread has a hard 5 ms deadline the OS does not otherwise know about. Without a fast/MMAP track (the AAudio stream above opens
     // "not low latency": a 20 ms burst, not the fast path's own real-time-scheduled mixer thread), nothing gives this thread's audio deadline any weight over the game's other
     // threads when the CPU is busy. On a Snapdragon 8 Gen 2 Thor, under load (Fire Emblem: Three Houses' battle map, Animal Crossing: New Horizons) this thread's measured render
@@ -167,49 +167,49 @@ static void render_main(void *arg) {
 #if PLAT_ANDROID
     setpriority(PRIO_PROCESS, (id_t)gettid(), -16);
 #endif
-    LOG("audren: render thread %d started (%d buffers in flight, paced by the clock, held back by the output)", ar_index(a), NBUF);   // PEANUTS: clock-paced (see enum NBUF above); the renderer's number
+    LOG("audren: render thread %d started (%d buffers in flight, paced by the clock, held back by the output)", ar_index(a), NBUF);   // KIWI: clock-paced (see enum NBUF above); the renderer's number
     // One block per 5 ms by the clock, as the DSP timer on Horizon; the output's releases only say how far ahead the thread may run (queue full: it waits, so the sound card stays
     // the master; the clock is 0.5 % fast so it does). The Mac's output releases a block every 5 ms and the renders followed it; Android's AAudio without a fast track releases four
     // at once, and the thread rendered four frames in 1.6 ms then nothing for 18 ms: the renderer event fired in bursts (one or two wakes for four frames), the game's updates between
     // bursts rendered catch-up frames (Fire Emblem: Three Houses: 550 per 2000) and the sound dragged
     uint64_t next = now_ns();
-    while (atomic_load(&a->open)) {   // PEANUTS: a->
-        int held = 0;   // PEANUTS: the output held the thread back (see the pacing below)
+    while (atomic_load(&a->open)) {   // KIWI: a->
+        int held = 0;   // KIWI: the output held the thread back (see the pacing below)
         while (!nfree) {   // wait for the output to hand a block back (silent sink / sound card); it signals each release, so the thread sleeps until then (it used to poll every 1 ms)
             gbuf *b = dm_pcmout_released(out);
             if (b) { free_list[nfree++] = b; break; }
             held = 1; dm_pcmout_wait(out, 10);
-            if (!atomic_load(&a->open)) break;   // PEANUTS: a->
+            if (!atomic_load(&a->open)) break;   // KIWI: a->
         }
         if (!nfree) break;
-        uint64_t t = now_ns();   // PEANUTS: clock pacing (see above)
+        uint64_t t = now_ns();   // KIWI: clock pacing (see above)
         if (t > next + FRAME_NS * NBUF) next = t;   // far behind (the output stopped, the thread held off): render now, the cadence starts afresh
-        // PEANUTS: held back by a full output, the cadence starts afresh too. The clock is 0.5 % fast, so the output's queue fills in the end; Android's output then hands
+        // KIWI: held back by a full output, the cadence starts afresh too. The clock is 0.5 % fast, so the output's queue fills in the end; Android's output then hands
         // back four blocks at once every 20 ms, and the thread, behind its clock by the wait, rendered them back to back and stalled again: frames and renderer events in
         // bursts, the game's updates in the gaps (300 catch-up frames per 2000 in Fire Emblem: Three Houses). From the release on it renders one frame per 5 ms again
         else if (held && t > next) next = t;
         else if (next > t) { struct timespec ts = {0, (long)(next - t)}; nanosleep(&ts, NULL); }
         next += FRAME_NS - FRAME_NS / 200;
         const int16_t *src; int got;
-        render_lock();   // PEANUTS: render lock (see above)
-        uint32_t h = atomic_load(&a->cq_head);   // PEANUTS: the renderer's own queue and frame (a->), here and in the two lines below
+        render_lock();   // KIWI: render lock (see above)
+        uint32_t h = atomic_load(&a->cq_head);   // KIWI: the renderer's own queue and frame (a->), here and in the two lines below
         if (h != atomic_load(&a->cq_tail)) { src = a->cq[h % CQ]; got = a->cq_n[h % CQ]; atomic_store(&a->cq_head, h + 1); cq_popped(a); }   // play queued catch-up output first
-        else { a->frame_n = 0; exec(a->handle[0], a->handle[1]); src = a->frame; got = a->frame_n; cq_popped(a); }   // SDK: generate commands → CPU processing (output taken in the host takeover) → signal the game's renderer event. PEANUTS: cq_popped wakes an update that waits for this render (h_ars_Update)
-        // PEANUTS: the frame is copied out before the lock is released. Taking a frame off a full queue wakes the update that waits for room (cq_popped), and its catch-up
+        else { a->frame_n = 0; exec(a->handle[0], a->handle[1]); src = a->frame; got = a->frame_n; cq_popped(a); }   // SDK: generate commands → CPU processing (output taken in the host takeover) → signal the game's renderer event. KIWI: cq_popped wakes an update that waits for this render (h_ars_Update)
+        // KIWI: the frame is copied out before the lock is released. Taking a frame off a full queue wakes the update that waits for room (cq_popped), and its catch-up
         // render goes into the slot just taken: copied after the unlock, the block played was that newer frame, the frame taken was never played, and the newer one played
         // again in its turn four blocks later. Fire Emblem: Three Houses keeps the queue full (one update in four renders a catch-up frame): 16.6 % of its sounding 5 ms
         // blocks were exact copies of the block four before, heard as crackle; Animal Crossing: New Horizons the same
         int n = got ? got : 240;
         gbuf *b = free_list[--nfree];
         if (got) memcpy(b->ptr, src, (size_t)n * 4); else memset(b->ptr, 0, (size_t)n * 4);
-        if (pn_audio_follow) { int f = pn_audio_follow(ar_index(a), b->ptr, n, FRAME_MAX); next += (int64_t)(f - n) * (FRAME_NS - FRAME_NS / 200) / 240; n = f; }   // PEANUTS: stretched to the game's pace (dm/peanuts/peanuts_audiosync.h); the clock paces the frames played
+        if (pn_audio_follow) { int f = pn_audio_follow(ar_index(a), b->ptr, n, FRAME_MAX); next += (int64_t)(f - n) * (FRAME_NS - FRAME_NS / 200) / 240; n = f; }   // KIWI: stretched to the game's pace (dm/kiwi/kiwi_audiosync.h); the clock paces the frames played
         b->size = (uint64_t)n * 4;
-        render_unlock();   // PEANUTS: render lock (see above)
-        if (!n) { free_list[nfree++] = b; continue; }   // PEANUTS: nothing to play yet (the stretch fills its look-ahead, peanuts_audiosync.c)
+        render_unlock();   // KIWI: render lock (see above)
+        if (!n) { free_list[nfree++] = b; continue; }   // KIWI: nothing to play yet (the stretch fills its look-ahead, kiwi_audiosync.c)
         if (!dm_pcmout_append(out, b)) free_list[nfree++] = b;
     }
     dm_pcmout_close(out);   // the output would otherwise keep its sound card callback or silent sink running and hold one of the AudioOut slots after the renderer closes
-    cq_popped(a);   // an update waiting for queue space (catch-up pacing) sees open cleared   // PEANUTS: a
+    cq_popped(a);   // an update waiting for queue space (catch-up pacing) sees open cleared   // KIWI: a
 }
 
 // Both OpenAudioRenderer forms: CPU rendering + manual execution, then the host's render thread. With the event the game waits on it, which each render signals; without it the
@@ -241,12 +241,12 @@ static void *rev_find(void *obj) {
     for (int i = 0; i < 4 && !ev; i++) if (g_rev[i].obj == obj) ev = g_rev[i].ev;
     pthread_mutex_unlock(&g_rev_mu); return ev;
 }
-static Result ar_open(void **handle, void *ev, const uint8_t *param, void *work, size_t sz, void *ra) {   // PEANUTS: ra, the game's call site
+static Result ar_open(void **handle, void *ev, const uint8_t *param, void *work, size_t sz, void *ra) {   // KIWI: ra, the game's call site
     static Result (*orig_ev)(void **, void *, const uint8_t *, void *, size_t), (*orig)(void **, const uint8_t *, void *, size_t);
     if (!orig_ev) orig_ev = gsym("_ZN2nn5audio17OpenAudioRendererEPNS0_19AudioRendererHandleEPNS_2os11SystemEventERKNS0_22AudioRendererParameterEPvm");
     if (!orig) orig = gsym("_ZN2nn5audio17OpenAudioRendererEPNS0_19AudioRendererHandleERKNS0_22AudioRendererParameterEPvm");
     if (t_in_open) return orig(handle, param, work, sz);
-    if (dm_audren_served()) return ev ? orig_ev(handle, ev, param, work, sz) : orig(handle, param, work, sz);   // PEANUTS: the SDK's own open, through the host's service (hle_audren_svc.c)
+    if (dm_audren_served()) return ev ? orig_ev(handle, ev, param, work, sz) : orig(handle, param, work, sz);   // KIWI: the SDK's own open, through the host's service (hle_audren_svc.c)
     uint8_t p[P_SIZE]; cpu_manual(p, param);
     LOG("audren: OpenAudioRenderer%s rate %d samples per frame %d mix buffers %d submixes %d voices %d sinks %d effects %d splitters %d (original device %d mode %d → CPU / manual) work buffer %p+%#zx",
         ev ? "" : " (no event)", *(int32_t *)param, *(int32_t *)(param + 4), *(int32_t *)(param + 8), *(int32_t *)(param + 0xc), *(int32_t *)(param + 0x10), *(int32_t *)(param + 0x14),
@@ -288,7 +288,7 @@ static Result ar_open(void **handle, void *ev, const uint8_t *param, void *work,
             rev_set(sev, handle[0]);
         } else { destroy(ev); hle_bind_system_event(ev, 1); }   // no free renderer event: the earlier behaviour, which needs the game's object to live
     }
-    // PEANUTS: a free slot for this renderer, and a render thread of its own (it used to log "[RED] audren: a second renderer (the host drives only one)" and render the first only)
+    // KIWI: a free slot for this renderer, and a render thread of its own (it used to log "[RED] audren: a second renderer (the host drives only one)" and render the first only)
     module_t *m = module_of(ra);
     pthread_mutex_lock(&g_ar_mu);
     ar_t *a = NULL;
@@ -305,21 +305,21 @@ static Result ar_open(void **handle, void *ev, const uint8_t *param, void *work,
     return r;
 }
 HLE_FORCE("_ZN2nn5audio17OpenAudioRendererEPNS0_19AudioRendererHandleEPNS_2os11SystemEventERKNS0_22AudioRendererParameterEPvm", "open the renderer (with event): CPU rendering + manual execution, the host starts a render thread",
-          Result, h_ar_Open, void **handle, void *ev, const uint8_t *param, void *work, size_t sz) { return ar_open(handle, ev, param, work, sz, __builtin_return_address(0)); }   // PEANUTS: the call site
+          Result, h_ar_Open, void **handle, void *ev, const uint8_t *param, void *work, size_t sz) { return ar_open(handle, ev, param, work, sz, __builtin_return_address(0)); }   // KIWI: the call site
 HLE_FORCE("_ZN2nn5audio17OpenAudioRendererEPNS0_19AudioRendererHandleERKNS0_22AudioRendererParameterEPvm", "open the renderer (no event): CPU rendering + manual execution, the host starts a render thread",
-          Result, h_ar_Open0, void **handle, const uint8_t *param, void *work, size_t sz) { return ar_open(handle, NULL, param, work, sz, __builtin_return_address(0)); }   // PEANUTS: the call site
+          Result, h_ar_Open0, void **handle, const uint8_t *param, void *work, size_t sz) { return ar_open(handle, NULL, param, work, sz, __builtin_return_address(0)); }   // KIWI: the call site
 HLE_FORCE("_ZN2nn5audio18CloseAudioRendererENS0_19AudioRendererHandleE", "close the renderer: stop the host render thread first, then hand over to the SDK", void, h_ar_Close, void *obj, void *state) {
     static void (*orig)(void *, void *); if (!orig) orig = gsym("_ZN2nn5audio18CloseAudioRendererENS0_19AudioRendererHandleE");
     // Join the render thread first (it checks open every round and at most every 10 ms while waiting for the output): it may be inside exec(), which uses the renderer the SDK is about to free.
     // A fixed 20 ms sleep used to stand in for this, and a renderer reopened inside that window ran a second thread over the first one's blocks
-    // PEANUTS: the renderer's own slot and thread; the slot is free again once the SDK has closed the renderer
+    // KIWI: the renderer's own slot and thread; the slot is free again once the SDK has closed the renderer
     ar_t *a = NULL;
     for (int i = 0; i < AR_MAX && !a; i++) if (g_ar[i].handle[0] == obj) a = &g_ar[i];
     if (a && a->render_tt) { atomic_store(&a->open, 0); dm_guest_thread_join(a->render_tt); a->render_tt = NULL; }
     void *owned = objmap_del(obj), *sev = rev_find(obj);
     orig(obj, state);
     free(owned);
-    if (a) { pthread_mutex_lock(&g_ar_mu); a->handle[0] = NULL; a->sys = NULL; pthread_mutex_unlock(&g_ar_mu); }   // PEANUTS
+    if (a) { pthread_mutex_lock(&g_ar_mu); a->handle[0] = NULL; a->sys = NULL; pthread_mutex_unlock(&g_ar_mu); }   // KIWI
     if (sev) {   // the SDK's Close does not touch the event (SDK 3 to 18); destroying it closes the renderer's ends, and the game's copied read end stays the game's
         static void (*destroy)(void *); if (!destroy) destroy = gsym("_ZN2nn2os18DestroySystemEventEPNS0_15SystemEventTypeE");
         destroy(sev); rev_set(sev, NULL);
@@ -370,7 +370,7 @@ HLE_FORCE("_ZN2nn5audio6server16UpsamplerManager8AllocateEv", "upsampler for a D
     return mgr ? orig(mgr) : NULL;
 }
 enum { RS_T = 16 };
-static uint32_t up_3_2(ar_t *a, const int32_t *in, uint32_t n, int32_t *out) {   // PEANUTS: the history and position are the renderer's (a->up_buf, a->up_pos)
+static uint32_t up_3_2(ar_t *a, const int32_t *in, uint32_t n, int32_t *out) {   // KIWI: the history and position are the renderer's (a->up_buf, a->up_pos)
     static float h[3][RS_T]; int32_t *buf = a->up_buf; uint32_t pos = a->up_pos;   // pos: the next output's position in thirds of an input sample, from the frame start
     if (!h[0][RS_T / 2 - 1]) {
         for (int p = 0; p < 3; p++) {
@@ -390,11 +390,11 @@ static uint32_t up_3_2(ar_t *a, const int32_t *in, uint32_t n, int32_t *out) {  
         for (int k = 0; k < RS_T; k++) { l += c[k] * (float)x[2 * k]; r += c[k] * (float)x[2 * k + 1]; }
         out[2 * m] = (int32_t)lrintf(l); out[2 * m + 1] = (int32_t)lrintf(r);
     }
-    a->up_pos = pos - 3 * n;   // PEANUTS
+    a->up_pos = pos - 3 * n;   // KIWI
     memmove(buf, buf + 2 * n, (RS_T - 1) * 8);
     return m;
 }
-static int capture(ar_t *a, const uint8_t *cl, size_t len, int16_t *dst) {   // PEANUTS: a
+static int capture(ar_t *a, const uint8_t *cl, size_t len, int16_t *dst) {   // KIWI: a
     if (len < 0x20) return 0;
     uint32_t ncmd = *(const uint32_t *)(cl + 4), samples = *(const uint32_t *)(cl + 0x14), rate = *(const uint32_t *)(cl + 0x18);
     const int32_t *mix = *(const int32_t *const *)(cl + 8); const uint8_t *cend = cl + len;
@@ -452,7 +452,7 @@ static int capture(ar_t *a, const uint8_t *cl, size_t len, int16_t *dst) {   // 
             for (uint32_t j = 0; j < 6; j++) in[j] = g_sink4 && !g_sink5 ? ((const int8_t *)(b + 0x124))[j] : ((const int16_t *)(b + (g_sink4 ? 0x124 : 0x134)))[j];
             const int32_t *up = *(const int32_t *const *)(b + (g_sink4 ? 0x118 : 0x128));
             if (!a->sink_logged++) LOG("audren: DeviceSink inputs %u (%d %d …) rate %u samples per frame %u mix buffer %p upsample buffer %p%s", nin, nin ? in[0] : -1, nin > 1 ? in[1] : -1, rate, samples, (void *)mix, (void *)up,
-                               rate == 32000 ? " (32 kHz: resampled to 48 kHz on the host)" : "");   // PEANUTS: logged once per renderer (a->sink_logged)
+                               rate == 32000 ? " (32 kHz: resampled to 48 kHz on the host)" : "");   // KIWI: logged once per renderer (a->sink_logged)
             if (!nin || samples > (rate == 48000 ? FRAME_MAX : FRAME_MAX * 2 / 3 - 1)) return 0;
             if (rate != 48000 && rate != 32000) { static int once; if (!once++) LOG("[RED] audren: renderer sample rate %u (the SDK takes 32000 or 48000): no sound", rate); return 0; }
             // Input buffers: the mix buffers the DeviceSink inputs name, at the renderer's rate (with CPU rendering the SDK makes no upsampler, below)
@@ -468,13 +468,13 @@ static int capture(ar_t *a, const uint8_t *cl, size_t len, int16_t *dst) {   // 
                 else { l = ch[0][s]; r = k > 1 ? ch[1][s] : l; }
                 st[2 * s] = l; st[2 * s + 1] = r;
             }
-            uint32_t nout = rate == 48000 ? samples : up_3_2(a, st, samples, st);   // PEANUTS: a
+            uint32_t nout = rate == 48000 ? samples : up_3_2(a, st, samples, st);   // KIWI: a
             uint64_t loud = 0;
             for (uint32_t s = 0; s < 2 * nout; s++) {
                 int32_t v = st[s]; v = v > 32767 ? 32767 : v < -32768 ? -32768 : v;
                 dst[s] = (int16_t)v; loud |= (uint64_t)v;
             }
-            atomic_fetch_add(&a->frames, 1); if (loud) atomic_fetch_add(&a->nonsilent, 1);   // PEANUTS: the renderer's own counts, here and below
+            atomic_fetch_add(&a->frames, 1); if (loud) atomic_fetch_add(&a->nonsilent, 1);   // KIWI: the renderer's own counts, here and below
             uint64_t f = atomic_load(&a->frames); if (f == 200 || f % 12000 == 0) LOG("audren: renderer %d rendered %llu frames, %llu of them not silent", ar_index(a), (unsigned long long)f, (unsigned long long)atomic_load(&a->nonsilent));
             return (int)nout;
         }
@@ -482,9 +482,9 @@ static int capture(ar_t *a, const uint8_t *cl, size_t len, int16_t *dst) {   // 
     }
     return 0;
 }
-// PEANUTS: render lock (see render_lock/render_unlock above), not a plain mutex, so the catch-up render can nest inside the render thread's lock without deadlocking.
+// KIWI: render lock (see render_lock/render_unlock above), not a plain mutex, so the catch-up render can nest inside the render thread's lock without deadlocking.
 // Render one frame (generate commands + CPU processing); dst = output (stereo int16, *nout samples). The two callers (render thread, catch-up) are serialized by the render lock (above
-// cq_popped): they share one command buffer   (PEANUTS: the update, render and catch-up counts are each renderer's, in ar_t)
+// cq_popped): they share one command buffer   (KIWI: the update, render and catch-up counts are each renderer's, in ar_t)
 // SDK 20's AudioRenderSystem (The Legend of Zelda: Breath of the Wild 1.9.0) has another layout: the member functions for mode / device / command buffer are inlined (sdk+0x22a70c ExecuteAudioRendererRendering:
 //   +0x48 rendering device and +0x4c execution mode, both must be 1; +0xf8 / +0x100 command buffer start / length), GenerateCommand takes a Span<std::byte> and returns a Span (x0 start, x1 length: the generated command list),
 //   and the mutex UpdateImpl holds is at +0x2d0 (+0x1f0 in SDK 16). The layout is recognized by the presence of the Span version of GenerateCommand
@@ -522,7 +522,7 @@ static int update_lock(const char *fn, size_t *off, int *os_mutex) {   // fn: th
     }
     return 0;
 }
-static Result render_once(ar_t *a, uint8_t *sys, int16_t *dst, int *nout) {   // PEANUTS: a
+static Result render_once(ar_t *a, uint8_t *sys, int16_t *dst, int *nout) {   // KIWI: a
     static int (*mode)(void *), (*device)(void *); static uint8_t *(*cbuf)(void *); static size_t (*cbsz)(void *), (*gen)(void *, void *, size_t);
     static span_t (*gen20)(void *, void *, size_t); static size_t mu_off;
     static void (*tmax)(void *, uint32_t), (*setup)(void *, const void *, size_t), (*process)(void *), (*lock)(void *), (*unlock)(void *);
@@ -547,7 +547,7 @@ static Result render_once(ar_t *a, uint8_t *sys, int16_t *dst, int *nout) {   //
     }
     int md = gen20 ? *(int32_t *)(sys + 0x4c) : mode(sys), dv = gen20 ? *(int32_t *)(sys + 0x48) : device(sys);
     if (md != 1 || dv != 1) return 0x40299;   // same as the original: manual rendering needs CPU + manual mode
-    render_lock();   // PEANUTS: render lock (see above)
+    render_lock();   // KIWI: render lock (see above)
     uint64_t t0 = now_ns();
     // Command generation must exclude the game thread's RequestUpdate (AudioRenderSystem::Update, which holds the mutex at mu_off): the original system thread (SendCommandToDsp) generates under the same lock. Processing (the CPU DSP) stays outside the lock, as in the original.
     uint8_t *cl; size_t n;
@@ -555,14 +555,14 @@ static Result render_once(ar_t *a, uint8_t *sys, int16_t *dst, int *nout) {   //
     if (gen20) { span_t sp = gen20(sys, *(uint8_t **)(sys + 0xf8), *(size_t *)(sys + 0x100)); cl = sp.p; n = sp.n; }
     else { cl = cbuf(sys); n = gen(sys, cl, cbsz(sys)); }
     unlock(sys + mu_off);
-    atomic_fetch_add(&a->renders, 1);   // PEANUTS: a->
+    atomic_fetch_add(&a->renders, 1);   // KIWI: a->
     uint64_t proc[16] __attribute__((aligned(16))) = {0};   // CommandListProcessor (0x58 bytes; 0x60 in SDK 21, whose Process reads +0x58)
     tmax(proc, 0xffffffffu); setup(proc, cl, n); process(proc);
-    if (dst) *nout = capture(a, cl, n, dst);   // PEANUTS: a
+    if (dst) *nout = capture(a, cl, n, dst);   // KIWI: a
     // render time per frame (budget: 5 ms per frame): mean / max every 2000 frames
     static uint64_t sum, mx, cnt; uint64_t d = now_ns() - t0; sum += d; if (d > mx) mx = d;
-    if (++cnt == 2000) { LOG("audren: render time mean %.2f ms / max %.2f ms (5 ms budget per frame, last 2000 frames); catch-up renders so far %llu", sum / 2000 / 1e6, mx / 1e6, (unsigned long long)atomic_load(&a->catchups)); sum = mx = cnt = 0; }   // PEANUTS: a->
-    render_unlock();   // PEANUTS: render lock (see above)
+    if (++cnt == 2000) { LOG("audren: render time mean %.2f ms / max %.2f ms (5 ms budget per frame, last 2000 frames); catch-up renders so far %llu", sum / 2000 / 1e6, mx / 1e6, (unsigned long long)atomic_load(&a->catchups)); sum = mx = cnt = 0; }   // KIWI: a->
+    render_unlock();   // KIWI: render lock (see above)
     return RES_OK;
 }
 // Where the AudioRenderSystem sits inside AudioRendererImpl, read off the SDK's own ExecuteAudioRendererRendering: its prologue adds the offset to `this` (x0) before the first branch.
@@ -583,7 +583,7 @@ static size_t impl_sys_off(void) {
     if (!atomic_exchange(&found, off + 1)) LOG("audren: AudioRenderSystem at +%#zx in AudioRendererImpl", off);
     return off;
 }
-// PEANUTS: a render from the host's render thread names the thread's renderer and its system; a game that executes its own CPU renderer renders into that renderer's frame, which nothing plays, as before
+// KIWI: a render from the host's render thread names the thread's renderer and its system; a game that executes its own CPU renderer renders into that renderer's frame, which nothing plays, as before
 static Result ar_exec(uint8_t *sys) {
     ar_t *a = t_ar;
     if (a && !a->sys) { pthread_mutex_lock(&g_ar_mu); a->sys = sys; pthread_mutex_unlock(&g_ar_mu); }
@@ -592,12 +592,12 @@ static Result ar_exec(uint8_t *sys) {
     return render_once(a, sys, a->frame, &a->frame_n);
 }
 HLE_FORCE("_ZN2nn5audio6server24AudioRendererManagerImpl17AudioRendererImpl29ExecuteAudioRendererRenderingEv", "render one frame manually: SDK generates commands + CPU processing, the host takes the DeviceSink output",
-          Result, h_ar_ImplExec, uint8_t *impl) { return ar_exec(impl + impl_sys_off()); }   // PEANUTS: ar_exec
+          Result, h_ar_ImplExec, uint8_t *impl) { return ar_exec(impl + impl_sys_off()); }   // KIWI: ar_exec
 // SDK 20 (The Legend of Zelda: Breath of the Wild 1.9.0): the public ExecuteAudioRendererRendering (sdk+0x221e90) calls the AudioRendererImpl version through the vtable (sdk+0x22ca88, just x0 += 0x60 and a jump through the PLT to here),
 // so the takeover above is never reached. The original generates commands here without the update lock; with the render thread on the original and the game thread's RequestUpdate rendering catch-up frames ("nothing rendered since the last update"),
 // both sides wrote the same command buffer at once and CommandListProcessor::Process sometimes read a half-written command list and crashed (once at 60 s and once at 134 s in the shrine). Taken over here, so rendering goes through the host's locked render as well
 HLE_FORCE("_ZN2nn5audio6server17AudioRenderSystem29ExecuteAudioRendererRenderingEv", "render one frame manually (SDK 20, reached through the PLT): same as above, through the host's locked rendering",
-          Result, h_ars_Exec, uint8_t *sys) { return ar_exec(sys); }   // PEANUTS: ar_exec
+          Result, h_ars_Exec, uint8_t *sys) { return ar_exec(sys); }   // KIWI: ar_exec
 
 // At least one rendered frame between two RequestUpdates. An effect's "needs initialization" is set only by the update in which the game flags it as new (e.g. LightLimiterInfo::Update: isNew → parameter status 0);
 // the next update overwrites it with the game's value; if no commands were generated in between, the DSP never receives the initialization and ApplyLightLimiterEffect later reads a null pointer. The real renderer produces a frame every 5 ms on its own
@@ -612,52 +612,52 @@ HLE_FORCE("_ZN2nn5audio6server17AudioRenderSystem29ExecuteAudioRendererRendering
 HLE_FORCE("_ZN2nn5audio6server17AudioRenderSystem6UpdateEPvmS3_mPKvm", "renderer update: if nothing was rendered since the last update, render a catch-up frame first (so effects get initialized), then hand over to the SDK",
           Result, h_ars_Update, uint8_t *sys, void *o, size_t on, void *p, size_t pn, const void *in, size_t inn) {
     static Result (*orig)(void *, void *, size_t, void *, size_t, const void *, size_t); if (!orig) orig = gsym("_ZN2nn5audio6server17AudioRenderSystem6UpdateEPvmS3_mPKvm");
-    // PEANUTS: the update's own renderer (nxnative 18b435ac38): its counts, queue and render thread, in every a-> below
+    // KIWI: the update's own renderer (nxnative 18b435ac38): its counts, queue and render thread, in every a-> below
     ar_t *a = ar_of_sys(sys);
     if (!a) return orig(sys, o, on, p, pn, in, inn);   // two renderers just opened, neither has rendered: at most one catch-up frame less
     uint64_t u = atomic_fetch_add(&a->updates, 1) + 1, r = atomic_load(&a->renders);
-    // PEANUTS: an update with nothing rendered since the one before first waits for the render thread's next frame (at most 15 ms; DM_AUDREN_WAIT=0: no wait, as before), and
+    // KIWI: an update with nothing rendered since the one before first waits for the render thread's next frame (at most 15 ms; DM_AUDREN_WAIT=0: no wait, as before), and
     // renders a catch-up frame only when none came. The console's renderer runs by its own 5 ms timer whatever the game does, so a sound thread that wakes late and updates
     // twice in a row moves nothing there; a catch-up frame here ran the voices 5 ms ahead of the clock each time. Fire Emblem: Three Houses streams its music through a
     // voice's four 5 ms wave buffers and refills them by the clock: one update in four rendered a catch-up frame, the voice reached buffers not refilled yet, and a quarter
     // of the sounding blocks were exact copies of the block 20 ms before (crackle); Animal Crossing: New Horizons the same
-    if (a->updated && r == a->last_r) {   // PEANUTS: a->
+    if (a->updated && r == a->last_r) {   // KIWI: a->
         static int wait_on = -1; if (wait_on < 0) { const char *e = getenv("DM_AUDREN_WAIT"); wait_on = !e || atoi(e); }
-        if (wait_on && atomic_load(&a->cq_tail) == atomic_load(&a->cq_head)) {   // (no queued frame: the render thread renders its next one itself)   PEANUTS: a->
+        if (wait_on && atomic_load(&a->cq_tail) == atomic_load(&a->cq_head)) {   // (no queued frame: the render thread renders its next one itself)   KIWI: a->
             struct timespec dl; clock_gettime(CLOCK_REALTIME, &dl); dl.tv_nsec += 15000000; if (dl.tv_nsec >= 1000000000) { dl.tv_sec++; dl.tv_nsec -= 1000000000; }
-            pthread_mutex_lock(&a->cq_mu);   // PEANUTS: a->, to the end of this wait
+            pthread_mutex_lock(&a->cq_mu);   // KIWI: a->, to the end of this wait
             dm_host_work++;   // a wait for the render thread is not a thread running on its core (see render_lock)
-            while (atomic_load(&a->open) && atomic_load(&a->renders) == r && !pthread_cond_timedwait(&a->cq_cv, &a->cq_mu, &dl)) {}   // PEANUTS: a->
+            while (atomic_load(&a->open) && atomic_load(&a->renders) == r && !pthread_cond_timedwait(&a->cq_cv, &a->cq_mu, &dl)) {}   // KIWI: a->
             dm_host_work--;
-            pthread_mutex_unlock(&a->cq_mu);   // PEANUTS: a->
+            pthread_mutex_unlock(&a->cq_mu);   // KIWI: a->
             r = atomic_load(&a->renders);
         }
     }
-    if (a->updated && r == a->last_r) {   // PEANUTS: a->, to the end of this block
+    if (a->updated && r == a->last_r) {   // KIWI: a->, to the end of this block
         uint64_t c = atomic_fetch_add(&a->catchups, 1) + 1;
         if (c <= 3) LOG("audren: renderer %d: no frame rendered before update %llu, rendering a catch-up frame first (%llu so far)", ar_index(a), (unsigned long long)u, (unsigned long long)c);
         uint32_t t = atomic_load(&a->cq_tail);
         if (t - atomic_load(&a->cq_head) >= CQ) {   // queue full: wait for the render thread to play one (every 5 ms), so catch-up frames keep real time; at most 50 ms (an output that stopped)
             struct timespec dl; clock_gettime(CLOCK_REALTIME, &dl); dl.tv_nsec += 50000000; if (dl.tv_nsec >= 1000000000) { dl.tv_sec++; dl.tv_nsec -= 1000000000; }
-            pthread_mutex_lock(&a->cq_mu);   // PEANUTS: a->
-            dm_host_work++;   // PEANUTS: a wait for the render thread is not a thread running on its core (same-core handoff, see render_lock)
-            while (atomic_load(&a->open) && t - atomic_load(&a->cq_head) >= CQ && !pthread_cond_timedwait(&a->cq_cv, &a->cq_mu, &dl)) {}   // PEANUTS: a->
-            dm_host_work--;   // PEANUTS
-            pthread_mutex_unlock(&a->cq_mu);   // PEANUTS: a->
+            pthread_mutex_lock(&a->cq_mu);   // KIWI: a->
+            dm_host_work++;   // KIWI: a wait for the render thread is not a thread running on its core (same-core handoff, see render_lock)
+            while (atomic_load(&a->open) && t - atomic_load(&a->cq_head) >= CQ && !pthread_cond_timedwait(&a->cq_cv, &a->cq_mu, &dl)) {}   // KIWI: a->
+            dm_host_work--;   // KIWI
+            pthread_mutex_unlock(&a->cq_mu);   // KIWI: a->
         }
-        // PEANUTS: render lock around the catch-up render too (see above), so it cannot cross a render-thread render
+        // KIWI: render lock around the catch-up render too (see above), so it cannot cross a render-thread render
         if (t - atomic_load(&a->cq_head) < CQ) { render_lock(); render_once(a, sys, a->cq[t % CQ], &a->cq_n[t % CQ]); atomic_store(&a->cq_tail, t + 1); render_unlock(); }
-        else render_once(a, sys, NULL, NULL);   // still full (the output stopped): render anyway, output discarded   (PEANUTS: a, in the two lines)
+        else render_once(a, sys, NULL, NULL);   // still full (the output stopped): render anyway, output discarded   (KIWI: a, in the two lines)
     }
     static int tr = -1; if (tr < 0) tr = getenv("DM_AUDREN_TRACE") != NULL;
-    if (tr && u < 200) LOG("audren update #%llu t=%.3f ms, %llu frames rendered since the last update", (unsigned long long)u, now_ns() / 1e6, (unsigned long long)(atomic_load(&a->renders) - (a->updated ? a->last_r : 0)));   // PEANUTS: a->
+    if (tr && u < 200) LOG("audren update #%llu t=%.3f ms, %llu frames rendered since the last update", (unsigned long long)u, now_ns() / 1e6, (unsigned long long)(atomic_load(&a->renders) - (a->updated ? a->last_r : 0)));   // KIWI: a->
     Result res = orig(sys, o, on, p, pn, in, inn);
-    a->last_r = atomic_load(&a->renders); a->updated = 1;   // PEANUTS: a->
+    a->last_r = atomic_load(&a->renders); a->updated = 1;   // KIWI: a->
     return res;
 }
 
-// PEANUTS: the renderer's state for the thread dump (hle_thread.c svc_thread_dump): a stalled audio clock shows as a render count that stops while the updates go on
-void dm_audren_dump(void) {   // PEANUTS: one line per renderer opened so far (a closed one's slot keeps its counts until the next open takes it)
+// KIWI: the renderer's state for the thread dump (hle_thread.c svc_thread_dump): a stalled audio clock shows as a render count that stops while the updates go on
+void dm_audren_dump(void) {   // KIWI: one line per renderer opened so far (a closed one's slot keeps its counts until the next open takes it)
     int n = 0;
     for (int i = 0; i < AR_MAX; i++) {
         ar_t *a = &g_ar[i]; if (!a->handle[0] && !atomic_load(&a->updates) && !atomic_load(&a->renders)) continue;

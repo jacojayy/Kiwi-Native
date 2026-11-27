@@ -63,7 +63,7 @@ int main(void) {
         fpw_apply(&r,base,rate,read_guest,write_guest);
         uint32_t integer;memcpy(&integer,mem+0x700,4);assert(integer==(unsigned)rate);
     }
-    // PEANUTS: a dynamic clock must agree across ratio, reciprocal FPS and seconds,
+    // KIWI: a dynamic clock must agree across ratio, reciprocal FPS and seconds,
     // including slow GPU frames, startup, and a movie's 32-bit state flag.
     const char *dynamic =
       "9fe60a212cff9b9a3656ab63d4f882e5,constant_i32,@0x740,2,1:1;"
@@ -99,7 +99,7 @@ int main(void) {
     assert(fpw_parse("9fe60a212cff9b9a3656ab63d4f882e5,constant_i32,@0x740,1,1.5:1",bid,&r)==-1);
     assert(fpw_parse("9fe60a212cff9b9a3656ab63d4f882e5,constant_i32,@0x740,1,4294967296:1",bid,&r)==-1);
     assert(fpw_parse("9fe60a212cff9b9a3656ab63d4f882e5,flag_cap_u32_gt,@0x750,1,2:240",bid,&r)==-1);
-    // PEANUTS: Unity keeps fixedDeltaTime as integer ticks behind a pointer.
+    // KIWI: Unity keeps fixedDeltaTime as integer ticks behind a pointer.
     const char *ticks = "9fe60a212cff9b9a3656ab63d4f882e5,step_ticks_u32,0x158/0x50,1,141120000:1";
     assert(fpw_parse(ticks, bid, &r) == 1);
     assert(!fpw_apply(&r, base, 20, read_guest, write_guest));
@@ -116,7 +116,7 @@ int main(void) {
     assert(fpw_parse(ticks, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", &r) == 0);
     assert(fpw_parse("9fe60a212cff9b9a3656ab63d4f882e5,step_ticks_u32,@0x750,1,4294967296:1",bid,&r)==-1);
     assert(fpw_parse("9fe60a212cff9b9a3656ab63d4f882e5,step_ticks_u32,@0x750,1,141120000.5:1",bid,&r)==-1);
-    // PEANUTS: a measured Trinity step is bounded by the selected cap and the stock ceiling.
+    // KIWI: a measured Trinity step is bounded by the selected cap and the stock ceiling.
     const char *elapsed_ticks = "9fe60a212cff9b9a3656ab63d4f882e5,step_ticks_u32,%0x0,1,1000000000:83333334";
     assert(fpw_parse(elapsed_ticks, bid, &r) == 1);
     const double intervals[] = {0, .01, .02, .2};
@@ -127,7 +127,7 @@ int main(void) {
       memcpy(&period,mem+0xa50,4);
       assert(period == periods[i]);
     }
-    // PEANUTS: Digimon Story Time Stranger's dynamic-resolution targets: fps + 2, 1000 / (fps + 5) and 0.78 of it.
+    // KIWI: Digimon Story Time Stranger's dynamic-resolution targets: fps + 2, 1000 / (fps + 5) and 0.78 of it.
     const char *offs = "9fe60a212cff9b9a3656ab63d4f882e5,target_offset_f32,@0x760,1,2:1;"
                        "9fe60a212cff9b9a3656ab63d4f882e5,frame_offset_ms_f32,@0x764,1,5:1;"
                        "9fe60a212cff9b9a3656ab63d4f882e5,frame_offset_ms_f32,@0x768,1,5:0.78";
@@ -247,7 +247,7 @@ int main(void) {
     }
     mem[0x810]=0;assert(fpw_effective_cap(&r,base,base+0x800,120,read_guest)==30);
     assert(fpw_effective_cap(&r,base,base+0x800,20,read_guest)==30); // required cutscene rate
-    // PEANUTS: Kirby and the Forgotten Land 1.1.0: the interval behind one pointer, and the
+    // KIWI: Kirby and the Forgotten Land 1.1.0: the interval behind one pointer, and the
     // frame-time budget pair behind four (Warehouse [MAIN, a, b, c, d, e]).
     const char *kirby = "9fe60a212cff9b9a3656ab63d4f882e5,zero_i32,0x100/0x50,1,0;"
                         "9fe60a212cff9b9a3656ab63d4f882e5,inverse_f32,0x108/0x140/0x1b0/0x20/0x34,1,30:1.95;"

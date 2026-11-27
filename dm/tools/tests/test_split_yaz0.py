@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""PEANUTS: _nxyaz0 (dm/peanuts/pack_worker/nxyaz0.c), shader_split.yaz0's decoder in C, against yaz0's own Python loop (peanuts/UPSTREAM-EDITS.md Round 31).
+"""KIWI: _nxyaz0 (dm/kiwi/pack_worker/nxyaz0.c), shader_split.yaz0's decoder in C, against yaz0's own Python loop (kiwi/UPSTREAM-EDITS.md Round 31).
 The module must give the loop's bytes for every stream the loop decodes, and None for every stream the loop stops on, which yaz0 then hands to the loop, so a
-damaged file names the same error with and without it. Built here with this machine's C compiler against this Python's headers, as peanuts_build.py builds
+damaged file names the same error with and without it. Built here with this machine's C compiler against this Python's headers, as kiwi_build.py builds
 it for the PC builder; skipped without either. No game files needed: synthetic streams from a small compressor below."""
 import atexit
 import importlib.util
@@ -21,7 +21,7 @@ sys.path.insert(0, str(REPO / 'dm/tools/fuzz'))
 import fuzzlib   # imports shader_split with a profile (any profile: yaz0 does not depend on it)
 
 ss = fuzzlib.import_shader_split()
-SRC = REPO / 'dm/peanuts/pack_worker/nxyaz0.c'
+SRC = REPO / 'dm/kiwi/pack_worker/nxyaz0.c'
 _built = []
 
 

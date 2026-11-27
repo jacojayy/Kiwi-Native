@@ -1,4 +1,4 @@
-// PEANUTS: new file. Resolution scale (DM_RES_SCALE=0.5 | 0.75 | 1.25 | 1.5 | 2, read once at the device's start): the game's render targets are made larger or
+// KIWI: new file. Resolution scale (DM_RES_SCALE=0.5 | 0.75 | 1.25 | 1.5 | 2, read once at the device's start): the game's render targets are made larger or
 // smaller than the game asked for, for every game, without the game knowing. Part of vka_tex.c (included there: it works on the texture cache's own tables under its
 // lock); the arithmetic is vka_resscale.h, the hooks are in vka_draw.c (the pass, viewport, scissor, the shaders' support buffer), vka_exec.c (clears, copies) and
 // vka_present.c (the crop).
@@ -7,7 +7,7 @@
 // texture's; and the translated shaders already carry Ryujinx's own resolution scale code, read from the support buffer (render_scale[0] divides gl_FragCoord.xy;
 // render_scale[1 + i] scales the integer coordinates of a fetch from a plain 2D texture and unscales its size query), which the replay only had filled with 1.0.
 //
-// Which images: only one the GPU fills (content ST_ZERO, never uploaded from the storage), a plain 2D texture with one level, one layer and one sample, of a colour   // PEANUTS: #734
+// Which images: only one the GPU fills (content ST_ZERO, never uploaded from the storage), a plain 2D texture with one level, one layer and one sample, of a colour   // KIWI: #734
 // format the device can blit (float, normalized or integer: an integer one is blitted nearest, #703) or a depth format, with none of the linear, image (shader storage), sparse or video flags, and not a power-of-two
 // square (shadow maps, cube faces, bakes: scaling those costs memory for nothing on screen; DM_RES_SCALE_POT=1 takes them too). It is scaled at its first use as a
 // render target (or as the other side of a copy with a scaled image), never when it is made: a texture that is only ever sampled or uploaded stays as it is.
@@ -63,11 +63,11 @@ static int rs_can_locked(vka_img *im) {
     static int pot = -1; if (pot < 0) { const char *e = getenv("DM_RES_SCALE_POT"); pot = e && atoi(e) != 0; }
     uint32_t lim = V.props.limits.maxImageDimension2D;
     if (im->mode != ST_ZERO || im->from_mem || im->track || im->vtrack || im->wt || im->is_video || im->rs || im->vpool || im->soft || im->base) no = 1;   // not GPU content alone
-    else if (d->target != NVN_TEXTURE_TARGET_2D || im->layers != 1 || im->levels != 1 || im->samples != 1 || im->depth != 1 || compressed(&im->f)) no = 1;   // PEANUTS: #734
+    else if (d->target != NVN_TEXTURE_TARGET_2D || im->layers != 1 || im->levels != 1 || im->samples != 1 || im->depth != 1 || compressed(&im->f)) no = 1;   // KIWI: #734
     else if (d->flags & (NVN_TEXTURE_FLAGS_LINEAR | NVN_TEXTURE_FLAGS_LINEAR_RENDER_TARGET | NVN_TEXTURE_FLAGS_IMAGE | NVN_TEXTURE_FLAGS_SPARSE | NVN_TEXTURE_FLAGS_VIDEO_DECODE)) no = 1;
     else if (!pot && d->width == d->height && !(d->width & (d->width - 1))) no = 1;                      // a power-of-two square
     else if (vkrs_dim((uint32_t)d->width, vka_rs_q) > lim || vkrs_dim((uint32_t)d->height, vka_rs_q) > lim) no = 1;
-    else if (im->f.kind <= 2 && !rs_blit_ok(im->f.vk)) no = 1;                                           // a colour format without blits: no scaled copy into or out of it (an integer one blits nearest, #703)   // PEANUTS: #734
+    else if (im->f.kind <= 2 && !rs_blit_ok(im->f.vk)) no = 1;                                           // a colour format without blits: no scaled copy into or out of it (an integer one blits nearest, #703)   // KIWI: #734
     else if (vkrs_deny_find(&g_rs_deny, (uint32_t)d->width, (uint32_t)d->height, (uint32_t)im->f.vk, (uint32_t)d->flags) >= 0) no = 1;
     if (!no && (im->usage & VK_IMAGE_USAGE_STORAGE_BIT)) no = 1;   // (remade with storage use since: a shader writes it in the texture's pixels; every swap keeps the use, so it is not asked again either)
     if (no) { im->rs_no = 1; return 0; }   // (none of these changes for an image; a shape denied later is found at the next question)

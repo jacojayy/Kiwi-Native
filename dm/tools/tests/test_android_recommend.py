@@ -14,13 +14,13 @@ sys.path.insert(0, str(REPO / 'dm/tools')); sys.path.insert(0, str(REPO / 'dm/ga
 import game   # noqa: E402
 import recommend   # noqa: E402
 
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/RecommendJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/RecommendJvmTest.java'
 FACTS = REPO / 'android/app/src/jvmtest/honor-pnm-n49.readiness.txt'
 GRADLE = REPO / 'android/app/build.gradle'
-FE = str(REPO / 'peanuts/tests/fixtures/profiles/fortunes-weave')   # PEANUTS: Fire Emblem Fortune's Weave's and Ocarina of Time's rows, fixtures (their
-OOT = str(REPO / 'peanuts/tests/fixtures/profiles/ocarina')   # Switch 2 profiles are not carried); its rows: the driver on Qualcomm's own driver, the preset and vegetation on any Adreno (the no-stored-facts case)
-STUB = '''package dev.nxnative.android;
+FE = str(REPO / 'kiwi/tests/fixtures/profiles/fortunes-weave')   # KIWI: Fire Emblem Fortune's Weave's and Ocarina of Time's rows, fixtures (their
+OOT = str(REPO / 'kiwi/tests/fixtures/profiles/ocarina')   # Switch 2 profiles are not carried); its rows: the driver on Qualcomm's own driver, the preset and vegetation on any Adreno (the no-stored-facts case)
+STUB = '''package hernandez.kiwinative;
 public final class BuildConfig {
     public static final String NX_PROFILES = "";
 }
@@ -74,7 +74,7 @@ class Wiring(unittest.TestCase):
         act = (SRC / 'GameActivity.java').read_text(encoding='utf-8')
         self.assertIn('Native.note(Recommend.logLine(Prefs.recStates(this, id)));', act)
         self.assertIn('Prefs.rememberFacts(this, probedChoice, vulkan);', act)
-        hold = act.split('private boolean readinessHold(', 1)[1].split('\n    }', 1)[0]   # PEANUTS: scope the order to this probe
+        hold = act.split('private boolean readinessHold(', 1)[1].split('\n    }', 1)[0]   # KIWI: scope the order to this probe
         env = hold.index('settingsEnv(id, pack, genv);')
         self.assertLess(hold.index('Prefs.pinDriver(this, id);'), env)
         self.assertLess(env, hold.index('Native.readiness(denv)'))
@@ -102,7 +102,7 @@ class Rows(unittest.TestCase):
         self.assertEqual(recommend.column(game.load(FE)), 'driver.id=8,driver.version&0xffc00000=0x80000000,driver.version&0x3ff000<0x320000|driver=18;any|upscaler=fsr3')
 
     def test_refusals(self):
-        g = game.load(OOT)   # Ocarina of Time: presets, options, vegetation, skip_layers, a frame step (PEANUTS: the fixture)
+        g = game.load(OOT)   # Ocarina of Time: presets, options, vegetation, skip_layers, a frame step (KIWI: the fixture)
         ok = lambda *w: recommend.check_row(g, list(w))
         self.assertEqual(ok('any', 'res_preset=performance', 'upscaler=sgsr1', 'hold60=on'), 'any|res_preset=performance upscaler=sgsr1 hold60=on')
         self.assertTrue(ok('feature.meshShader=0', 'vegetation=off', 'skip_layers=on'))
@@ -140,7 +140,7 @@ class RecommendJvm(unittest.TestCase):
             r = subprocess.run(['javac', '-Xlint:all,-try', '-Werror', '-encoding', 'UTF-8', '-d', str(d / 'classes'), *map(str, srcs), str(TEST), str(d / 'stub/BuildConfig.java')],
                                capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-            r = subprocess.run(['java', '-cp', str(d / 'classes'), 'dev.nxnative.android.RecommendJvmTest', str(FACTS), recommend.column(game.load(FE)), recommend.column(game.load(OOT))], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', str(d / 'classes'), 'hernandez.kiwinative.RecommendJvmTest', str(FACTS), recommend.column(game.load(FE)), recommend.column(game.load(OOT))], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertEqual(r.stdout.strip(), 'ok')
 

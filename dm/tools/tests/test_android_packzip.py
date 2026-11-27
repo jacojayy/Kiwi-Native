@@ -9,9 +9,9 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/PackZipJvmTest.java'
-STUB = '''package dev.nxnative.android;
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/PackZipJvmTest.java'
+STUB = '''package hernandez.kiwinative;
 public final class BuildConfig {
     public static final String NX_PROFILES = "040074A01BF12000\\tDonkey Kong Bananza\\t22852\\tabcdef012345\\t458752 main=aa\\n0400C3F00006E000\\tMario Kart World\\t0\\tunknown\\t";
     public static final String NX_DMSH_VK_CHAIN = "c0ffee", NX_DMSH_VK_ABI = "abi1", NX_DMSH_VK_ABI_COMPAT = "";
@@ -26,12 +26,12 @@ class PackZipJvm(unittest.TestCase):
             d = Path(d)
             (d / 'stub').mkdir()
             (d / 'stub/BuildConfig.java').write_text(STUB)
-            srcs = [SRC / f'{n}.java' for n in ('PackZip', 'Pack', 'DumpLayout', 'BuildCheck', 'RomfsCheck', 'Nup', 'Nsp', 'Zstd', 'Profile', 'ShaderLibs', 'SaveStore', 'Streams')]   # PEANUTS: Streams.java (Android 12: the stream helpers)
+            srcs = [SRC / f'{n}.java' for n in ('PackZip', 'Pack', 'DumpLayout', 'BuildCheck', 'RomfsCheck', 'Nup', 'Nsp', 'Zstd', 'Profile', 'ShaderLibs', 'SaveStore', 'Streams')]   # KIWI: Streams.java (Android 12: the stream helpers)
             r = subprocess.run(['javac', '-Xlint:all,-try', '-Werror', '-d', str(d / 'classes'), *map(str, srcs), str(TEST), str(d / 'stub/BuildConfig.java')],
                                capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             (d / 'run').mkdir()
-            r = subprocess.run(['java', '-cp', str(d / 'classes'), 'dev.nxnative.android.PackZipJvmTest', str(d / 'run')], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', str(d / 'classes'), 'hernandez.kiwinative.PackZipJvmTest', str(d / 'run')], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertTrue(r.stdout.startswith('ok '), r.stdout)
 

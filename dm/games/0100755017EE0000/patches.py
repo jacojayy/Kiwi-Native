@@ -1,4 +1,4 @@
-# PEANUTS: FANTASY LIFE i 1.5.0 and 2.2.0, Switch main. The host deliberately does not load the EOS SDK.
+# KIWI: FANTASY LIFE i 1.5.0 and 2.2.0, Switch main. The host deliberately does not load the EOS SDK.
 CUTS = {
     '74bcac96835db9aeeb29bce78be410ea': [
         (0x5a9f064, 'c80000b4', '1f2003d5', 'offline: skip EOS_UI_AddNotifyDisplaySettingsUpdated; retain delegate cleanup'),
@@ -8,7 +8,7 @@ CUTS = {
         (0x5a9f680, 'ff4301d1', '0ac3ff17', 'offline: return no Epic account ID'),
         (0x5b3bca0, '00feff34', '1f2003d5', 'avatar name: dictionary version zero is normal offline; still run the mask and region checks'),
     ],
-    # PEANUTS: #800. 2.2.0: the same five sites, located by masked instruction windows (this main has no unwind entries for these functions, so nso_fnmap.py cannot map them)
+    # KIWI: #800. 2.2.0: the same five sites, located by masked instruction windows (this main has no unwind entries for these functions, so nso_fnmap.py cannot map them)
     # and checked by disassembly. Both getters now branch to the `mov x0, xzr; ret` at main+0x5e0cba0, the same shape as 1.5.0's stub.
     '6e4502b822cb120486285ce14f16e490': [
         (0x5e1c984, 'c80000b4', '1f2003d5', 'offline: skip EOS_UI_AddNotifyDisplaySettingsUpdated; retain delegate cleanup'),

@@ -1,6 +1,6 @@
 # Pokémon: Let's Go, Pikachu! (`010003F003A34000`)
 
-<!-- PEANUTS: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
+<!-- KIWI: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
 
 Update 1.0.2 (`v131072`) over the base game, SDK 5.4.151. Game Freak's engine, the one before [Pokémon Sword](../0100ABF008968000/README.md)'s, on NVN with Wwise audio. Modules `main`, `subsdk0` (GLSLC), `subsdk1` (the movie module) and `sdk`.
 

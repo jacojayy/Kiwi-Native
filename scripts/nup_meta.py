@@ -113,7 +113,7 @@ def set_meta(path, sel, icon, title, version, publisher):
 
 
 def main():
-    ap = argparse.ArgumentParser(description=(__doc__ or '').split('\n')[0])   # PEANUTS(upstream-candidate): module docs can be stripped
+    ap = argparse.ArgumentParser(description=(__doc__ or '').split('\n')[0])   # KIWI(upstream-candidate): module docs can be stripped
     ap.add_argument('nup'); ap.add_argument('--package'); ap.add_argument('--icon', type=Path)
     ap.add_argument('--title'); ap.add_argument('--version'); ap.add_argument('--publisher'); ap.add_argument('--show', action='store_true')
     a = ap.parse_args()

@@ -1,4 +1,4 @@
-// PEANUTS: a Peanuts test file (the feeder ring in hle_audio.c, DM_AUDIO_FEED)
+// KIWI: a Kiwi test file (the feeder ring in hle_audio.c, DM_AUDIO_FEED)
 // Stand-in for the NDK's <aaudio/AAudio.h> so t_audio_feed.c can build hle_audio.c's Android output path on Linux: the types and calls it uses, none of which a test reaches
 #pragma once
 #include <stdint.h>

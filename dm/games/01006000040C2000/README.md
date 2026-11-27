@@ -23,7 +23,7 @@ The streamed textures are sparse (flag 0x20, no packaged layout), DXT1 / DXT5 (0
 
 The Yoshis are plain lightmapped static-mesh materials (fragment key `a7c457a031dcb113`: 1024² DXT1 base colour and BC5 normal, both sampled with a mip bias, an HQ lightmap and a static shadow mask; no shells, alpha test or alpha to coverage), so their felt is in the textures. From the moment the opening went dark they sampled bright speckles and dark blotches, with sharp silhouettes: `texraw <serial>.<level>` showed levels 0–3 of the base colour intact and level 4 holding another texture (level 4 of the normal all zero). The streamer re-creates a texture with more levels when finer ones stream in, copies the resident levels from the old texture on the GPU (`nvnCommandBufferCopyTextureToTexture` from `main+0x27f5044`, Unreal's `RHIAsyncReallocateTexture2D`) and writes the new levels from the CPU; the host then uploaded the whole texture from its storage, where the copied levels had never been written. Fixed for every game: [GPU copies into textures uploaded from their storage](../../../docs/reference/nvn-objects.md#gpu-copies-into-textures-uploaded-from-their-storage).
 
-<!-- PEANUTS: Android rendering notes (OnePlus Pad 2), contributed by 999sian with the Vulkan fixes of GitHub PR #140 -->
+<!-- KIWI: Android rendering notes (OnePlus Pad 2), contributed by 999sian with the Vulkan fixes of GitHub PR #140 -->
 On the OnePlus Pad 2 (Adreno 750, Android 16, game 1.0.1), the broken title frame had 53 block-compressed Vulkan images whose finest mip was zero despite nonzero guest storage. Mirroring eligible whole-mip GPU copies into guest storage keeps later CPU uploads visible. With Turnip v32 the title island and felt in the opening rendered correctly; the Vulkan self-test also read back the CPU-filled and GPU-copied levels intact.
 
 On Turnip v32, Rail-Yard Run was reached and Yoshi moved, jumped and collected coins, but the driver still hung in the course. Turning off LRZ, UBWC, the upscaler, threaded command encoding or the replay worker did not establish a workaround. On Qualcomm's system driver, validation caught linear filtering of an integer image and an oversized unused clip/cull interface. After both fixes those validation errors disappeared on the same route, but the driver still reported invalid GPU reads. One address-traced run faulted outside every address range the driver had reported, not in a known retired image. None of the 23,497 pack shaders uses the raw global-memory address table. Copying CPU-known uniform data at recording time did not prevent the stock fault either.
@@ -60,7 +60,7 @@ Unreal's purgatory proxy: a romfs overlay (`DM_ROMFS_OVERLAY`) with `UE4CommandL
 
 - The iPhone (IPA 6.1 GB; 3.15 GB heap: check the memory it needs there).
 
-<!-- PEANUTS: Android on the AYN Thor, 2026-11-22 -->
+<!-- KIWI: Android on the AYN Thor, 2026-11-22 -->
 ## Android
 
 Tested on the AYN Thor (Snapdragon 8 Gen 2, Adreno 740) with Turnip v26.2.0-R5 (driver ID 18), update 1.0.1, 2026-11-21.

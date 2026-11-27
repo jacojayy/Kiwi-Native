@@ -298,7 +298,7 @@ static int player_of(uint32_t id) {   // the reported player on npad id; -1 when
     if (id == connected_id()) return 0;
     return id > 0 && id < DM_PLAYERS && reported((int)id) ? (int)id : -1;
 }
-// PEANUTS: no npad has a style until the game has set its supported styles (SetSupportedNpadStyleSet), as the hid service keeps an application's npads empty until
+// KIWI: no npad has a style until the game has set its supported styles (SetSupportedNpadStyleSet), as the hid service keeps an application's npads empty until
 // then. Pokemon Sword asks for No1's style between InitializeNpad and that call (main+0x65adb4 -> main+0x65af30): with a style there it made its four vibration
 // objects about 4,300 allocations early, and every object of its root heap after them lay 0x50 to 0xF0 bytes off where the console has it (a companion's
 // fixed addresses then read nothing: no live party). A game that reads a controller's state without ever setting its styles gets them from that read on
@@ -312,27 +312,27 @@ static int styles_set(void) {
     }
     return v;
 }
-static uint32_t style_for_player(uint32_t id, int p) { return p < 0 || !styles_set() ? 0 : id == NPAD_HANDHELD ? STYLE_HANDHELD : STYLE_FULLKEY; }   // PEANUTS: styles_set
+static uint32_t style_for_player(uint32_t id, int p) { return p < 0 || !styles_set() ? 0 : id == NPAD_HANDHELD ? STYLE_HANDHELD : STYLE_FULLKEY; }   // KIWI: styles_set
 static uint32_t style_of(uint32_t id) { return style_for_player(id, player_of(id)); }
 static int32_t ax(uint64_t v, int i) { return (int16_t)(v >> (16 * i)); }
 static int32_t pick(int32_t a, int32_t b) { return (a < 0 ? -a : a) >= (b < 0 ? -b : b) ? a : b; }   // whichever of two sources is deflected more
 
 // Style update events bound per npad (BindNpadStyleSetUpdateEvent, No1..No8 by id): signalled when a player's controller comes or goes, as the hid
 // service does. The front end reports from its own thread, where an event cannot be bound, so only a bound one is signalled (one the game destroyed is not bound any more)
-// PEANUTS: the Handheld npad's event is kept too (slot DM_PLAYERS): it was signalled only at its binding, which with no style before the supported styles are set
+// KIWI: the Handheld npad's event is kept too (slot DM_PLAYERS): it was signalled only at its binding, which with no style before the supported styles are set
 // (styles_set) is too early for a game that binds first, and it has to fire at a change of operation mode
 static void *_Atomic g_style_ev[DM_PLAYERS + 1];
 static int style_ev_slot(uint32_t id) { return id < DM_PLAYERS ? (int)id : id == NPAD_HANDHELD ? DM_PLAYERS : -1; }
 static void style_changed(uint32_t id) { int k = style_ev_slot(id); void *ev = k >= 0 ? atomic_load(&g_style_ev[k]) : NULL; if (ev) hle_signal_bound_system_event(ev); }
-// PEANUTS: the operation mode changed while the game runs (hle_oe.c oe_state_set: the in-game panel's Console mode): player 1 is on the Handheld npad in handheld mode and on
+// KIWI: the operation mode changed while the game runs (hle_oe.c oe_state_set: the in-game panel's Console mode): player 1 is on the Handheld npad in handheld mode and on
 // No1 docked (connected_id), so the styles of No1 and Handheld change (players 2 to 8 keep their npads); a game that waits for the style event (Link's Awakening) would
 // otherwise keep reading the npad that went away
-// PEANUTS begin: when the mode changed, for the controller applet a game opens because of it (ctrl_support)
+// KIWI begin: when the mode changed, for the controller applet a game opens because of it (ctrl_support)
 static _Atomic uint64_t g_mode_change_ns; static _Atomic int g_mode_changed;
 #define MODE_APPLET_NS 5000000000ull
-// PEANUTS end
-void dm_hid_opmode_changed(void) { atomic_store(&g_mode_change_ns, now_ns()); atomic_store(&g_mode_changed, 1); /* PEANUTS: for ctrl_support */ style_changed(NPAD_NO1); style_changed(NPAD_HANDHELD); }
-// PEANUTS: the controllers appear (styles_set above): the style events bound before fire, as on a connect. why: what lifted it, for the log
+// KIWI end
+void dm_hid_opmode_changed(void) { atomic_store(&g_mode_change_ns, now_ns()); atomic_store(&g_mode_changed, 1); /* KIWI: for ctrl_support */ style_changed(NPAD_NO1); style_changed(NPAD_HANDHELD); }
+// KIWI: the controllers appear (styles_set above): the style events bound before fire, as on a connect. why: what lifted it, for the log
 static void styles_now(const char *why) {
     if (styles_set() || atomic_exchange(&g_styles_set, 1) == 1) return;   // once, whichever thread comes first
     LOG("hid: controllers reported from now on (%s)", why);
@@ -473,7 +473,7 @@ static void rec_start(void) {
 }
 
 static void fill(NpadState *s, uint32_t id, uint32_t style) {
-    styles_now("[RED] the game reads a controller's state without having set its supported styles");   // PEANUTS: a no-op once they are set
+    styles_now("[RED] the game reads a controller's state without having set its supported styles");   // KIWI: a no-op once they are set
     memset(s, 0, sizeof *s);
     s->sampling = atomic_fetch_add(&g_sampling, 1) + 1;
     int pl = player_of(id);
@@ -505,14 +505,14 @@ static void fill(NpadState *s, uint32_t id, uint32_t style) {
     if (s->ry > STICK_THRESH) b |= 1u << 21;
     if (s->rx > STICK_THRESH) b |= 1u << 22;
     if (s->ry < -STICK_THRESH) b |= 1u << 23;
-    // PEANUTS begin: the companion's pad gate (dm_pad_gate, below fill): while the second screen has the controller's focus the game reads a neutral pad
+    // KIWI begin: the companion's pad gate (dm_pad_gate, below fill): while the second screen has the controller's focus the game reads a neutral pad
     { void (*gate)(int, uint64_t *, int32_t *) = atomic_load_explicit(&dm_pad_gate, memory_order_acquire);
       if (gate) { int32_t g[4] = {s->lx, s->ly, s->rx, s->ry}; gate(id == NPAD_HANDHELD ? 8 : (int)id, &b, g); s->lx = g[0]; s->ly = g[1]; s->rx = g[2]; s->ry = g[3]; } }
-    // PEANUTS end
+    // KIWI end
     s->buttons = b;
     s->attributes = ATTR_CONNECTED | (id == NPAD_HANDHELD ? ATTR_WIRED | ATTR_LEFT_CONN | ATTR_LEFT_WIRED | ATTR_RIGHT_CONN | ATTR_RIGHT_WIRED : ATTR_LEFT_CONN | ATTR_RIGHT_CONN);
 }
-// PEANUTS begin: the companion runtime and the pad (dm/peanuts). Two directions, as Eden Duo's controller focus mode has them:
+// KIWI begin: the companion runtime and the pad (dm/kiwi). Two directions, as Eden Duo's controller focus mode has them:
 //   dm_pad_raw: what player 1 holds as fill composes it for the game (keyboard / touch / the companion's own presses, the controller and the controllers merged into player 1,
 //   the scripted path; buttons 0..15 and the sticks' direction bits 16..23), but before the gate, without taking a press latch and without counting a sample: the runtime reads
 //   it once a tick to move its focus and never costs the game a press. npad: the id player 1 is on now (Handheld 0x20 or No1 0), 0 buttons before the game set its styles;
@@ -537,7 +537,7 @@ void dm_pad_raw(uint32_t *npad, uint64_t *buttons, int32_t axes[4]) {
     if (buttons) *buttons = styles_set() ? b : 0;
     if (axes) for (int i = 0; i < 4; i++) axes[i] = styles_set() ? a[i] : 0;
 }
-// PEANUTS end
+// KIWI end
 // The cheat VM's key mask (hle_cheats.c "all keys of the mask held"): the OR of every player's controller buttons
 // (the keyboard / touch source's bits included) plus the eight stick-direction pseudo buttons of the merged axes —
 // one flat bitset, not exactly any one npad read (fill() publishes per-npad states with attributes, merges and
@@ -590,7 +590,7 @@ HLE_FORCE("_ZN2nn3hid22SetSupportedNpadIdTypeEPKjm", "supported controller ids; 
 static uint32_t g_styles_supported = 0xffffffffu;
 HLE_FORCE("_ZN2nn3hid24SetSupportedNpadStyleSetENS_4util10BitFlagSetILi32ENS0_12NpadStyleTagEEE", "supported controller styles; the host records them and picks the reported style from them", void, h_hid_SetStyles, uint32_t styles) {
     if (styles != g_styles_supported) LOG("hid supported controller styles %#x", styles); g_styles_supported = styles;
-    if (styles) styles_now("the game set its supported styles");   // PEANUTS
+    if (styles) styles_now("the game set its supported styles");   // KIWI
 }
 HLE_FORCE("_ZN2nn3hid15GetNpadStyleSetERKj", "controller style query; follows DM_OPMODE", uint32_t, h_hid_GetStyle, const uint32_t *id) { return style_of(*id); }
 HLE_FORCE("_ZN2nn3hid13GetNpadStatesEPNS0_16NpadFullKeyStateEiRKj", "full-key controller states", int, h_hid_StatesFullKey, NpadState *s, int n, const uint32_t *id) { return states(s, n, *id, STYLE_FULLKEY); }
@@ -636,7 +636,7 @@ HLE_FORCE("_ZN2nn3hid20StopLrAssignmentModeEv", "L/R assignment mode (Joy-Con pa
 __attribute__((weak)) int front_controller_support(const void *arg, int *count) { (void)arg; (void)count; return -2; }
 static Result ctrl_support(int32_t *info, const int8_t *arg) {
     ctrl_arg a; ctrl_arg_parse(&a, (const uint8_t *)arg);
-    // PEANUTS begin: the applet a game opens right after the launcher changed the operation mode. The mode moves player 1's controller between No1 and Handheld, the game
+    // KIWI begin: the applet a game opens right after the launcher changed the operation mode. The mode moves player 1's controller between No1 and Handheld, the game
     // sees its controller go and asks for controllers again (The Legend of Zelda: Link's Awakening, a second after each change in the in-game panel: the join screen
     // came up every time, "1 to 1 players, 1 already joined"). Nothing changed about who plays, so the first applet within 5 s of the change is answered with the players
     // as they are when they are enough; too few, and the join screen opens as ever
@@ -658,7 +658,7 @@ static Result ctrl_support(int32_t *info, const int8_t *arg) {
           if (info) { info[0] = 1; info[1] = (int32_t)connected_id(); }
           return RES_OK;
       } }
-    // PEANUTS end
+    // KIWI end
     int joined = 0, r = front_controller_support(&a, &joined);
     if (r != -2) {
         LOG("hid controller applet: %d to %d players wanted%s%s: %s, %d player%s", a.min, a.single ? 1 : a.max, a.single ? ", single mode" : "", a.take_over ? "" : ", no take over",
@@ -696,7 +696,7 @@ static int shaking(uint64_t t) { return t >= atomic_load(&g_shake_t0) && t < ato
 // Every history entry is the newest sample, numbered by time. DM_MOTION=0 ignores live motion; DM_MOTION_AXES / DM_MOTION_ACC_SIGN map Apple's axes (motion_fusion.h);
 // DM_MOTION_GAIN sets the tilt correction (default 0.5); DM_MOTION_SENS scales the phone's rotation rates (a controller's are real turns) and DM_MOTION_DEADZONE (degrees / s) zeroes the small ones (motion_shape); DM_MOTION_LOG=1 logs player 1's mapped sample once a second, for checking the axes
 enum { MOTION_STALE_NS = 300000000 };
-// PEANUTS: hist: the last MOTION_HIST samples with their times (hist_n of them, the newest at hist_w - 1), for the history a game reads (motion_live_hist, six_states)
+// KIWI: hist: the last MOTION_HIST samples with their times (hist_n of them, the newest at hist_w - 1), for the history a game reads (motion_live_hist, six_states)
 enum { MOTION_HIST = 64 };
 typedef struct { pthread_mutex_t mu; motion_state st; uint64_t last_ns, received_ns, logged; struct { motion_state st; uint64_t t; } hist[MOTION_HIST]; uint32_t hist_w, hist_n; } live_motion;
 static live_motion g_motion[DM_PLAYERS] = {[0 ... DM_PLAYERS - 1] = {.mu = PTHREAD_MUTEX_INITIALIZER}};
@@ -723,7 +723,7 @@ static void motion_set(int p, const float acc[3], const float rot[3], int source
     uint64_t now = now_ns(), t = sample_ns ? sample_ns : now;
     if (!t || t > now || now - t > MOTION_STALE_NS) return;
     pthread_mutex_lock(&m->mu);
-    if (!m->last_ns || now - m->received_ns > MOTION_STALE_NS) { motion_reset(&m->st); m->last_ns = 0; m->hist_n = 0; /* PEANUTS: the history starts again too */ }
+    if (!m->last_ns || now - m->received_ns > MOTION_STALE_NS) { motion_reset(&m->st); m->last_ns = 0; m->hist_n = 0; /* KIWI: the history starts again too */ }
     if (m->last_ns && t <= m->last_ns) { pthread_mutex_unlock(&m->mu); return; }
     float dt = m->last_ns && t > m->last_ns ? (float)((double)(t - m->last_ns) / 1e9) : 0;
     float rs[3] = {rot[0], rot[1], rot[2]};
@@ -735,13 +735,13 @@ static void motion_set(int p, const float acc[3], const float rot[3], int source
             source == 1 ? "phone" : source == 2 ? "controller HID" : "controller", m->st.acc[0], m->st.acc[1], m->st.acc[2], m->st.gyro[0], m->st.gyro[1], m->st.gyro[2]);
     }
     m->last_ns = t; m->received_ns = now;
-    m->hist[m->hist_w % MOTION_HIST].st = m->st; m->hist[m->hist_w % MOTION_HIST].t = t; m->hist_w++; if (m->hist_n < MOTION_HIST) m->hist_n++;   // PEANUTS: the history (motion_live_hist)
+    m->hist[m->hist_w % MOTION_HIST].st = m->st; m->hist[m->hist_w % MOTION_HIST].t = t; m->hist_w++; if (m->hist_n < MOTION_HIST) m->hist_n++;   // KIWI: the history (motion_live_hist)
     pthread_mutex_unlock(&m->mu);
 }
 void dm_motion_sens(float f) { pthread_once(&g_motion_once, motion_env); if (f > 0) atomic_store(&g_motion_sens, f); }   // live, from the in-game panel (after the env's value)
 void dm_motion_set(int p, const float acc[3], const float rot[3]) { motion_set(p, acc, rot, 0, 0); }
 void dm_motion_set_switch(int p, const float acc[3], const float rot[3]) { motion_set(p, acc, rot, 1, 0); }
-void dm_motion_set_switch_at(int p, const float acc[3], const float rot[3], uint64_t t) { motion_set(p, acc, rot, 1, t); }   // PEANUTS: with the sample's own time on the host clock (0: now)
+void dm_motion_set_switch_at(int p, const float acc[3], const float rot[3], uint64_t t) { motion_set(p, acc, rot, 1, t); }   // KIWI: with the sample's own time on the host clock (0: now)
 void dm_motion_set_hid(int p, const float acc[3], const float rot[3], uint64_t t) { if (t) motion_set(p, acc, rot, 2, t); }
 void dm_motion_clear(int p) {
     if (p < 0 || p >= DM_PLAYERS) return;
@@ -773,7 +773,7 @@ static int motion_live(int p, motion_state *out) {
     if (newest) return 1;
     return !p && g_phone_mode < 0 && motion_copy(&g_phone_motion, out);
 }
-// PEANUTS begin: the history of a player's live motion, as a console's six-axis history holds it: out[i] is the sample that was current i * SIX_PERIOD_NS ago (out[0] the
+// KIWI begin: the history of a player's live motion, as a console's six-axis history holds it: out[i] is the sample that was current i * SIX_PERIOD_NS ago (out[0] the
 // newest; times before the oldest kept sample give that one). Every entry used to be the newest sample, so a game that reads the states since its last frame (The Legend
 // of Zelda: Breath of the Wild: GetSixAxisSensorStates once a frame at 30 fps, the phone's gyroscope at 109 Hz on an AYN Thor) got one of the three or four samples of the
 // frame and the turn of the others never reached it. Returns how many were filled: 0 when the source is not fresh. The source is chosen as motion_live chooses it
@@ -805,7 +805,7 @@ static int motion_live_hist(int p, motion_state *out, int n) {
     if (best) return motion_hist(best, out, n);
     return !p && g_phone_mode < 0 ? motion_hist(&g_phone_motion, out, n) : 0;
 }
-// PEANUTS end
+// KIWI end
 static void six_sample_live(SixAxisState *s, int64_t samp, const motion_state *ms, int shakes) {
     memset(s, 0, sizeof *s);
     uint64_t t = (uint64_t)samp * SIX_PERIOD_NS;
@@ -839,7 +839,7 @@ static int six_states(SixAxisState *out, int n, uint32_t h) {
     int pl = player_of(h >> 8 & 0xff), shakes = pl == 0;
     motion_state ms;
     if (motion_live(pl, &ms)) {
-        enum { HN = 40 }; motion_state hs[HN]; int hn = n > 1 ? motion_live_hist(pl, hs, n < HN ? n : HN) : 0;   // PEANUTS: each entry is the sample of its time (motion_live_hist), not the newest
+        enum { HN = 40 }; motion_state hs[HN]; int hn = n > 1 ? motion_live_hist(pl, hs, n < HN ? n : HN) : 0;   // KIWI: each entry is the sample of its time (motion_live_hist), not the newest
         for (int i = 0; i < n; i++) six_sample_live(&out[i], samp - i, i < hn ? &hs[i] : hn ? &hs[hn - 1] : &ms, shakes);
         return n;
     }
@@ -884,7 +884,7 @@ HLE_FORCE("_ZN2nn3hid19EnableNmousePointerENS0_12NmouseHandleEb", "Joy-Con mouse
 HLE_FORCE("_ZN2nn3hid24SetNmousePointerPositionENS0_12NmouseHandleEii", "Joy-Con mouse pointer position: no sensor on the host (false: no device)", bool, h_hid_NmousePos, uint64_t hd, int x, int y) { (void)hd; (void)x; (void)y; return 0; }
 HLE_FORCE("_ZN2nn3hid22GetSixAxisSensorStatesEPNS0_18SixAxisSensorStateEiRKNS0_19SixAxisSensorHandleE", "six-axis sensor states: every requested entry, newest first",
           int, h_hid_SixStates, SixAxisState *out, int n, const uint32_t *h) {
-    { static _Atomic int said; if (n > 0 && !atomic_exchange(&said, 1)) LOG("hid: the game reads %d six-axis state%s at a time%s", n, n == 1 ? "" : "s", n == 1 ? "" : " (each the sample of its time)"); }   // PEANUTS: once, for a motion report
+    { static _Atomic int said; if (n > 0 && !atomic_exchange(&said, 1)) LOG("hid: the game reads %d six-axis state%s at a time%s", n, n == 1 ? "" : "s", n == 1 ? "" : " (each the sample of its time)"); }   // KIWI: once, for a motion report
     return six_states(out, n, *h); }
 // Vibration handles: byte 0 = SDK style index (FullKey 3, Handheld 4), byte 1 = npad id, byte 2 = motor.
 // See libnx hid.c _hidGetVibrationDeviceHandles. Only the styles this host connects are exposed.
@@ -988,7 +988,7 @@ HLE_FORCE("_ZN2nn3hid23MergeSingleJoyAsDualJoyERKjS2_", "merge single Joy-Cons; 
 HLE_FORCE("_ZN2nn3hid27BindNpadStyleSetUpdateEventERKjPNS_2os15SystemEventTypeENS3_14EventClearModeE", "controller style update event: bound, signaled once for a connected controller and on connect / disconnect", void, h_hid_BindStyleEv,
           const uint32_t *id, void *ev, int clear) {
     hle_bind_system_event(ev, clear);
-    { int k = style_ev_slot(*id); if (k >= 0) atomic_store(&g_style_ev[k], ev); }   // PEANUTS: Handheld's too (style_ev_slot)
+    { int k = style_ev_slot(*id); if (k >= 0) atomic_store(&g_style_ev[k], ev); }   // KIWI: Handheld's too (style_ev_slot)
     if (style_of(*id)) hle_signal_system_event(ev);
 }
 // The Switch's player LEDs by npad (No1 1, No2 1-2, No3 1-3, No4 1-4, No5 1+4, No6 1+3, No7 1+3+4, No8 2+3; bit 0 = LED 1); Handheld and Other light LED 1 as before

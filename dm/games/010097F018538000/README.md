@@ -1,7 +1,7 @@
-<!-- PEANUTS: Android profile and validation for DAVE THE DIVER. -->
+<!-- KIWI: Android profile and validation for DAVE THE DIVER. -->
 # DAVE THE DIVER (`010097F018538000`)
 
-The Peanuts Android profile targets update 1.0.6.1267 (`v3080192`). Its main build ID is `f74b633e480e4e161f80a7c16a467f2a`. The update uses Unity 6000.0.52f1 IL2CPP, FMOD and Nintendo SDK 20.5.29 on NVN. The Android pack loads `main`, the Nintendo SDK movie module (`subsdk0`) and `sdk`.
+The Kiwi Android profile targets update 1.0.6.1267 (`v3080192`). Its main build ID is `f74b633e480e4e161f80a7c16a467f2a`. The update uses Unity 6000.0.52f1 IL2CPP, FMOD and Nintendo SDK 20.5.29 on NVN. The Android pack loads `main`, the Nintendo SDK movie module (`subsdk0`) and `sdk`.
 
 ## PC build
 
@@ -12,7 +12,7 @@ The Peanuts Android profile targets update 1.0.6.1267 (`v3080192`). Its main bui
 ## Frame rate and shader startup
 
 - **Game owned** defaults to the original 30 fps. Game settings also offer 20, 30, 40, 45, 60, 90 and 120 fps caps. For the supported executable, `step_ticks_u32` sets Unity's fixed physics timestep to `141120000 / cap` ticks at `[main + 0xa5477e8] + 0x50`. [FPSLocker Warehouse timing patch](https://github.com/masagrator/FPSLocker-Warehouse/blob/master/SaltySD/plugins/FPSLocker/patches/010097F018538000/F74B633E480E4E16.yaml)
-- `vk_prewarm.bin` supplies 160 Vulkan pipeline keys recorded through the first dive on Thor. In the empty-cache Turnip test, Peanuts built 75 applicable pipelines in 0.8 seconds before guest entry. Startup prewarm defaults to off on Thor's Qualcomm 676.53 driver.
+- `vk_prewarm.bin` supplies 160 Vulkan pipeline keys recorded through the first dive on Thor. In the empty-cache Turnip test, Kiwi built 75 applicable pipelines in 0.8 seconds before guest entry. Startup prewarm defaults to off on Thor's Qualcomm 676.53 driver.
 
 ## Android testing
 
@@ -29,9 +29,9 @@ The Peanuts Android profile targets update 1.0.6.1267 (`v3080192`). Its main bui
 - The NPDM declares 16 MiB of system resource. The profile uses a 5 GiB guest reservation with 4.375 GiB for virtual address regions and the standard Switch application pool.
 - The shared SDK rewriter matches this build's `AddressRegionManager` constructor. The two edits at `sdk+0x145d0c` and `sdk+0x145d78` reduce the reserved node area from 1,022 MiB to 62 MiB.
 
-<!-- PEANUTS begin: picture shapes -->
+<!-- KIWI begin: picture shapes -->
 ## Picture shapes (Android)
 
 **Untested.** Game settings › Display offers **Fill the screen** on 1.0.6.1267 through 14 `aspect_plan` rows that nobody has seen on a device (`aspect_plan_untested 1`, and the Fill choice says so). They are every place this build's main has the width,height pairs in data, from a scan of the code on 2026-11-21 with each expected word read on the pack; no community patch stands behind them. With Fill the 3D view may follow the screen, the HUD and menus may not, or the game may draw wrongly or not start. Fit and Stretch are unchanged. Open: every screen, at any shape.
 
-<!-- PEANUTS end -->
+<!-- KIWI end -->

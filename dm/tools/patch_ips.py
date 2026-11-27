@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-# PEANUTS: new file (code mods: IPS/IPS32 before the rewrite, DESIGN-MODS.md)
+# KIWI: new file (code mods: IPS/IPS32 before the rewrite, DESIGN-MODS.md)
 """Applies a code mod's exefs_patches (ips.py: IPS/IPS32, Atmosphère's own format and offset convention: offsets count the NSO's 0x100-byte header) to one
 NSO module, *before* dm/tools/patch_nso.py's ARM64 rewrite — the rewrite's own registered CUTS and MATCH_CUTS
 assert the module's original bytes one at a time and would otherwise abort on a mod's own edits, or silently
 rewrite around them.
 
 Where this sits in a mod build (design/platform/DESIGN-MODS.md "ExeFS binary patch (IPS/IPS32)"): a code mod
-(dev.peanuts.mods.ModStore) may ship exefs_patches/<name>/<buildid>.ips(32) files, named by the module's own NSO
+(hernandez.kiwinative.kiwi.mods.ModStore) may ship exefs_patches/<name>/<buildid>.ips(32) files, named by the module's own NSO
 build ID (all of it without its trailing zero bytes, or more, in either letter case, as Atmosphère's loader looks
 them up; or its first 8 bytes alone: stem_matches), so a mod author's existing Atmosphère-layout package needs no
 renaming to be used here. An emulator-layout mod keeps the same files in its exefs/ folder, beside the modules it
-adds; that folder is then given as a patches dir too (dev.peanuts.build.ModBuild).
+adds; that folder is then given as a patches dir too (hernandez.kiwinative.kiwi.build.ModBuild).
 
 Usage: patch_ips.py <module NSO/NRO> <patches dir> <output NSO> [<patches dir> ...]
   <module>        a stock module (main, subsdk0, ...), read with dm/tools/nso.py exactly as patch_nso.py reads it

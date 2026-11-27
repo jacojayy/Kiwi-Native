@@ -1,5 +1,5 @@
 # Diablo III: Eternal Collection (`01001B300B9BE000`)
-<!-- PEANUTS: Android game profile and validation notes. -->
+<!-- KIWI: Android game profile and validation notes. -->
 
 Update 2.7.7.92380 (v1441792), SDK 8.2.0, NVN. Blizzard's own engine (the survey's Unreal 4 marker in `main` is a false one), FMOD, its data as SNO assets in Blizzard's console packages (`CPKs/*.cpk`, `Update/CPKs/*.cpk`: 37 files, 16 GB). Modules `main` and `sdk` only. Three DLC NSPs (indices 100–102) hold a licence and no content.
 
@@ -33,12 +33,12 @@ Experimental display-paced caps offer 20, 30, 40, 45, 60, 90 and 120 fps, with G
 - Each shader is a program of one stage (`#D3@` in `SINGLE_STAGE`): the pairs table pairs every vertex shader with a cover of the pixel shaders' inputs.
 - All 34 programs the game asked for on the way to its first menus (dumped with `DM_NVN_SHDUMP` before the reader existed) are among them, 33 in `ClientCommon.cpk`; no draw on the route above asked for a shader the map lacks.
 
-<!-- PEANUTS begin: picture shapes -->
+<!-- KIWI begin: picture shapes -->
 ## Picture shapes (Android)
 
 **Untested.** Game settings › Display offers **Fill the screen** on 2.7.7.92380 through 1 `aspect_plan` row that nobody has seen on a device (`aspect_plan_untested 1`, and the Fill choice says so). They are every place this build's main has the packed 1920x1080 sizes in code and the 16/9 float words, from a scan of the code on 2026-11-21 with each expected word read on the pack; no community patch stands behind them. With Fill the 3D view may follow the screen, the HUD and menus may not, or the game may draw wrongly or not start. Fit and Stretch are unchanged. Open: every screen, at any shape.
 
-<!-- PEANUTS end -->
+<!-- KIWI end -->
 
 ## Mac routes
 

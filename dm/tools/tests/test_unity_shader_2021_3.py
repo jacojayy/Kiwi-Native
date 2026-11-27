@@ -1,4 +1,4 @@
-"""PEANUTS: unityfs.py's Shader layout of Unity 2021.3.26f1 (KNOWN_TREES, type hash f0c184272a05e54447e36366ec4876a6; My Time at Sandrock, Unity
+"""KIWI: unityfs.py's Shader layout of Unity 2021.3.26f1 (KNOWN_TREES, type hash f0c184272a05e54447e36366ec4876a6; My Time at Sandrock, Unity
 2021.3.26f1, whose serialized files and asset bundles all come without type trees). A synthetic Shader object is written field by field from the layout,
 with values in the three fields the layout adds to 2021.2's (a program's m_PlayerSubPrograms and m_ParameterBlobIndices, the Shader's stageCounts), put in
 a serialized file without type trees, and read back the way the shader split's second pass reads a stripped file: the tree comes from KNOWN_TREES by the

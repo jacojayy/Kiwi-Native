@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# PEANUTS: new file (a third-party IPS code patch turned into a variant's cut rows: Animal Crossing: New Horizons' 60 fps speed fix, dm/games/01006F8002326000/speedfix60)
+# KIWI: new file (a third-party IPS code patch turned into a variant's cut rows: Animal Crossing: New Horizons' 60 fps speed fix, dm/games/01006F8002326000/speedfix60)
 """Turns an Atmosphère exefs patch (IPS or IPS32 named by the module's build ID, offsets counting the NSO's 0x100-byte header: ips.py) into rows of the
 rewriter's cut form, with each record's original bytes read from the module it was made for: <image offset> <original bytes> <new bytes>, hex, one row per
 record, in the patch's order. A profile's patches.py reads them into VARIANT_CUTS (dm/tools/patch_nso.py), which asserts every original before it writes the

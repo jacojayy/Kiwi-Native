@@ -75,7 +75,7 @@ class FindTest(unittest.TestCase):
         self.assertEqual((off, reg), (ENGINE + 16, 1), why)
 
     def test_shared_reservation_helper_gates_only_the_startup_store(self):
-        # PEANUTS: the helper rounds the same size variable and reserves the region.
+        # KIWI: the helper rounds the same size variable and reserves the region.
         helper = 0x1800
         startup = [lambda a: ADRP(19, a, VAR + 8), ADDI(19, 19, (VAR + 8) & 0xfff), LDRX(8, 19),
                    ADDI(9, 8, 4095), 0xf100011f, MOV_X8_62GB, 0x9274cd29, 0x9a890108,

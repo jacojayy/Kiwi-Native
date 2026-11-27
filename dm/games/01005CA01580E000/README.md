@@ -14,7 +14,7 @@ Update 1.0.2 (`v65536`) over the base game, SDK 13.3.2. Atlus GFD / Needle on NV
 
 ## Rendering
 
-<!-- PEANUTS: the Android HD resolution option was removed (owner 2026-11-26) -->
+<!-- KIWI: the Android HD resolution option was removed (owner 2026-11-26) -->
 
 - **Resolved:** the first boot trapped in `SetupSurfaceInfoMemoryInside`, at `main+0x1028fbc`, asserting `ctx.memorySize <= localmemsetupinfo.memorySize`. A 16x16 RGBA8 texture with flags `0x44` (`IMAGE | LINEAR_RENDER_TARGET`) and stride 128 received only 1 KB from the host; the game independently calculated 2 KB. The general fix is linked below. No executable cut is needed.
 
@@ -60,9 +60,9 @@ Persona 5 Royal uses the reviewed Warehouse fade-step helper in a separate RX pa
 
 The launcher defaults to 60 and offers Game owned as a separate choice. Switching to or from Game owned requires restarting. Code plans require the exact main build and expected instruction words, validate every replacement before writing, and leave pack files unchanged. Other platform patch preparation retains its existing method. See the Thor continuation report for bounded Turnip validation.
 
-<!-- PEANUTS begin: picture shapes -->
+<!-- KIWI begin: picture shapes -->
 ## Picture shapes (Android)
 
 **Untested.** Game settings › Display offers **Fill the screen** on 1.0.2 through 2 `aspect_plan` rows that nobody has seen on a device (`aspect_plan_untested 1`, and the Fill choice says so). They are every place this build's main has the packed 1920x1080 sizes in code and the 16/9 float words, from a scan of the code on 2026-11-21 with each expected word read on the pack; no community patch stands behind them. With Fill the 3D view may follow the screen, the HUD and menus may not, or the game may draw wrongly or not start. Fit and Stretch are unchanged. Open: every screen, at any shape.
 
-<!-- PEANUTS end -->
+<!-- KIWI end -->

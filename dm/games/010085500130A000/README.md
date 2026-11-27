@@ -1,6 +1,6 @@
 # LEGO CITY UNDERCOVER (`010085500130A000`)
 
-<!-- PEANUTS: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
+<!-- KIWI: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
 
 Update 1.0.3 (v196608) over base 1.0.0. SDK 1.3.1, the oldest SDK of any profile here. TT Games' own engine (Nu2, with its "NuUbershader" shader system) on NVN. Modules `main`, `subsdk0` (NintendoSDK_NVN), `subsdk1` (GLSLC, NVN's run-time GLSL compiler, which `main` imports `glslcCompile` from), `subsdk2` (nn::sf), `subsdk4` (NintendoSDK_movie) and `sdk`. `subsdk3` (libcurl) is not loaded: `main` takes nothing from it that the host does not supply.
 

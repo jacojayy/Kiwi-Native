@@ -1,4 +1,4 @@
-<!-- PEANUTS: Android bring-up evidence and limitations. -->
+<!-- KIWI: Android bring-up evidence and limitations. -->
 # CRISIS CORE –FINAL FANTASY VII– REUNION (`01004BC0166CC000`)
 
 Base 1.0.0 (v0), SDK 13.3.0, Unreal Engine 4.27, NVN. The profile covers `main`, `subsdk0` and `sdk` for this build only. The decoded global and game shader archives and executable yield 22,104 unique keys. The profile contains keys, pairs and compute launch metadata, not game shaders. No prewarm seed was recorded.
@@ -20,10 +20,10 @@ The severe overexposure did not reproduce in the second run. Both the runtime bu
 - Turnip 27.0.0-R2 (`git-2648b2059f`): **the severe overexposure comes back.** The station and the fight are near white (94 % of the scene above 240 of 255); movement, hits and HP changes work, 58.96 fps.
 - Stock Qualcomm driver (Vulkan 1.3.128): boots to the title at 59 fps, then stopped on a SIGBUS in `libhwui.so` as the station scene began (one run).
 
-<!-- PEANUTS: #578 landing note (2026-11-26) -->
+<!-- KIWI: #578 landing note (2026-11-26) -->
 **Later finding (2026-11-26, GitHub #578):** the overexposure follows the pipeline cache, not the driver. With an empty pipeline cache both R1 and R2 wash out white on the first run (about 100 % of the scene above 240), and a warm cache is right on R2 (0 %); `DM_VK_PSO_ASYNC=0` or a program list learned from an earlier run also gives 0 %. The R1 run above was second, with the programs the R2 run had learned. It is the known case of a draw skipped while its pipeline is built leaving a result the game keeps (docs/reference/rendering.md): a 1x1 exposure value goes from about 0.00036 to 3332 and never recovers. A prewarm seed would avoid it; this profile ships none. The stock driver stops either with a SIGBUS in `libhwui.so` at the station or a SIGSEGV in `vulkan.adreno.so` creating an image view before the title. The profile has no readiness row.
 
-<!-- PEANUTS: on the 0.1.9 release list (2026-11-27) -->
-**On the release list from 0.1.9** (`peanuts/release-titles.txt`, so in the default APK), as a bring-up: only the opening was played, to the Behemoth scene. Play it with Turnip. On the first start, with an empty pipeline cache, the picture can wash out white; the next start, with the cache the first one filled, draws it right. Qualcomm's own driver crashes (above).
+<!-- KIWI: on the 0.1.9 release list (2026-11-27) -->
+**On the release list from 0.1.9** (`kiwi/release-titles.txt`, so in the default APK), as a bring-up: only the opening was played, to the Behemoth scene. Play it with Turnip. On the first start, with an empty pipeline cache, the picture can wash out white; the next start, with the cache the first one filled, draws it right. Qualcomm's own driver crashes (above).
 
 Original reading: The second run above used Turnip Gen8 V38, the R1 generation. Later progression remains untested; the status is **bring-up**.

@@ -5,6 +5,6 @@ out/
 local.properties
 *.iml
 .idea/
-# PEANUTS: dev/peanuts/build is a source package, not a build dir
-!src/jvmtest/java/dev/peanuts/build/
-!src/main/java/dev/peanuts/build/
+# KIWI: hernandez/kiwinative/kiwi/build is a source package, not a build dir
+!src/jvmtest/java/hernandez/kiwinative/kiwi/build/
+!src/main/java/hernandez/kiwinative/kiwi/build/

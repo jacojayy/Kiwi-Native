@@ -1,7 +1,7 @@
 # Digimon Story Time Stranger (010062E01FE0C000): the rewriter's patches of this game's own builds. dm/tools/patch_nso.py loads every profile's patches.py and applies those of a module's
 # NSO build ID ("Registered patches" there).
 
-# PEANUTS: main 1.2.2's animation job pool (its workers are the PoseWorker threads). The pool keeps two job vectors: the first at pool+0x80 (a high-water count, the take index at
+# KIWI: main 1.2.2's animation job pool (its workers are the PoseWorker threads). The pool keeps two job vectors: the first at pool+0x80 (a high-water count, the take index at
 # +0x84, begin / end / capacity at +0x88 / +0x90 / +0x98), which its workers take from holding the mutex at pool+0x48; the second at pool+0xa0, filled by the submit
 # (main+0xb7ebc0) holding the mutex at pool+0x10, which a worker moves into the first (main+0xb7fb50: it appends, empties the second and raises the first's high-water count).
 # When every worker has gone idle, the pool's wait (main+0xb7f090) "tidies" both vectors with main+0xb7f240, holding neither mutex: it grows the vector to its high-water

@@ -1,4 +1,4 @@
-// PEANUTS: guest memory given back inside a placed segment (vka_mem.c vka_mem_release, "Ranges given back inside placed memory"): the range arithmetic, free of Vulkan
+// KIWI: guest memory given back inside a placed segment (vka_mem.c vka_mem_release, "Ranges given back inside placed memory"): the range arithmetic, free of Vulkan
 // so the unit test (dm/host/tests/t_android_holes.c) can check it. A hole is a range of a placed segment whose CPU pages the host took back (UnmapPhysicalMemory, a
 // heap shrink): the segment keeps its Vulkan memory, its buffer and its place in the table, so every other byte of it stays GPU-visible, and only the hole's addresses
 // answer "not placed" until the segment's CPU map is made whole again. The table is the set of those addresses: ranges sorted by start, disjoint and not touching

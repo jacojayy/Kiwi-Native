@@ -1,8 +1,8 @@
 # Game profile of LEGO 2K Drive (Switch, update 1.17 = v1114112 over the base game 1.0 = v0, with its 13 add-on content packs)
 # Format: see dm/games/README.md
-# PEANUTS: a Kiwi Native profile (Kiwi Native has none for this title); whole file Peanuts' own
+# KIWI: a Kiwi Native profile (Kiwi Native has none for this title); whole file Kiwi' own
 # Visual Concepts / 2K Games, Unreal Engine 4.27.2 (EpicGames+UnrealEngine-4_27_2 in main; SF_GLSL_SWITCH shaders in two Oodle-compressed shader code archives), SDK 14.3.0, NVN, FMOD sound, Bink movies, PhysX 4.1.2.
-# Status: provisional profile (dm/games/profile_guess.py from the survey, peanuts/docs/NEW-GAME.md); the note (README.md) says what is a guess
+# Status: provisional profile (dm/games/profile_guess.py from the survey, kiwi/docs/NEW-GAME.md); the note (README.md) says what is a guess
 
 # ---- Identity ----
 title_id	0100739018020000

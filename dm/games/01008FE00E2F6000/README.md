@@ -1,6 +1,6 @@
 # One Piece Pirate Warriors 4 (`01008FE00E2F6000`)
 
-<!-- PEANUTS: a new Kiwi Native game profile and device-tested note. -->
+<!-- KIWI: a new Kiwi Native game profile and device-tested note. -->
 
 **Status (current): plays on Android, with sound.**
 

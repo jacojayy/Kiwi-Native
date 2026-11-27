@@ -1,4 +1,4 @@
-// PEANUTS(upstream-candidate): the audio renderer service (audren:u) for an SDK with no renderer of its own, with its own CPU mixer.
+// KIWI(upstream-candidate): the audio renderer service (audren:u) for an SDK with no renderer of its own, with its own CPU mixer.
 // SDK 1.3.1 (LEGO CITY UNDERCOVER, sdk 9f841a65…) links only the renderer's IPC client: no AudioRendererManagerImpl, no ExecuteAudioRendererRendering, so the host cannot run the
 // SDK's renderer on the CPU as it does for every later SDK (hle_audren.c). Its client connects to audren:u through sm, which the host answers here (hle_sf.c sf_serving), and keeps
 // all of its own work: it builds each update's input and checks every byte count of the output. This service answers as Horizon's does and mixes the voices itself:
@@ -125,7 +125,7 @@ static void wb_begin(vstate *s, const rwb *w, int restart) {   // a buffer start
         int16_t c[3]; memcpy(c, (const void *)(uintptr_t)w->ctx, 6); s->h1 = c[1]; s->h2 = c[2];
     }
 }
-// PEANUTS(upstream-candidate): the voice biquads (LEGO CITY UNDERCOVER's low-pass), Q14 with a1/a2 stored negated
+// KIWI(upstream-candidate): the voice biquads (LEGO CITY UNDERCOVER's low-pass), Q14 with a1/a2 stored negated
 // Filters the channels x[c][0..n) of a voice with its enabled biquads, filter 0 then filter 1: y = b0 x + b1 x1 + b2 x2 + a1 y1 + a2 y2. A result that is not finite resets that filter's history and passes the input through.
 static void voice_biquads(vstate *s, float (*x)[FRAME_MAX], unsigned nch, int n) {
     for (int f = 0; f < 2; f++) {

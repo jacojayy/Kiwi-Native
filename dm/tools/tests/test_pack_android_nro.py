@@ -60,7 +60,7 @@ class Collect(unittest.TestCase):
         def replace(src, dst, *a, **kw):
             if os.path.isdir(src): raise PermissionError(errno.EPERM, 'Operation not permitted', str(src), None, str(dst))
             return real(src, dst, *a, **kw)
-        # PEANUTS(upstream-candidate): the replacement function already has the Path method's argument shape.
+        # KIWI(upstream-candidate): the replacement function already has the Path method's argument shape.
         with mock.patch.object(pack_android.os, 'replace', replace), mock.patch.object(pack_android.os, 'rename', replace), \
              mock.patch.object(pack_android.shutil, 'move', side_effect=AssertionError('folder moved')), \
              mock.patch.object(Path, 'rename', replace), mock.patch.object(Path, 'replace', replace):

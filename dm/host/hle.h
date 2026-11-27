@@ -21,7 +21,7 @@ uint64_t now_ns(void);
 // A blocking native HLE wait releases the guest core. With the condition mutex
 // held, enter with 1 before waiting and balance with 0 after reacquiring it.
 void dm_thread_native_wait(int entering);
-// PEANUTS begin: what a Horizon core keeps to one thread until it blocks, where the SDK takes no lock of its own (hle_fontll.c's font engines; hle_thread.c)
+// KIWI begin: what a Horizon core keeps to one thread until it blocks, where the SDK takes no lock of its own (hle_fontll.c's font engines; hle_thread.c)
 extern __thread int dm_core_excl_held;        // the calling thread holds such a resource
 extern void (*dm_core_excl_release)(void);    // gives back what the calling thread holds: hle_thread.c calls it at the thread's SVCs and when it enters a native HLE wait
 uint64_t dm_thread_id_self(void);             // the calling guest thread's ID (never reused); 0 for a host thread
@@ -29,7 +29,7 @@ int dm_thread_core_excl_wait(uint64_t owner); // whether the caller leaves such 
 void dm_thread_describe(uint64_t id, char *buf, size_t n);   // "'name' (priority, core, mask)" of guest thread id, for a log line
 extern void *(*dm_fontll_enter)(void *engine, const char *what);   // hle_sdk16.c's take-overs of ScalableFontEngine::Initialize and LoadFont: set by hle_fontll.c
 extern void (*dm_fontll_leave)(void *slot);
-// PEANUTS end
+// KIWI end
 void dm_thread_service_connect(void);   // an HLE call that stands for connecting to a service on Horizon: threads started so far get to run (hle_thread.c)
 void dm_thread_service_request(void);   // an HLE call that is a blocking service request on Horizon: the caller gives up its core (hle_thread.c)
 uint64_t guest_ns(void);              // Guest clock (hle_os.c; does not advance while frozen, guest_clock_freeze)
@@ -74,7 +74,7 @@ static inline void dm_applet_leave_(const char *const *name) { (void)name; dm_ap
 #define DM_APPLET(name) const char *const dm_applet_ __attribute__((cleanup(dm_applet_leave_))) = (name); dm_applet_enter(dm_applet_)
 // Audio pause / resume following the lifecycle (called by the front end on going to background / returning to foreground)
 extern uint8_t *dm_fps_state;   // frame step state page (loader.c install_fps_state): +0 float target fps, +4 movie flag (dm_movie_playing, written by the host at each present: Tears of the Kingdom's step stub caps its first, undecided steps by it), +0x10 float render scale, +0x18 double game seconds stepped; NULL when the build has none
-// PEANUTS: Android elapsed-time frame-step mode in the shared state page.
+// KIWI: Android elapsed-time frame-step mode in the shared state page.
 static inline int dm_fps_elapsed_step(void) {
     return dm_fps_state && __atomic_load_n((const uint32_t *)(dm_fps_state + 0x3c), __ATOMIC_RELAXED) == 1;
 }
@@ -85,7 +85,7 @@ void dm_audio_reset(void);   // iOS media services reset: recreate the AudioUnit
 // An nn::gs::NativeSyncHandle (16 bytes, magic first) the host made that never signals: GameChat's camera pictures, which never come (no camera; hle_misc.c). nn::gs::TryWaitNativeSync (hle_codec_video.c) reads it as not reached
 #define DM_SYNC_NEVER 0x4e436d44u   // 'DmCN'
 uint32_t dm_sf_host_session(const char *name);   // hle_sf.c: a session the host answers (success, zeroed output) for a service the game reaches without sm
-// PEANUTS begin: a host service that reads its request and writes data back (hle_sf.c sf_serve; first the audio renderer service of SDKs with no renderer of their own, hle_audren_svc.c).
+// KIWI begin: a host service that reads its request and writes data back (hle_sf.c sf_serve; first the audio renderer service of SDKs with no renderer of their own, hle_audren_svc.c).
 // One request: the session's name and object (obj 0 for a plain session, the object ID in a domain), the command, the raw arguments after the CMIF header, the buffers of each
 // descriptor kind (A in, B out, X in pointer, C out receive list) as guest addresses (the guest's memory is the host's), and the copied handles. The service writes its raw output
 // (at most 0x100 bytes), a copied handle (copy), and a new object: in a domain session the object ID it chose (child, from sf_new_object), else a session of the host's (move).
@@ -105,5 +105,5 @@ unsigned sf_new_object(int slot);                                      // hle_sf
 uint32_t sf_new_session(const char *name, sf_serve serve);             // hle_sf.c: a host session answered by serve (a moved interface of a plain session)
 int sf_session_slot(uint32_t h);                                        // hle_sf.c: the slot (sf_req.slot) of a host session handle, -1 for none
 int hle_signal_event_handle(uint32_t write_end);                        // hle_thread.c: signal a kernel event by its write end (any thread); 0 when the handle is gone
-// PEANUTS end
+// KIWI end
 uint32_t hle_new_event(uint32_t *write_end);   // hle_thread.c: a new kernel event's read end (a service's handle copied to its client); its write end in *write_end, none when NULL (never signaled)

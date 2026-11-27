@@ -1,4 +1,4 @@
-// PEANUTS: the "Preparing graphics" notice's counters (dm/gfx/vk_android/vka_warmnote.h): shown while draws are skipped for pipelines still being made, hidden when
+// KIWI: the "Preparing graphics" notice's counters (dm/gfx/vk_android/vka_warmnote.h): shown while draws are skipped for pipelines still being made, hidden when
 // none waits or nothing on screen lacks one
 #include "../../gfx/vk_android/vka_warmnote.h"
 #include <stdio.h>

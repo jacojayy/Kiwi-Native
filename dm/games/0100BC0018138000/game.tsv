@@ -31,7 +31,7 @@ sys_resource	0x1000000
 mem_reserve	0x140000000
 mem_alias	0x118000000
 mem_stack	0x10000000
-# PEANUTS: a 2 GB pool (nxnative: 1 GB). On an AYN Thor (Turnip) the game had 0.91 GB mapped 16 s in, then MapPhysicalMemory was refused (the application pool is full) and it crashed on a null at main+0x627a74; Advance Wars 1+2 needed 2 GB the same way (docs/reference/memory.md, Sizing the pool and alias region)
+# KIWI: a 2 GB pool (nxnative: 1 GB). On an AYN Thor (Turnip) the game had 0.91 GB mapped 16 s in, then MapPhysicalMemory was refused (the application pool is full) and it crashed on a null at main+0x627a74; Advance Wars 1+2 needed 2 GB the same way (docs/reference/memory.md, Sizing the pool and alias region)
 app_pool	0x80000000
 
 # ---- Graphics ----

@@ -1,6 +1,6 @@
 # Game profile of STORY OF SEASONS: Grand Bazaar (Switch, update v655360 over the base game)
 # Format: see dm/games/README.md
-# PEANUTS: a Kiwi Native profile (Kiwi Native has none for this title); whole file Peanuts' own
+# KIWI: a Kiwi Native profile (Kiwi Native has none for this title); whole file Kiwi' own
 # Unity 2020.3 IL2CPP with CRIWARE and FMOD, SDK 18.3.5, NVN; subsdk0 is the movie module. 16 MB of system resource: the game maps its own memory (no heap).
 # The shaders are in the UnityFS bundles under data/ and main (shader_split.py: 14,249).
 # Status: provisional profile (dm/games/profile_guess.py from the survey); memory values not measured yet
@@ -40,7 +40,7 @@ mem_used	0xba80000
 shader_groups	/Data/=data /Plugins/=plugins /.nrr/=nrr
 shader_note	STORY OF SEASONS: Grand Bazaar shaders
 
-# PEANUTS: frame rate choices from 20 to 120 fps, with Game owned (its own pacing). The game starts at 60 fps (0.1.8; Game owned before); a cap paces the display and is
+# KIWI: frame rate choices from 20 to 120 fps, with Game owned (its own pacing). The game starts at 60 fps (0.1.8; Game owned before); a cap paces the display and is
 # marked experimental (fps_limit_present), since no run has yet checked that the game's speed follows elapsed time above its own rate
 fps_limit_max	120
 fps_limit_present	1

@@ -21,7 +21,7 @@ class Error(ValueError): pass
 class Record:
     def __init__(self, id, version, type):
         self.id, self.version, self.type = id, version, type
-        # PEANUTS(upstream-candidate): links are absent until the matching extended header supplies them.
+        # KIWI(upstream-candidate): links are absent until the matching extended header supplies them.
         self.application_id: int | None = None
         self.patch_id: int | None = None
         self.data_patch_id: int | None = None

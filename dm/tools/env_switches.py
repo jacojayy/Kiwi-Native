@@ -17,7 +17,7 @@ TABLE = REPO / 'docs/env_switches.tsv'
 VENDORED = REPO / 'dm/tools/env_switches_vendored.tsv'   # name<TAB>module: switches read by dm/third_party/<module>
 HEAD = 'name\tclass\tmeaning\n'
 CLASSES = ('player', 'path', 'switch', 'diagnostic', 'test')
-CODE = ('.c', '.m', '.h', '.inc', '.swift', '.py', '.sh', '.S', '.cpp')   # PEANUTS: .cpp, the companion runtime's sources (dm/peanuts/rt: DM_RT_VALUES)
+CODE = ('.c', '.m', '.h', '.inc', '.swift', '.py', '.sh', '.S', '.cpp')   # KIWI: .cpp, the companion runtime's sources (dm/kiwi/rt: DM_RT_VALUES)
 NAME = r'(?:DM|DMSH_VK)_[A-Z0-9_]*[A-Z0-9]'   # the host's and tools' DM_* switches, and the Android shader build's DMSH_VK_* (vk_android_build.py)
 READ = r'(?:getenv\(|environ(?:\.get\(|\[))\s*["\'](' + NAME + r')["\']'   # a literal name in getenv(…), os.environ.get(…) or os.environ[…]
 
@@ -38,7 +38,7 @@ def scan():
         if p.endswith('.md'):
             for n in set(re.findall(r'`(' + NAME + r')', text)): docs.setdefault(n, set()).add(p)
             continue
-        if p.endswith('CMakeLists.txt'):   # PEANUTS: a build's compile definitions (DM_NSP_DIRECT) are macros, not switches
+        if p.endswith('CMakeLists.txt'):   # KIWI: a build's compile definitions (DM_NSP_DIRECT) are macros, not switches
             for l in re.findall(r'(?i)^.*compile_definitions.*$', text, re.M): macros |= set(re.findall(NAME, l))
             continue
         if not p.endswith(CODE) and not p.startswith('scripts/'): continue
@@ -79,7 +79,7 @@ def vendored_reads(reads):
         reads.setdefault(n, set()).add('dm/third_party/' + mod)
 
 
-# PEANUTS begin: the fork's switches with a prefix of their own (NX_DEBUG, NXIMPORT_THREADS, PN_BUILD_ID)
+# KIWI begin: the fork's switches with a prefix of their own (NX_DEBUG, NXIMPORT_THREADS, PN_BUILD_ID)
 def fork_rows():
     """The table's rows whose name has another prefix than NAME's, as they stand, for the table's end: each is kept while a tracked source still reads its name
     with getenv (a row for a switch nothing reads any more loses its place, like any other)"""
@@ -88,9 +88,9 @@ def fork_rows():
     if not have: return []
     read = set()
     for p in tracked():
-        if p.endswith(CODE) and (REPO / p).is_file(): read |= set(re.findall(r'(?:getenv|env_int)\(\s*"([A-Z][A-Z0-9_]*)"', (REPO / p).read_text(errors='replace')))   # env_int: peanuts_gpufloor.c's getenv wrapper (#457)
+        if p.endswith(CODE) and (REPO / p).is_file(): read |= set(re.findall(r'(?:getenv|env_int)\(\s*"([A-Z][A-Z0-9_]*)"', (REPO / p).read_text(errors='replace')))   # env_int: kiwi_gpufloor.c's getenv wrapper (#457)
     return [l + '\n' for l in have if l.split('\t')[0] in read]
-# PEANUTS end
+# KIWI end
 
 
 def guess(name, files, player):   # a new row's class, for whoever writes its meaning to correct
@@ -115,9 +115,9 @@ def rows():
         cls, meaning = kept.get(n, [guess(n, reads[n], player), ''])
         if cls not in CLASSES or not meaning.strip(): bad.append(n)
         out.append(f'{n}\t{cls}\t{meaning}\n')
-    for l in fork_rows():   # PEANUTS: after the DM_* rows, as written
-        if l.split('\t')[1] not in CLASSES or not l.split('\t')[2].strip(): bad.append(l.split('\t')[0])   # PEANUTS
-        out.append(l)   # PEANUTS
+    for l in fork_rows():   # KIWI: after the DM_* rows, as written
+        if l.split('\t')[1] not in CLASSES or not l.split('\t')[2].strip(): bad.append(l.split('\t')[0])   # KIWI
+        out.append(l)   # KIWI
     families = [n[:-len('_<n>')] for n in reads if n.endswith('_<n>')]   # the docs name a family as `<NAME>_<n>` (quoted up to <NAME>) or by a member (`<NAME>_0`)
     unread = sorted(n for n in docs if n not in reads and not n.endswith('_') and not any(n == f or re.fullmatch(re.escape(f) + r'_\d+', n) for f in families))
     return HEAD + ''.join(out), bad, unread

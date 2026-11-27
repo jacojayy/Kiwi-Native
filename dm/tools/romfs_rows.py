@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# PEANUTS: new file (a game variant's RomFS data as rows of changed bytes: Animal Crossing: New Horizons' 60 fps speed fix, dm/games/01006F8002326000/speedfix60)
+# KIWI: new file (a game variant's RomFS data as rows of changed bytes: Animal Crossing: New Horizons' 60 fps speed fix, dm/games/01006F8002326000/speedfix60)
 """A variant's changed game files, kept as rows of changed bytes so that no game file is shipped: the pack step applies them to the player's own RomFS files
 and writes the results into the pack's overlay folder for that variant (scripts/pack_android.py variant_overlays; the launcher passes the folder as
 DM_ROMFS_OVERLAY when it starts the variant). Every original byte a row replaces is checked, and so are the original file's size and SHA-256 before and the

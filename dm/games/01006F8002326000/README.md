@@ -15,7 +15,7 @@ On the Mac: a new game through Tom Nook's counter (name entry on the game's own 
 | `pad_layout full` | `game.tsv` | the 3D layout: the D-pad holds the tool ring and the right stick turns the camera |
 | `shader_groups` `/Shader/` `/System/` `/Effect/` `/Model/` `/Layout/` `/Swkbd/` | `game.tsv` | see [Files and shaders](#files-and-shaders) |
 
-## 60 fps <!-- PEANUTS: the 60 fps choice, with tmouh's speed fix -->
+## 60 fps <!-- KIWI: the 60 fps choice, with tmouh's speed fix -->
 
 Android's Frame rate cap offers **Game owned** (the game's own 30 fps, the game as it is, the default) and **60 fps**, which starts the game with
 ["ACNH 60 FPS + SpeedFix"](https://github.com/tmouh/acnh-60fps) v1.4.5 by **tmouh** (CC BY-NC 4.0, [speedfix60/NOTICE.md](speedfix60/NOTICE.md)): the game's

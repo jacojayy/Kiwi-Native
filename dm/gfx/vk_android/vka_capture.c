@@ -435,12 +435,12 @@ static void cap_tex_read(const tex_t *t, int rec) {
 static void cap_registries(uint32_t submit) {
     cap_buf tb = {0}, sb = {0}; tex_t *reads = NULL; int nreads = 0, nt = 0, ns = 0;
     tex_t t; view_t v; uint8_t has_v, img; samp_par sp;
-    vka_cap_treg(-1, &t, &v, &has_v, &img, &nt, NULL); vka_cap_sreg(-1, &sp, &ns);   // PEANUTS(upstream-candidate)
+    vka_cap_treg(-1, &t, &v, &has_v, &img, &nt, NULL); vka_cap_sreg(-1, &sp, &ns);   // KIWI(upstream-candidate)
     if (g_cap_ntreg0 < nt) { g_cap_treg0 = realloc(g_cap_treg0, (size_t)nt * sizeof *g_cap_treg0); memset(g_cap_treg0 + g_cap_ntreg0, 0, (size_t)(nt - g_cap_ntreg0) * sizeof *g_cap_treg0); g_cap_ntreg0 = nt; }
     reads = malloc((size_t)MAX(nt, 1) * sizeof *reads);
     for (int i = 0; i < nt; i++) {
         memset(&t, 0, sizeof t); memset(&v, 0, sizeof v); has_v = img = 0;
-        int id, ok = vka_cap_treg(i, &t, &v, &has_v, &img, NULL, &id); treg_seen *o = &g_cap_treg0[i];   // PEANUTS(upstream-candidate)
+        int id, ok = vka_cap_treg(i, &t, &v, &has_v, &img, NULL, &id); treg_seen *o = &g_cap_treg0[i];   // KIWI(upstream-candidate)
         if (ok == o->ok && (!ok || (has_v == o->has_v && img == o->img && !memcmp(&t, &o->t, sizeof t) && (!has_v || !memcmp(&v, &o->v, sizeof v))))) continue;
         *o = (treg_seen){(uint8_t)ok, has_v, img, t, v};
         cap_treg e = {id, (uint8_t)ok, has_v, 0, img, t, v};   // pad: 1 = RegisterImage

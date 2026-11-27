@@ -1,4 +1,4 @@
-// PEANUTS begin: nn::fontll::ScalableFontEngine used by one thread at a time, as a Horizon core keeps it (the whole file is Peanuts'; docs/reference/threads.md,
+// KIWI begin: nn::fontll::ScalableFontEngine used by one thread at a time, as a Horizon core keeps it (the whole file is Kiwi'; docs/reference/threads.md,
 //   "Two threads of one core in a font engine").
 // An engine (the object, 0xb8 bytes on SDK 20, is the iType font state that every FSS_ function works on) takes no lock. NintendoWare Font's TextureCache, in the
 //   game's main, keeps one engine per core and picks it by the caller's core number (Tomodachi Life: Living the Dream 1.0.4: main+0x693930 builds three, main+0x1d0d470
@@ -170,4 +170,4 @@ FONT_CALL("_ZN2nn6fontll18ScalableFontEngine21AcquireOtfKerningLastEPKNS0_15OtfK
 FONT_CALL("_ZN2nn6fontll18ScalableFontEngine20AcquireRawOtfKerningEPKNS0_15OtfKerningTableEjj", h_fontll_AcquireRawOtfKerning, 0)
 FONT_CALL("_ZN2nn6fontll18ScalableFontEngine25AcquireRawOtfKerningFirstEPKNS0_15OtfKerningTableEj", h_fontll_AcquireRawOtfKerningFirst, 0)
 FONT_CALL("_ZN2nn6fontll18ScalableFontEngine24AcquireRawOtfKerningLastEPKNS0_15OtfKerningTableEj", h_fontll_AcquireRawOtfKerningLast, 0)
-// PEANUTS end
+// KIWI end

@@ -1,6 +1,6 @@
 # Game profile of LEGO CITY UNDERCOVER (Switch, update 1.0.3 = v196608 over base 1.0.0)
 # Format: see dm/games/README.md
-# PEANUTS: a Kiwi Native profile (Kiwi Native has none for this title); whole file Peanuts' own
+# KIWI: a Kiwi Native profile (Kiwi Native has none for this title); whole file Kiwi' own
 # TT Games' engine (Nu2, "NuUbershader"), SDK 1.3.1, NVN; subsdk0 is NVN, subsdk1 GLSLC (the game compiles shaders its caches lack at run time), subsdk4 the movie module.
 # The shaders are BNSH files in the .nnx_shaders resources of the TT Games DAT archives (GAME*.DAT, the update's PATCH.DAT; RFPK chunks, ttdat.py) and GLSLC outputs in main (shader_split.py).
 # Status: provisional profile (dm/games/profile_guess.py from the survey); memory values not measured yet
@@ -39,7 +39,7 @@ shader_groups	/MOVIES/=movies
 shader_note	LEGO CITY UNDERCOVER shaders
 
 # ---- Frame rate ----
-# PEANUTS: the engine steps by the measured frame time (GameFramework::Process → FrameworkEnvironment::SetFrameTime, main+0x6d1288; NuTimeLockFrameTime has no caller), so display
+# KIWI: the engine steps by the measured frame time (GameFramework::Process → FrameworkEnvironment::SetFrameTime, main+0x6d1288; NuTimeLockFrameTime has no caller), so display
 # pacing at a frame limit keeps the game's speed. Offered as experimental (fps_limit_present), Game owned (the game's own 30 fps) by default, up to 120 on a high-refresh display
 fps_limit_max	120
 fps_limit_present	1

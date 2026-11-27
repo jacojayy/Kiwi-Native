@@ -72,7 +72,7 @@ static void fastboot_apply(void) {
     free(s);
 }
 static void host_preload(int argc, char **argv) {
-#ifdef DM_RUNTIME_PROFILE   // PEANUTS: the generic host (-PnxGenericHost=true): load the title's profile before anything below reads
+#ifdef DM_RUNTIME_PROFILE   // KIWI: the generic host (-PnxGenericHost=true): load the title's profile before anything below reads
     // DM_GAME_* (a profile/schema mismatch is a hard stop, never a silent default). DM_PROFILE_PATH is set by the launcher (GameActivity/PackService) beside DM_ROMFS;
     // DM_PROFILE_SEED (optional) is the same title's vk_prewarm.bin copy, "" when it has none.
     { const char *pp = getenv("DM_PROFILE_PATH");
@@ -125,7 +125,7 @@ static void host_preload(int argc, char **argv) {
     if (add && *add) { g_argc = game_args_add(g_argv, g_argc, 63, strdup(add)); LOG("game arguments added: %s", add); }
     static char pm[512];   // an Android pack names the modules it was made with (pack.tsv "modules"): a game whose registered builds have different module sets loads those of its dump's build
     if (!n) n = pack_modules(argv[1], pm, sizeof pm, names, DM_GAME_NMOD);
-#ifdef DM_RUNTIME_PROFILE   // PEANUTS: the generic host reads the profile's own module list instead of a static const initialized from the macro
+#ifdef DM_RUNTIME_PROFILE   // KIWI: the generic host reads the profile's own module list instead of a static const initialized from the macro
     if (!n) { for (int k = 0; k < (int)DM_GAME_NMOD; k++) names[n++] = g_profile.modules[k]; }
 #else
     if (!n) { static const char *def[] = DM_GAME_MODULES; for (int k = 0; k < DM_GAME_NMOD; k++) names[n++] = def[k]; }   // default module list from the game profile's modules (Mario: main sdk)

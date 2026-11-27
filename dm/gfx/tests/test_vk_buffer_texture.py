@@ -1,4 +1,4 @@
-# PEANUTS: new test file (buffer textures as texel buffers, vk_android_spv.py buffer_textures_split)
+# KIWI: new test file (buffer textures as texel buffers, vk_android_spv.py buffer_textures_split)
 """A buffer texture read through a texture slot (vk_android_spv.py buffer_textures_split): the translator declares it as a combined image and sampler of Dim Buffer, then takes the
 image back with OpImage before each fetch and size query. Vulkan has no combined descriptor of a texel buffer, so the sampled image type becomes the image (a UNIFORM_TEXEL_BUFFER
 binding with no sampler), each load of it gives the image and each OpImage of it a copy; a module that uses the loaded value another way is left as it is. Modules are assembled with

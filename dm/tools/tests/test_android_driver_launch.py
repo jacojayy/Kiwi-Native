@@ -1,4 +1,4 @@
-"""PEANUTS: the launch warning follows the effective driver, including per-game overrides."""
+"""KIWI: the launch warning follows the effective driver, including per-game overrides."""
 import pathlib
 import shutil
 import subprocess
@@ -11,7 +11,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[3]
 @unittest.skipUnless(shutil.which('javac') and shutil.which('java'), 'no JDK')
 class DriverLaunchTest(unittest.TestCase):
     def test_effective_driver(self):
-        source = '''package dev.nxnative.android;
+        source = '''package hernandez.kiwinative;
 import java.util.List;
 public class DriverLaunchTest {
     static void check(boolean value) { if (!value) throw new AssertionError(); }
@@ -30,5 +30,5 @@ public class DriverLaunchTest {
             test = pathlib.Path(tmp) / 'DriverLaunchTest.java'
             test.write_text(source)
             subprocess.run(['javac', '-Xlint:all', '-Werror', '-d', tmp,
-                            str(ROOT / 'android/app/src/main/java/dev/nxnative/android/DriverLaunch.java'), str(test)], check=True)
-            subprocess.run(['java', '-cp', tmp, 'dev.nxnative.android.DriverLaunchTest'], check=True)
+                            str(ROOT / 'android/app/src/main/java/hernandez/kiwinative/DriverLaunch.java'), str(test)], check=True)
+            subprocess.run(['java', '-cp', tmp, 'hernandez.kiwinative.DriverLaunchTest'], check=True)

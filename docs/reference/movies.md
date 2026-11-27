@@ -4,7 +4,7 @@ The SDK's movie library (`movie::Decoder`, `movie::Extractor`), which the host t
 
 ## Decoder lifecycle
 
-<!-- PEANUTS: SDK 1.3.1's movie module -->
+<!-- KIWI: SDK 1.3.1's movie module -->
 ### SDK 1.3.1's movie::Buffer getters without const
 
 - **Symptom:** `FATAL movie: missing SDK symbol _ZNK5movie6Buffer4DataEv` and an abort (`CRASH sig=6`) when the game's first movie starts.

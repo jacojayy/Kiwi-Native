@@ -1,6 +1,6 @@
 # Monster Sanctuary (`0100A0F00DA68000`)
 
-<!-- PEANUTS: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
+<!-- KIWI: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
 
 Update 2.1.0 (v524288) over the base game (1.0.0, v0), SDK 9.4.1. **Unity 2018.4.23f1** (IL2CPP) with FMOD, rendering with **NVN**. Modules `main`, `subsdk0` (NintendoSDK_movie) and `sdk`. The closest profiles are [FINAL FANTASY CRYSTAL CHRONICLES Remastered Edition](../0100CE4010AAC000/README.md) (Unity 2018.4.2f1, SDK 8.2.1) and [Raging Loop](../010020400E1C2000/README.md) (Unity 2018.3.10f1).
 
@@ -53,9 +53,9 @@ The rewriter took all three modules without an error.
 - `main` carries Nintendo's NEX and Pia network libraries (online play). Nothing of them was looked at.
 - `bf_want.tsv` and `pso_manifest.tsv` are empty. No `patches.py`.
 
-<!-- PEANUTS begin: picture shapes -->
+<!-- KIWI begin: picture shapes -->
 ## Picture shapes (Android)
 
 **Untested.** Game settings › Display offers **Fill the screen** on 2.1.0 through 2 `aspect_plan` rows that nobody has seen on a device (`aspect_plan_untested 1`, and the Fill choice says so). They are every place this build's main has the packed 1920x1080 sizes in code and the 16/9 float words, from a scan of the code on 2026-11-21 with each expected word read on the pack; no community patch stands behind them. With Fill the 3D view may follow the screen, the HUD and menus may not, or the game may draw wrongly or not start. Fit and Stretch are unchanged. Open: every screen, at any shape.
 
-<!-- PEANUTS end -->
+<!-- KIWI end -->

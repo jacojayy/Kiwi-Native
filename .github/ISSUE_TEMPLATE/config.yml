@@ -1,6 +1,6 @@
 blank_issues_enabled: false
 contact_links:
-  - name: "Game requests: not accepted"   # PEANUTS: owner 2026-11-26, game requests are not taken as issues
+  - name: "Game requests: not accepted"   # KIWI: owner 2026-11-26, game requests are not taken as issues
     url: https://github.com/jacojayy/Kiwi-Native#supported-games
     about: "Requests for new games, other versions or DLC are not accepted as issues and are closed. This link shows the games and versions the app supports."
   # Hosted on git.eden-emu.dev while GitHub is unavailable. The GitHub links below go back in when the project returns there
@@ -8,7 +8,7 @@ contact_links:
   - name: Install and use
     url: https://github.com/jacojayy/Kiwi-Native
     about: What you need, the games and versions that run, and how to add a game. Questions and ideas have their own form above.
-  - name: A companion shows something wrong   # PEANUTS: companion pages are made in their own repository
+  - name: A companion shows something wrong   # KIWI: companion pages are made in their own repository
     url: https://github.com/igawa6/eden-duo-companions/issues
     about: Wrong or missing information on a companion's pages. A companion that does not start or install goes in Setup or app problem above.
   # - name: Questions, ideas and phone reports that work

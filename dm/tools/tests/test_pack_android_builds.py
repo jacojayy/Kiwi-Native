@@ -4,18 +4,18 @@ import importlib.util
 import tempfile
 import unittest
 from pathlib import Path
-from typing import Any, Callable   # PEANUTS(upstream-candidate): independently loaded fixture module and optional profile hook.
+from typing import Any, Callable   # KIWI(upstream-candidate): independently loaded fixture module and optional profile hook.
 
 REPO = Path(__file__).resolve().parents[3]
 spec = importlib.util.spec_from_file_location('pack_android', REPO / 'scripts/pack_android.py')
-assert spec is not None and spec.loader is not None   # PEANUTS(upstream-candidate): required fixture loader.
+assert spec is not None and spec.loader is not None   # KIWI(upstream-candidate): required fixture loader.
 pa: Any = importlib.util.module_from_spec(spec); spec.loader.exec_module(pa)
 
 A, B, C, D = ('%032x' % n for n in (1, 2, 3, 4))   # build IDs
 
 
 class Profile:   # what dump_modules asks of a game profile
-    # PEANUTS(upstream-candidate): attributes supplied by individual synthetic profiles.
+    # KIWI(upstream-candidate): attributes supplied by individual synthetic profiles.
     id: str
     get: Callable[..., str | None]
     dir = Path('.')
@@ -95,7 +95,7 @@ class SplitAbsent(unittest.TestCase):
         with self.assertRaises(pa.Error) as e: self.run_split(['k1'], ['k3'])
         self.assertIn('lack 1 of the 3', str(e.exception))
 
-    # PEANUTS begin: tables that are the union of two versions (game.tsv shader_versions), a dump of one of them (may_lack)
+    # KIWI begin: tables that are the union of two versions (game.tsv shader_versions), a dump of one of them (may_lack)
     def union(self, versions='v100 v200'):
         root = Path(self.enterContext(tempfile.TemporaryDirectory()))
         prof = root / 'profile'; prof.mkdir()
@@ -169,9 +169,9 @@ class SplitAbsent(unittest.TestCase):
         tagged = pa.other_version_keys(g, 0)
         named = {l.split('\t')[0] for l in (g.dir / 'shader_optional.tsv').read_text().splitlines() if '(v327680) only' in l}
         self.assertEqual(tagged, named); self.assertEqual(len(tagged), 3457)
-    # PEANUTS end
+    # KIWI end
 
-    def test_missing_shaders_name_the_addon_content(self):   # PEANUTS: a dump without its DLC file was told "another version or incomplete" (no game is known that needs it; a profile of one version only)
+    def test_missing_shaders_name_the_addon_content(self):   # KIWI: a dump without its DLC file was told "another version or incomplete" (no game is known that needs it; a profile of one version only)
         root = Path(self.enterContext(tempfile.TemporaryDirectory()))
         prof, rd = root / 'profile', root / 'romfs'; prof.mkdir(); (rd / 'Common/agl.sarc').parent.mkdir(parents=True)
         (rd / 'Common/agl.sarc').write_text('x'); (rd / 'Course').mkdir()
@@ -187,7 +187,7 @@ class SplitAbsent(unittest.TestCase):
         said = pa.lacking_shaders(g, rd, ['k1', 'k2', 'k3'], 4, 0, root / 'tmp')   # one of the missing shaders comes from a file that is there: DLC does not explain the dump
         self.assertIn('lack 3 of the 4', said); self.assertIn('2 of them from files the game files do not have (e.g. /Course/Dlc/course.ptcl): the dump is of another version or incomplete', said)
         self.assertNotIn('DLC', said)
-        said = pa.lacking_shaders(g, rd, ['k2', 'k3'], 4, 0, root / 'tmp', True)   # PEANUTS: tables of several versions: not called DLC
+        said = pa.lacking_shaders(g, rd, ['k2', 'k3'], 4, 0, root / 'tmp', True)   # KIWI: tables of several versions: not called DLC
         self.assertIn('the dump is of another version or incomplete', said); self.assertNotIn('DLC', said)
         said = pa.lacking_shaders(g, rd, ['k2', 'k3'], 4, 1, root / 'tmp')   # the same with add-on content in the dump: not the DLC
         self.assertIn('2 of them from files the game files do not have (e.g. /Course/Dlc/course.ptcl): the dump is of another version or incomplete', said)
@@ -198,7 +198,7 @@ class SplitAbsent(unittest.TestCase):
         said = pa.lacking_shaders(g, rd, ['k2'], 4, None, root / 'tmp')   # how much add-on content the dump has is not known: the old words, the DLC as a possibility
         self.assertIn('the dump is of another version or incomplete', said); self.assertIn('when the game has add-on content (DLC), it may not have been part of the import', said)
 
-    def test_addon_content_is_named_only_for_the_one_version_the_tables_are_of(self):   # PEANUTS: the call in split_shaders (lacking_shaders' multi)
+    def test_addon_content_is_named_only_for_the_one_version_the_tables_are_of(self):   # KIWI: the call in split_shaders (lacking_shaders' multi)
         for versions, ver, dlc in (('v100', 100, True), ('v100', 200, False), ('v100 v200', 100, False), ('', 100, False), ('v100', None, False)):
             g, split = self.union(versions)
             (g.dir / 'shader_map.tsv').write_text('# map\npackage\tindex\tstage\tdm_ctl_sha16\tsource\n' + ''.join(
@@ -207,7 +207,7 @@ class SplitAbsent(unittest.TestCase):
             self.assertIn('lack 1 of the 2', str(e.exception))
             self.assertEqual('DLC' in str(e.exception), dlc, (versions, ver))
 
-    # PEANUTS begin: a split that reads no shader is a failure, unless the profile says the game has no NVN shaders 
+    # KIWI begin: a split that reads no shader is a failure, unless the profile says the game has no NVN shaders 
     def empty(self, note=None, capture=None, map_rows=()):
         g, split = self.union('v100')
         (g.dir / 'shader_map.tsv').write_text('# map\npackage\tindex\tstage\tdm_ctl_sha16\tsource\n' + ''.join(f'cs_x.bin\t0\tcompute\t{k}\tmain#BNSH@0x2\n' for k in map_rows))
@@ -246,7 +246,7 @@ class SplitAbsent(unittest.TestCase):
         src = (REPO / 'scripts/pack_android.py').read_text(encoding='utf-8')
         body = src[src.index('def pack_shaders('):]
         self.assertLess(body.index('require_shaders(g)'), body.index('library_current(lib, g)'), 'before a cached library is taken')
-    # PEANUTS end
+    # KIWI end
 
     def test_absent_optional(self):
         """pack_shaders builds the library without the keys of _absent.tsv only when the profile's shader_optional.tsv names every one"""
@@ -262,11 +262,11 @@ class SplitAbsent(unittest.TestCase):
 class MarioKartWorldOptional(unittest.TestCase):
     """Mario Kart World 1.8.0 as update 917504 (Forgejo #50): its split lacks only the profile's optional key, which the profile's map has"""
 
-    def test_profile(self):   # PEANUTS begin: Mario Kart World is a Switch 2 profile Kiwi Native does not carry; Mario Kart 8 Deluxe's optional keys
-        d = REPO / 'dm/games/0100152000022000'   # (4.0.0 / 4.0.1, Peanuts' own list) are checked the same way
+    def test_profile(self):   # KIWI begin: Mario Kart World is a Switch 2 profile Kiwi Native does not carry; Mario Kart 8 Deluxe's optional keys
+        d = REPO / 'dm/games/0100152000022000'   # (4.0.0 / 4.0.1, Kiwi' own list) are checked the same way
         g = Profile('main', {}); g.dir = d
         self.assertTrue(pa.optional_keys(g))
-        self.assertLessEqual(pa.optional_keys(g), pa.map_keys(d / 'shader_map.tsv'))   # PEANUTS end
+        self.assertLessEqual(pa.optional_keys(g), pa.map_keys(d / 'shader_map.tsv'))   # KIWI end
 
 
 if __name__ == '__main__':

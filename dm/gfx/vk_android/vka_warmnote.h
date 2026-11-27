@@ -1,4 +1,4 @@
-// PEANUTS: the "Preparing graphics" notice (dev.peanuts.ui.WarmNotice, GameActivity; android/README.md, In-game notices). With DM_VK_PSO_ASYNC a draw or dispatch whose
+// KIWI: the "Preparing graphics" notice (hernandez.kiwinative.kiwi.ui.WarmNotice, GameActivity; android/README.md, In-game notices). With DM_VK_PSO_ASYNC a draw or dispatch whose
 // pipeline the cache lacks is skipped until a background thread has made it (vka_pso.c). On a game's first run that can be most of the 3D scene for a minute: EA SPORTS
 // FC 27 on an AYN Thor (Turnip) showed a black pitch with only the HUD while 517 pipelines were made in the background, and the only word on screen was the
 // skipped-work notice blaming the GPU driver. Those skips are now counted apart from the driver's refusals (vka_draw.c g_skip_warm, vka_pso_last_pending), and this

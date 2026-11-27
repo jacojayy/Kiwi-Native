@@ -1,4 +1,4 @@
-"""PEANUTS(upstream-candidate): the level a mip-chain pass samples from its own target on the Android replay (dm/gfx/vk_android/vka_tex.c fb_samp_pin and
+"""KIWI(upstream-candidate): the level a mip-chain pass samples from its own target on the Android replay (dm/gfx/vk_android/vka_tex.c fb_samp_pin and
 fb_view_levels, run as they are in the production file, without a Vulkan device). A sampler that pins one level (a mip filter, minimum and maximum LOD the same whole
 number) samples that level alone; any other sampler keeps the view of the levels below the attachment. GitHub issue #170 (Breath of the Wild's Sheikah glow), reference:
 "Upsample pass reading the level above the one it renders" in docs/reference/rendering.md."""

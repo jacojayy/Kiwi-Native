@@ -3,7 +3,7 @@
 // Layout sources (offsets in the sdk image the host was first written against):
 //   ShowKeyboard 0x3a6770 moves KeyboardConfig field by field into the applet arguments: +0x24 title u16[65], +0xa6 subtitle u16[129], +0x1a8 hint u16[257],
 //     +0x3ac maximum length, +0x3b0 minimum length, +0x3bd isUseUtf8, +0x3c0 offset of the initial text within the work buffer, +0x3c4 UTF-16 length of the initial text;
-//     work buffer pointer / size at +0x4d0 / +0x4d8 (handed to the applet together with CreateLargeStorage); later SDKs move it, see swkbd_layout_read (PEANUTS)
+//     work buffer pointer / size at +0x4d0 / +0x4d8 (handed to the applet together with CreateLargeStorage); later SDKs move it, see swkbd_layout_read (KIWI)
 //   SetInitialTextUtf8 0x3a74c0: UTF-8 → UTF-16 written to work buffer+offset (offset 0x14, at most 500 characters + terminating 0)
 //   ReadCloseResultAndString 0x3a63f0: output storage = u32 CloseResult + text area; the text area is copied as is into String{+0 pointer, +8 capacity}, at most the capacity, which it only reads (Pikmin 4: sdk+0x39b7d0)
 //   ShowKeyboard wrap-up 0x3a6acc: CloseResult == 0 (OK) → Result 0, otherwise (cancel) → 0x29F; GetRequiredStringBufferSize = 0x7D4
@@ -16,10 +16,10 @@
 
 enum { ARG_HEADER = 0x24, ARG_SUB = 0xa6, ARG_GUIDE = 0x1a8, ARG_MAXLEN = 0x3ac, ARG_MINLEN = 0x3b0, ARG_UTF8 = 0x3bd,
        ARG_INIT_OFF = 0x3c0, ARG_INIT_LEN = 0x3c4, ARG_WORKBUF = 0x4d0,
-       HEADER_N = 65, SUB_N = 129, GUIDE_N = 257, TC_DIALOG = 0x7d4 };   // PEANUTS: TC_DIALOG
+       HEADER_N = 65, SUB_N = 129, GUIDE_N = 257, TC_DIALOG = 0x7d4 };   // KIWI: TC_DIALOG
 #define SWKBD_RESULT_CANCELED 0x29Fu   // swkbd module 159 / description 1: the constant the SDK returns when CloseResult != 0
 
-// PEANUTS begin: the argument layout of later SDKs and the text check (issue 292)
+// KIWI begin: the argument layout of later SDKs and the text check (issue 292)
 // The end of ShowKeyboardArg moves between SDK versions: the work buffer is at +0x4d0 in the SDK the host was first written against, at +0x518 in SDK 18.3.5, where +0x4d0
 // holds the text check callback's user data (STORY OF SEASONS: Grand Bazaar). The host reads these offsets off the SDK's own setters (swkbd_layout_read), which store them:
 //   SetInitialTextUtf8 loads the work buffer pointer from the argument (SDK 18.3.5 sdk+0x3e38cc: ldr x9, [x20, #0x518], x20 = x0);
@@ -62,7 +62,7 @@ void swkbd_layout_read(const uint32_t *init_utf8, const uint32_t *tc_cb, const u
     }
     g_swkbd_layout = l;
 }
-// PEANUTS end
+// KIWI end
 
 // UTF-16 (at most n units, stops at 0) → UTF-8, written to out (cap includes the terminating 0), returns the number of bytes written
 size_t swkbd_u16_to_u8(const uint16_t *s, size_t n, char *out, size_t cap) {
@@ -105,7 +105,7 @@ int g_swkbd_min_chars = -1;     // ≥0 = this input needs at least that many ch
 int g_swkbd_numeric_max = -1;   // ≥0 = this input is a quantity box, value = upper limit (set by dm_textinput.c, read by the front end input box, set back to -1 after use)
 int (*g_swkbd_unfilter)(void);   // registered by the host (dm_charname_unfilter in hle_charname.c; NULL in unit tests): keyboard requests from the naming panel bypass the game's ASCII typing filter
 typedef int (*swkbd_input_fn)(const char *title, const char *sub, const char *guide, const char *initial, int max_chars, char *out, int out_cap);
-// PEANUTS begin: the text check (issue 292); swkbd_put is the old tail of swkbd_show
+// KIWI begin: the text check (issue 292); swkbd_put is the old tail of swkbd_show
 // Writes text into the game's String {+0 buffer, +8 capacity} per the arg's encoding, truncated to the character limit (UTF-16 units)
 static void swkbd_put(void *out, const uint8_t *arg, int32_t maxlen, const char *text) {
     uint8_t *buf; uint64_t cap; memcpy(&buf, (uint8_t *)out, 8); memcpy(&cap, (uint8_t *)out + 8, 8);
@@ -141,18 +141,18 @@ static uint32_t swkbd_text_check(void *out, const uint8_t *arg, char *msg, size_
     else swkbd_u16_to_u8((const uint16_t *)dialog, TC_DIALOG / 2, msg, msg_cap);
     return res;
 }
-// PEANUTS end
+// KIWI end
 Result swkbd_show(void *out, const void *arg_, swkbd_input_fn input) {
     const uint8_t *arg = arg_;
     char title[HEADER_N * 3 + 1], sub[SUB_N * 3 + 1], guide[GUIDE_N * 3 + 1];
-    static char text[1002 * 3 + 1];   // PEANUTS: off the guest stack too, as init and msg: the game's text check runs on that stack while swkbd_show is in its frame
-    static char init[1002 * 3 + 1], msg[TC_DIALOG / 2 * 3 + 1];   // PEANUTS: off the guest stack (a game thread's can be 8 KB); one keyboard at a time (the applet is modal)
+    static char text[1002 * 3 + 1];   // KIWI: off the guest stack too, as init and msg: the game's text check runs on that stack while swkbd_show is in its frame
+    static char init[1002 * 3 + 1], msg[TC_DIALOG / 2 * 3 + 1];   // KIWI: off the guest stack (a game thread's can be 8 KB); one keyboard at a time (the applet is modal)
     init[0] = 0;
     swkbd_u16_to_u8((const uint16_t *)(arg + ARG_HEADER), HEADER_N, title, sizeof title);
     swkbd_u16_to_u8((const uint16_t *)(arg + ARG_SUB), SUB_N, sub, sizeof sub);
     swkbd_u16_to_u8((const uint16_t *)(arg + ARG_GUIDE), GUIDE_N, guide, sizeof guide);
     int32_t maxlen, minlen, ilen, ioff; memcpy(&maxlen, arg + ARG_MAXLEN, 4); memcpy(&minlen, arg + ARG_MINLEN, 4); memcpy(&ilen, arg + ARG_INIT_LEN, 4); memcpy(&ioff, arg + ARG_INIT_OFF, 4);
-    const uint8_t *work; memcpy(&work, arg + g_swkbd_layout.work, 8);   // PEANUTS: the SDK's offset
+    const uint8_t *work; memcpy(&work, arg + g_swkbd_layout.work, 8);   // KIWI: the SDK's offset
     if (ilen > 0 && work) swkbd_u16_to_u8((const uint16_t *)(work + ioff), (size_t)ilen, init, sizeof init);
 
     const char *script = getenv("DM_KBD");
@@ -163,7 +163,7 @@ Result swkbd_show(void *out, const void *arg_, swkbd_input_fn input) {
     // Test switch DM_TEST_SWKBD_HOLD_MS=<ms> (with DM_KBD): the keyboard stays up that long before DM_KBD's text is returned, the way a player types into the input box (for reproducing on the Mac what the game's other threads do meanwhile)
     static int hold = -1; if (hold < 0) { const char *h = getenv("DM_TEST_SWKBD_HOLD_MS"); hold = h ? atoi(h) : 0; }
     if (script && hold > 0) usleep((useconds_t)hold * 1000);
-    // PEANUTS begin: the box comes back while the game's text check refuses the text
+    // KIWI begin: the box comes back while the game's text check refuses the text
     const char *shown_sub = sub;
     for (;;) {
         int r = script ? (snprintf(text, sizeof text, "%s", script), 1) : (g_swkbd_min_chars = minlen > 0 ? minlen : -1, input(title, shown_sub, guide, init, maxlen > 0 ? maxlen : 0, text, sizeof text));
@@ -180,14 +180,14 @@ Result swkbd_show(void *out, const void *arg_, swkbd_input_fn input) {
         snprintf(init, sizeof init, "%s", text);   // as on hardware: the keyboard stays up with the text, the game's message over it
         shown_sub = msg[0] ? msg : sub;
     }
-    // PEANUTS end
+    // KIWI end
     g_swkbd_numeric_max = -1;   // the numeric box mark applies to this one time only (set by dm_textinput.c before bringing up the keyboard)
     if (g_swkbd_name_panel && g_swkbd_unfilter && g_swkbd_unfilter()) LOG("swkbd: naming panel -- turned off the game's ASCII input filter on the returned string (Chinese names allowed, see hle_charname.c)");
     { const char *lag = getenv("DM_TEST_SWKBD_LAG_MS"); if (lag) usleep((useconds_t)atoi(lag) * 1000); }   // test: slow down "keyboard handed back → the game's thread gets the result" to verify that auto-accept does not jump the gun   // front end path cleanup (dm_cursor.c): auto-accept after the name is typed on the naming page
     return RES_OK;
 }
 
-// PEANUTS begin: the layout of the SDK the game ships (swkbd_layout_read); the setters run in the SDK as they are, so their code is the SDK's
+// KIWI begin: the layout of the SDK the game ships (swkbd_layout_read); the setters run in the SDK as they are, so their code is the SDK's
 static void swkbd_layout_from_sdk(void) {
     const uint32_t *init = guest_sym("_ZN2nn5swkbd18SetInitialTextUtf8EPNS0_15ShowKeyboardArgEPKc");
     if (!init) init = guest_sym("_ZN2nn5swkbd14SetInitialTextEPNS0_15ShowKeyboardArgEPKDs");
@@ -197,11 +197,11 @@ static void swkbd_layout_from_sdk(void) {
     LOG("swkbd: ShowKeyboardArg work buffer at +%#x%s; text check %s (flag +%#x, callback +%#x, with user data +%#x / +%#x)", l->work, init ? "" : " (no SetInitialText in the SDK: the default)",
         l->tc_flag >= 0 ? "called" : "not found in the SDK", l->tc_flag, l->tc_cb, l->tc_cb_ud, l->tc_ud);
 }
-// PEANUTS end
+// KIWI end
 HLE_FORCE("_ZN2nn5swkbd12ShowKeyboardEPNS0_6StringERKNS0_15ShowKeyboardArgE", "software keyboard applet → host native input box (DM_KBD gives the text directly)",
           Result, h_swkbd_Show, void *out, const void *arg) {
     DM_APPLET("software keyboard");
-    static pthread_once_t once = PTHREAD_ONCE_INIT;   // PEANUTS: the SDK's layout
+    static pthread_once_t once = PTHREAD_ONCE_INIT;   // KIWI: the SDK's layout
     pthread_once(&once, swkbd_layout_from_sdk);
     return swkbd_show(out, arg, front_text_input);
 }

@@ -31,7 +31,7 @@ class EncoderWait(unittest.TestCase):
             return v;
         }
         ''' + ring[b:]
-        # PEANUTS(upstream-candidate): include the worker's real tail batching and statistics, with a portable counter.
+        # KIWI(upstream-candidate): include the worker's real tail batching and statistics, with a portable counter.
         start = src.index("static _Atomic uint32_t g_tail_every")
         worker = src[start:src.index("// ---------- Interface", start)]
         counter = worker.index("static inline uint64_t enc_cnt(")
@@ -52,7 +52,7 @@ class EncoderWait(unittest.TestCase):
         #include <time.h>
         #include <unistd.h>
         typedef void *VkCommandBuffer;
-        enum { E_WRAP = 0, E_CALL = 1, E_N };   // PEANUTS: the worker records per-call statistics.
+        enum { E_WRAP = 0, E_CALL = 1, E_N };   // KIWI: the worker records per-call statistics.
         #define VRED(...) do { fprintf(stderr, __VA_ARGS__); abort(); } while (0)
         static void vka_fp_host(const char *thread) { (void)thread; }
         static void vka_perf_thread(int nice) { (void)nice; }

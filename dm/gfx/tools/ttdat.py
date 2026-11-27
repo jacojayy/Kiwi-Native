@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# PEANUTS: TT Games' DAT archives (LEGO CITY UNDERCOVER on the Switch: GAME.DAT, GAME0-2.DAT and the update's PATCH.DAT, 8.5 GB). The file's first u32 (little-endian) is where the
+# KIWI: TT Games' DAT archives (LEGO CITY UNDERCOVER on the Switch: GAME.DAT, GAME0-2.DAT and the update's PATCH.DAT, 8.5 GB). The file's first u32 (little-endian) is where the
 # index is: with the top bit set, ((v ^ 0xffffffff) << 8) + 0x100, else v itself; the second u32 is the index's length. The index is big-endian: u32 length, '.CC40TAD', i32 version
 # (-11 here, the only one read), u32 ?, u32 file count, u32 name count, u32 name table length, the name table (NUL-terminated strings), then one 12-byte entry per name
 # {u16 last child (0 for a file), u16 previous sibling, u32 name offset, u16 parent, u16 file index}, then u32 0, i32 version again, u32 file count, and one 16-byte entry per file

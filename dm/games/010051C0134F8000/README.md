@@ -1,4 +1,4 @@
-<!-- PEANUTS begin: Android bring-up profile. -->
+<!-- KIWI begin: Android bring-up profile. -->
 # DRAGON BALL Z: KAKAROT + A NEW POWER AWAKENS SET
 
 ## Build and content
@@ -46,4 +46,4 @@ sweep, and the remaining DLC story checks are open.
   image was filled once. Tracking SPARSE compressed textures outside sparse
   pools from their first use fixed Raditz and Gohan on Thor (Turnip v27.0.0 R2).
 
-<!-- PEANUTS end -->
+<!-- KIWI end -->

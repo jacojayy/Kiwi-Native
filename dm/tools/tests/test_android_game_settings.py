@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
 
 # A row's title, one line at the normal font scale on a 1080-wide phone (about 22 characters with a switch at its end)
 MAX_TITLE = 22
@@ -21,13 +21,13 @@ class GameSettingsPage(unittest.TestCase):
         self.gs = (SRC / 'GameSettings.java').read_text(encoding='utf-8')
 
     def test_every_setting_reachable(self):
-        # PEANUTS: xbox(a, g, again) is gone with the Xbox button label swap (owner 2026-11-26)
+        # KIWI: xbox(a, g, again) is gone with the Xbox button label swap (owner 2026-11-26)
         for call in ('presets(a, g, again)', 'resolution(a, g, again)', 'scene(a, g, again)', 'upscaler(a, g, again)', 'sharpness(a, g, again)', 'dlssMode(a, g, again)',
                      'clarity(a, g, again)', 'dlssSharp(a, g, again)', 'display(a, g, again)', 'aspect(a, g, again)', 'cap(a, g, again)', 'drs(a, g, again)',
                      'gpuTiming(a, g, again)', 'language(a, g, again)', 'PadMapUi.forGame(a, g, again)', 'env(a, g, again)',
                      'Prefs.resetGame(a, id)', 'Prefs.backToRecommended(a, id)'):
             self.assertIn(call, self.gs, f'{call}: its row is gone')
-        self.assertIn('"GPU driver", v -> dev.peanuts.ui.DriverActivity.openForGame(a, g.titleId, g.name)', self.gs)   # PEANUTS: the row opens this game's driver page
+        self.assertIn('"GPU driver", v -> hernandez.kiwinative.kiwi.ui.DriverActivity.openForGame(a, g.titleId, g.name)', self.gs)   # KIWI: the row opens this game's driver page
         for setter in ('fullVegetation', 'skipLayers', 'hold60', 'decouple', 'instancedDraws', 'classicPasses', 'psoAsync', 'ramSaver', 'pauseOnReturn', 'rumble', 'pinThreads'):
             self.assertIn(f'Prefs.{setter}(a, id, on)', self.gs, f'{setter}: its switch is gone')
         self.assertIn('Prefs.gameOption(a, id, opt.env, checked)', self.gs, "the profile's options")
@@ -59,8 +59,8 @@ class GameSettingsPage(unittest.TestCase):
         self.assertNotIn('Ui.sheet(this, null, box)', ma)
         self.assertIn('{"Performance", "Game", "Saves", "Storage"}', self.gs)
         self.assertIn('Ui.tabs(a, labels, t, ', self.gs)
-        # PEANUTS: Play's tap goes through the launcher's feel (dev.peanuts.ui.Feel.launch: the haptic and the fade); what it does is still a.launch(g), in the header
-        self.assertIn('Ui.button(a, "Play", Ui.Kind.PRIMARY, dev.peanuts.ui.Feel.launch(v -> a.launch(g)))', self.gs.split('private static LinearLayout header(')[1].split('return out;')[0], 'Play in the header')   # PEANUTS
+        # KIWI: Play's tap goes through the launcher's feel (hernandez.kiwinative.kiwi.ui.Feel.launch: the haptic and the fade); what it does is still a.launch(g), in the header
+        self.assertIn('Ui.button(a, "Play", Ui.Kind.PRIMARY, hernandez.kiwinative.kiwi.ui.Feel.launch(v -> a.launch(g)))', self.gs.split('private static LinearLayout header(')[1].split('return out;')[0], 'Play in the header')   # KIWI
         self.assertIn('t.setMaxLines(2);', self.gs.split('private static LinearLayout header(')[1].split('return out;')[0], 'a long name wraps')
         m = ma.split('void gameTab(LinearLayout content, Game g, boolean savesTab) {')[1].split('\n    }\n')[0]
         for s in titles(m): self.assertLessEqual(len(s), MAX_TITLE, s)
@@ -92,7 +92,7 @@ class GameSettingsPage(unittest.TestCase):
 
     def test_option_descriptions_for_players(self):   # game.tsv option rows: plain sentences for the player, no developer wording
         rows = [l.split('\t') for p in sorted((REPO / 'dm/games').glob('*/game.tsv')) for l in p.read_text(encoding='utf-8').splitlines() if l.startswith('option\t')]
-        self.assertTrue(rows)   # PEANUTS: two option rows are left once the Switch 2 profiles are gone (upstream: more than 2)
+        self.assertTrue(rows)   # KIWI: two option rows are left once the Switch 2 profiles are gone (upstream: more than 2)
         for r in rows:
             d = r[3]
             self.assertGreater(len(d), 40, r[2]); self.assertLess(len(d), 260, r[2])

@@ -104,7 +104,7 @@ static int cs_variant(const vka_shader *s) {
 }
 VkShaderModule vka_shader_cs_module(vka_shader *s) {
     VkShaderModule m = cs_variant(s) == DMSH_VK_MOD_SHUFFLE_LDS ? vka_shader_module(s, DMSH_VK_MOD_SHUFFLE_LDS) : VK_NULL_HANDLE;
-    return m ? m : vka_shader_module(s, DMSH_VK_MOD_BASE);   // (that module not made: logged by vka_shader_module; the base one) PEANUTS: through vka_shader_module (vka_shader_drop_modules)
+    return m ? m : vka_shader_module(s, DMSH_VK_MOD_BASE);   // (that module not made: logged by vka_shader_module; the base one) KIWI: through vka_shader_module (vka_shader_drop_modules)
 }
 
 const char *vka_shader_lib_path(void) { return g_lib_path; }
@@ -274,7 +274,7 @@ VkShaderModule vka_shader_pfb_pick(VkShaderModule m, int a2c, int alpha_func) {
 // ---------- Shaders by key ----------
 typedef struct { uint64_t key; vka_shader *sh; const vka_shlib *lib; } shent;
 static shent *g_sh; static size_t g_shcap, g_shn;
-// PEANUTS begin: the library modules of every shader destroyed (vka_shader_module makes one again at its next use). For the end of the preparing step (vka_pso.c
+// KIWI begin: the library modules of every shader destroyed (vka_shader_module makes one again at its next use). For the end of the preparing step (vka_pso.c
 // pp_prepare), which makes the modules of every program of the game to compile them into the driver's cache: tens of thousands, 1.2 GiB in Super Mario Odyssey,
 // of which a session draws with a few hundred. Only while no other thread makes pipelines, and no kept pipeline library is keyed by a module. A shader with
 // derived modules (retyped inputs or textures, a geometry claim, folded constants) is left as it is. Returns the modules destroyed
@@ -289,7 +289,7 @@ size_t vka_shader_drop_modules(void) {
     pthread_mutex_unlock(&g_mu);
     return n;
 }
-// PEANUTS end
+// KIWI end
 static size_t hslot(uint64_t k, size_t cap) { return (size_t)((k * 0x9E3779B97F4A7C15ull) >> 17) & (cap - 1); }
 static shent *sh_find(uint64_t key, const vka_shlib *L) {
     if (!g_shcap) return NULL;
@@ -321,7 +321,7 @@ static const char *refusal(const vka_shlib *L, const dmsh_vk_entry *e) {
     }
     const dmsh_vk_bind *b = vka_shlib_binds(L, e);
     for (unsigned i = 0; i < e->bind_count; i++) if (b[i].kind == DMSH_VK_KIND_UNKNOWN) return "a binding the build could not place";
-    for (unsigned i = 0; i < e->bind_count; i++)   // PEANUTS: the fallback arrays of dynamic texture handles (DMSH_VK_KIND_TEX_DYN) only where the profile says the handles come from c2's tables, as Metal's TEXD
+    for (unsigned i = 0; i < e->bind_count; i++)   // KIWI: the fallback arrays of dynamic texture handles (DMSH_VK_KIND_TEX_DYN) only where the profile says the handles come from c2's tables, as Metal's TEXD
         if ((b[i].kind == DMSH_VK_KIND_TEX_DYN || b[i].kind == DMSH_VK_KIND_SAMP_DYN) && !DM_GAME_TEX_DYN_SLOTS) return "dynamic texture handles (profile key tex_dyn_slots is off)";
     return NULL;
 }
@@ -349,7 +349,7 @@ static void one_lane_env(void) {
     else if (g_one_nenv) VLOG("subgroup_one_lane: %d shader key%s from DM_VK_ONE_LANE", g_one_nenv, g_one_nenv == 1 ? "" : "s");
 }
 static int one_lane_forced(uint64_t key) {
-#ifdef DM_RUNTIME_PROFILE   // PEANUTS: the generic host reads the profile's own key list instead of a static const initialized from the macro
+#ifdef DM_RUNTIME_PROFILE   // KIWI: the generic host reads the profile's own key list instead of a static const initialized from the macro
     const uint64_t *prof = g_profile.subgroup_one_lane;
 #else
     static const uint64_t prof[] = DM_GAME_SUBGROUP_ONE_LANE;
@@ -358,7 +358,7 @@ static int one_lane_forced(uint64_t key) {
     pthread_once(&once, one_lane_env);
     for (int i = 0; i < g_one_nenv; i++) if (g_one_env[i] == key) return 1;
     if (g_one_mode > 0 || (!g_one_mode && V.driver_id == VK_DRIVER_ID_QUALCOMM_PROPRIETARY))
-        for (int i = 0; i < (int)DM_GAME_NSUBGROUP_ONE_LANE; i++) if (prof[i] == key) return 1;   // PEANUTS: a runtime count with the generic host
+        for (int i = 0; i < (int)DM_GAME_NSUBGROUP_ONE_LANE; i++) if (prof[i] == key) return 1;   // KIWI: a runtime count with the generic host
     return 0;
 }
 static void single_lane(uint64_t key, int stage, uint32_t **w, size_t *nb) {
@@ -388,7 +388,7 @@ static void gs_fill(uint64_t key, int stage, uint32_t **w, size_t *nb) {
     static _Atomic int n; if (atomic_fetch_add(&n, 1) < 8) VLOG("geometry shader %016llx: emits a degenerate primitive where it would emit none (DM_VK_GS_FILL)", (unsigned long long)key);
     free(*w); *w = o; *nb = on * 4;
 }
-// PEANUTS begin: a pixel shader's warp shuffles inside a quad as quad operations (vka_spv_quad_shfl has the why: Luigi's Mansion 3's flashlight drew coloured lines along
+// KIWI begin: a pixel shader's warp shuffles inside a quad as quad operations (vka_spv_quad_shfl has the why: Luigi's Mansion 3's flashlight drew coloured lines along
 // triangle edges on Turnip, #283). DM_VK_QUAD_SHFL (restart): 1 on VK_DRIVER_ID_MESA_TURNIP, 0 on other drivers (Qualcomm's untested); 0 / 1 to choose. Only where the
 // fragment stage runs the library's subgroup operations (not one lane) and the device has quad operations. Logged once per shader for the first few
 static void quad_shfl(uint64_t key, int stage, uint32_t **w, size_t *nb) {
@@ -399,20 +399,20 @@ static void quad_shfl(uint64_t key, int stage, uint32_t **w, size_t *nb) {
     static _Atomic int n; if (atomic_fetch_add(&n, 1) < 8) VLOG("pixel shader %016llx: %d warp shuffle%s inside a quad made quad operations (DM_VK_QUAD_SHFL)", (unsigned long long)key, sites, sites == 1 ? "" : "s");
     free(*w); *w = o; *nb = on * 4;
 }
-// PEANUTS end
+// KIWI end
 // The library's words for a module, made ready for this device: subgroups of one lane where the stage has none (single_lane), a geometry shader's empty runs filled (gs_fill)
 static void prep_words(const dmsh_vk_entry *e, uint64_t key, uint32_t **w, size_t *nb) {
-    if (e->stage == DMSH_VK_STAGE_FS) {   // PEANUTS(upstream-candidate): apply depth precision to existing packs and every derived pixel module.
+    if (e->stage == DMSH_VK_STAGE_FS) {   // KIWI(upstream-candidate): apply depth precision to existing packs and every derived pixel module.
         size_t count = 0;
         uint32_t *precise = vka_spv_precise_depth(*w, *nb / sizeof **w, &count);
         if (precise) { free(*w); *w = precise; *nb = count * sizeof **w; }
     }
     if (e->flags & DMSH_VK_F_SUBGROUP) single_lane(key, e->stage, w, nb);
-    if (e->flags & DMSH_VK_F_SUBGROUP) quad_shfl(key, e->stage, w, nb);   // PEANUTS: quad shuffles keep their helper lanes
+    if (e->flags & DMSH_VK_F_SUBGROUP) quad_shfl(key, e->stage, w, nb);   // KIWI: quad shuffles keep their helper lanes
     gs_fill(key, e->stage, w, nb);
-    vka_tf_prep(key, w, nb);   // PEANUTS: a transform feedback capture variant's words get their capture (vka_tf.c; a key of no variant, every library key among them: untouched)
+    vka_tf_prep(key, w, nb);   // KIWI: a transform feedback capture variant's words get their capture (vka_tf.c; a key of no variant, every library key among them: untouched)
 }
-// PEANUTS begin: tables of texture handles read through the texture pool (vka_spv_table_pool has the why: the translator's 32-element arrays over Hogwarts Legacy's
+// KIWI begin: tables of texture handles read through the texture pool (vka_spv_table_pool has the why: the translator's 32-element arrays over Hogwarts Legacy's
 // 512-entry reflection capture table). An entry's records of kind TEX_UBO with a count (a combined image sampler array whose element k is the handle at byte off + 8 k of
 // uniform slot reg, all elements with one sampler: skind SAMP, SAMP_TEX or SAMP_ID) are planned once: every module of the entry is rewritten on trial, and when all take it
 // the entry's modules are rewritten whenever their words are read (lib_words) and its shaders get a copy of the records where each such array is its sampler alone
@@ -426,7 +426,7 @@ static int tabpool_plan(const vka_shlib *L, const dmsh_vk_entry *e, vka_tabpool 
     for (unsigned i = 0; i < e->bind_count && n < 16; i++) {   // (vka_spv_table_pool takes 16)
         if (b[i].kind != DMSH_VK_KIND_TEX_UBO || b[i].count < 2 || b[i].set != DMSH_VK_SET_DRAW || b[i].desc != VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER || (b[i].flags & DMSH_VK_BF_NOSLOT) || b[i].reg < 0) continue;
         if (b[i].skind != DMSH_VK_KIND_SAMP && b[i].skind != DMSH_VK_KIND_SAMP_TEX && b[i].skind != DMSH_VK_KIND_SAMP_ID) continue;   // (SAMP_UBO: a sampler per element, from the same handle)
-        if (b[i].step && b[i].step != 8) continue;   // PEANUTS: an array read by record (step, Tomodachi Life #182) stays an array: vka_spv_table_pool reads entry k at off + 8 k
+        if (b[i].step && b[i].step != 8) continue;   // KIWI: an array read by record (step, Tomodachi Life #182) stays an array: vka_spv_table_pool reads entry k at off + 8 k
         for (unsigned j = 0; j < e->bind_count; j++) if (b[j].kind == DMSH_VK_KIND_CBUF && b[j].set == DMSH_VK_SET_DRAW && b[j].reg == b[i].reg) { t[n] = (vka_tabpool){b[i].binding, b[j].binding, b[i].off}; rec[n++] = i; break; }
     }
     return n;
@@ -434,15 +434,15 @@ static int tabpool_plan(const vka_shlib *L, const dmsh_vk_entry *e, vka_tabpool 
 static const tp_ent *tabpool_of(const vka_shlib *L, const dmsh_vk_entry *e) {
     static int env = -1; if (env < 0) { const char *q = getenv("DM_VK_TABLE_POOL"); env = !(q && q[0] == '0'); }
     if (!env || !e) return NULL;
-    static _Thread_local tp_ent tl;   // PEANUTS: what callers read: a copy made under the lock (a later entry's realloc moves g_tp)
+    static _Thread_local tp_ent tl;   // KIWI: what callers read: a copy made under the lock (a later entry's realloc moves g_tp)
     pthread_mutex_lock(&g_tpmu);
     for (size_t i = 0; i < g_ntp; i++) if (g_tp[i].e == e) { const tp_ent *r = NULL; if (g_tp[i].b) { tl = g_tp[i]; r = &tl; } pthread_mutex_unlock(&g_tpmu); return r; }   // (a linear scan of the entries with such arrays; a map if a game has tens of thousands)
     pthread_mutex_unlock(&g_tpmu);
     tp_ent n = {.e = e}; unsigned rec[16]; n.nt = tabpool_plan(L, e, n.t, rec);
     if (!n.nt) return NULL;   // (not remembered: the plan is a walk of its records)
-    vka_tex_bindless_ready();   // PEANUTS: the pool set first (a prewarm's or preparing step's module may be read before the first frame made it)
+    vka_tex_bindless_ready();   // KIWI: the pool set first (a prewarm's or preparing step's module may be read before the first frame made it)
     uint32_t slots = vka_bindless_tex_slots(); int sites = 0, ok = slots && vka_tex_pfb_flags(); char err[200] = "";
-    if (!slots) return NULL;   // PEANUTS: no pool set (yet): not remembered as left as built, so a later read plans it again
+    if (!slots) return NULL;   // KIWI: no pool set (yet): not remembered as left as built, so a later read plans it again
     for (int v = 0; ok && v <= DMSH_VK_MOD_SHUFFLE_LDS; v++) {
         const dmsh_vk_module *m = vka_shlib_module(L, e, v); if (!m) continue;
         size_t nb = 0, on = 0; int s = 0; char e2[96]; uint32_t *w = vka_shlib_spirv(L, m, &nb, e2, sizeof e2);
@@ -454,7 +454,7 @@ static const tp_ent *tabpool_of(const vka_shlib *L, const dmsh_vk_entry *e) {
         const dmsh_vk_bind *b = vka_shlib_binds(L, e);
         n.b = malloc((e->bind_count ? e->bind_count : 1) * sizeof *n.b);
         if (n.b) { memcpy(n.b, b, e->bind_count * sizeof *b);
-                   for (int j = 0; j < n.nt; j++) vka_tabpool_record(&n.b[rec[j]]); }   // PEANUTS: (vka_bind.c: the sampler's record, with the table's place kept for the draw)
+                   for (int j = 0; j < n.nt; j++) vka_tabpool_record(&n.b[rec[j]]); }   // KIWI: (vka_bind.c: the sampler's record, with the table's place kept for the draw)
     }
     if (err[0] && atomic_fetch_add(&g_tp_refused, 1) < 8) VRED("shader %016llx: its texture arrays over tables of handles stay 32 long (entries past 31 read element 31): %s", (unsigned long long)e->key, err);
     pthread_mutex_lock(&g_tpmu);
@@ -473,12 +473,12 @@ static const tp_ent *tabpool_of(const vka_shlib *L, const dmsh_vk_entry *e) {
     if (!r) return NULL;
     tl = copy; return &tl;
 }
-// PEANUTS end
+// KIWI end
 // A library module's words. With the mesh draws drawn through compute (V.memu, vka_memu.c), a pixel shader of per-primitive inputs is only ever drawn behind the generated
 // vertex shader: every module of it is made from its words with those inputs flat (vka_memu_fs_flat), so the variants and retypes made from them are too
 static uint32_t *lib_words(const vka_shlib *L, const dmsh_vk_entry *e, const dmsh_vk_module *m, size_t *nb, char *err, size_t errn) {
     uint32_t *w = vka_shlib_spirv(L, m, nb, err, errn);
-    const tp_ent *tp = w ? tabpool_of(L, e) : NULL;   // PEANUTS: its arrays over tables of handles read through the pool (above)
+    const tp_ent *tp = w ? tabpool_of(L, e) : NULL;   // KIWI: its arrays over tables of handles read through the pool (above)
     if (tp) { size_t on = 0; int s = 0; char e2[200]; uint32_t *o = vka_spv_table_pool(w, *nb / 4, tp->t, tp->nt, DMSH_VK_SET_POOL, DMSH_VK_POOL_TEX_BINDING, vka_bindless_tex_slots() - 1, &on, &s, e2, sizeof e2);
               if (o) { free(w); w = o; *nb = on * 4; } }
     if (w && V.memu && e && e->stage == DMSH_VK_STAGE_FS && (e->flags & DMSH_VK_F_MESH_PRIM)) {
@@ -488,7 +488,7 @@ static uint32_t *lib_words(const vka_shlib *L, const dmsh_vk_entry *e, const dms
     }
     return w;
 }
-// Turnip/A740 intermittently interpolates the Trails SC terrain normal sideways across 16-pixel squares. // PEANUTS (PR #164)
+// Turnip/A740 intermittently interpolates the Trails SC terrain normal sideways across 16-pixel squares. // KIWI (PR #164)
 // In a single-sample pass centroid still uses the pixel's only covered sample. Keep the output at the same location untouched.
 static int terrain_normal_centroid(uint32_t **words, size_t *bytes) {
     enum { Decorate = 71, Location = 30, Centroid = 16, Variable = 59, Input = 1, Function = 54 };
@@ -516,7 +516,7 @@ static int terrain_normal_centroid(uint32_t **words, size_t *bytes) {
 static VkShaderModule spv_module(const vka_shlib *L, const dmsh_vk_entry *e, const dmsh_vk_module *m, uint64_t key, const char **why, char *err, size_t errn, uint8_t *fcomp, int variant) {
     size_t nb = 0; uint32_t *w = lib_words(L, e, m, &nb, err, errn);
     if (!w) { *why = err; return VK_NULL_HANDLE; }
-    if (variant == VKA_MOD_TERRAIN_NORMAL && !terrain_normal_centroid(&w, &nb)) { // PEANUTS (PR #164)
+    if (variant == VKA_MOD_TERRAIN_NORMAL && !terrain_normal_centroid(&w, &nb)) { // KIWI (PR #164)
         free(w); *why = "terrain normal centroid variant could not be made"; return VK_NULL_HANDLE;
     }
     if (fcomp && vka_spv_fout_comps(w, nb / 4, fcomp)) memset(fcomp, 0xf, 8);   // a pixel shader's output components (the colour write mask: vka_draw.c)
@@ -527,7 +527,7 @@ static VkShaderModule spv_module(const vka_shlib *L, const dmsh_vk_entry *e, con
     if (r) { snprintf(err, errn, "vkCreateShaderModule %d (variant %u of %016llx)", r, m->variant, (unsigned long long)key); *why = err; return VK_NULL_HANDLE; }
     return mod;
 }
-// PEANUTS (PR #164): spv_module takes the variant itself now (above), so the one-line wrapper over spv_module_ is gone
+// KIWI (PR #164): spv_module takes the variant itself now (above), so the one-line wrapper over spv_module_ is gone
 // An instanced variant (vka_draw.c's instanced runs): the base module with the uniform block at `binding` read at data[i + d] (vka_spv_instance), made from the
 // library's SPIR-V; the caller caches it. VK_NULL_HANDLE (the reason logged a few times) when the shader cannot take it
 VkShaderModule vka_shader_inst_module(vka_shader *s, uint32_t binding, uint32_t loc) {
@@ -576,17 +576,17 @@ vka_shader *vka_shader_remap(vka_shader *s, uint64_t map) {
     return v;
 }
 VkShaderModule vka_shader_module(vka_shader *s, int variant) {
-    if (variant < 0 || variant > VKA_MOD_TERRAIN_NORMAL) return VK_NULL_HANDLE; // PEANUTS (PR #164)
+    if (variant < 0 || variant > VKA_MOD_TERRAIN_NORMAL) return VK_NULL_HANDLE; // KIWI (PR #164)
     if (s->mods[variant]) return s->mods[variant];
-    const dmsh_vk_module *m = vka_shlib_module(s->lib, s->e, variant == VKA_MOD_TERRAIN_NORMAL ? DMSH_VK_MOD_UINT_MIXED : variant); // PEANUTS (PR #164)
+    const dmsh_vk_module *m = vka_shlib_module(s->lib, s->e, variant == VKA_MOD_TERRAIN_NORMAL ? DMSH_VK_MOD_UINT_MIXED : variant); // KIWI (PR #164)
     if (!m) return VK_NULL_HANDLE;
     const char *why = NULL; char err[256];
-    VkShaderModule mod = spv_module(s->lib, s->e, m, s->key, &why, err, sizeof err, NULL, variant); // PEANUTS (PR #164)
+    VkShaderModule mod = spv_module(s->lib, s->e, m, s->key, &why, err, sizeof err, NULL, variant); // KIWI (PR #164)
     if (!mod) { static _Atomic int n; if (atomic_fetch_add(&n, 1) < 8) VRED("shader %016llx variant %d: %s", (unsigned long long)s->key, variant, why); return VK_NULL_HANDLE; }
     pthread_mutex_lock(&g_mu);
     if (s->mods[variant]) { pthread_mutex_unlock(&g_mu); vk.vkDestroyShaderModule(V.dev, mod, NULL); return s->mods[variant]; }
     s->mods[variant] = mod;
-    if (variant == VKA_MOD_TERRAIN_NORMAL) VLOG("single-sample terrain normal: centroid input on %s", V.props.deviceName); // PEANUTS (PR #164)
+    if (variant == VKA_MOD_TERRAIN_NORMAL) VLOG("single-sample terrain normal: centroid input on %s", V.props.deviceName); // KIWI (PR #164)
     pthread_mutex_unlock(&g_mu);
     return mod;
 }
@@ -808,7 +808,7 @@ int vka_shader_fout_retyped(vka_shader *s, uint32_t umask, uint32_t smask) {
     VkShaderModule m = vka_shader_fout_module(s, umask, smask);
     return m && m != vka_shader_module(s, DMSH_VK_MOD_BASE);
 }
-// PEANUTS begin: resolution scale (DM_RES_SCALE, vka_tex.c vka_resscale.inc): what a shader made while it is on does with the translator's scale code: rs_fetch
+// KIWI begin: resolution scale (DM_RES_SCALE, vka_tex.c vka_resscale.inc): what a shader made while it is on does with the translator's scale code: rs_fetch
 // (it reads render_scale[1 + i]: vka_draw.c rs_fetch_fix brings its 2D textures to one scale), and the counts of the `res scale:` statistics line. A shader that
 // fetches or sizes an image by pixel through no helper at all (texture arrays, pool reads, other shapes) reads a scaled image at the wrong texels: the first 16 are named
 static void rs_scan(vka_shader *s, const vka_shlib *L, const dmsh_vk_entry *e, const dmsh_vk_module *m) {
@@ -825,7 +825,7 @@ static void rs_scan(vka_shader *s, const vka_shlib *L, const dmsh_vk_entry *e, c
         VLOG("res scale: %s shader %016llx fetches from or sizes an image by pixel with no scale helper (a texture array, a pool read or a shape the translator does not scale): a scaled image it reads that way is read at the texture's coordinates",
              stage_name(e->stage), (unsigned long long)s->key);
 }
-// PEANUTS end
+// KIWI end
 vka_shader *vka_shader_make(const vka_shlib *L, uint64_t key) {
     pthread_mutex_lock(&g_mu);
     shent *h = sh_find(key, L);
@@ -838,13 +838,13 @@ vka_shader *vka_shader_make(const vka_shlib *L, uint64_t key) {
     else {
         s->e = e; s->b = vka_shlib_binds(L, e); s->chash = vka_shlib_entry_hash(L, e);
         why = refusal(L, e);
-        { const tp_ent *tp = why ? NULL : tabpool_of(L, e); if (tp) s->b = tp->b; }   // PEANUTS: its arrays over tables of handles as their samplers (tabpool, above)
+        { const tp_ent *tp = why ? NULL : tabpool_of(L, e); if (tp) s->b = tp->b; }   // KIWI: its arrays over tables of handles as their samplers (tabpool, above)
         const dmsh_vk_module *m = why ? NULL : vka_shlib_module(L, e, DMSH_VK_MOD_BASE);
         if (!why && !m) why = "no base module";
         memset(s->fcomp, 0xf, sizeof s->fcomp);
         if (m && V.memu && (e->stage == DMSH_VK_STAGE_TS || e->stage == DMSH_VK_STAGE_MS)) {}   // drawn through compute: its converted modules are made at its first draw (vka_memu.c)
-        else if (m) s->mods[DMSH_VK_MOD_BASE] = spv_module(L, e, m, key, &why, err, sizeof err, e->stage == DMSH_VK_STAGE_FS && VKA_ENV("DM_VK_FOUT_COMPS", 1) ? s->fcomp : NULL, DMSH_VK_MOD_BASE); // PEANUTS (PR #164)
-        if (m && !why && vka_rs_on() && s->mods[DMSH_VK_MOD_BASE]) rs_scan(s, L, e, m);   // PEANUTS: DM_RES_SCALE: its use of the translator's scale code (above)
+        else if (m) s->mods[DMSH_VK_MOD_BASE] = spv_module(L, e, m, key, &why, err, sizeof err, e->stage == DMSH_VK_STAGE_FS && VKA_ENV("DM_VK_FOUT_COMPS", 1) ? s->fcomp : NULL, DMSH_VK_MOD_BASE); // KIWI (PR #164)
+        if (m && !why && vka_rs_on() && s->mods[DMSH_VK_MOD_BASE]) rs_scan(s, L, e, m);   // KIWI: DM_RES_SCALE: its use of the translator's scale code (above)
         if (!why && e->stage == DMSH_VK_STAGE_GS && VKA_ENV("DM_VK_GS_CLAIM", 1)) {   // memory writes: made once per primitive (vka_spv_gs_claim)
             char e2[256] = ""; s->gs_fx = gs_words(s, NULL, NULL, e2, sizeof e2);
             if (s->gs_fx < 0) VRED("geometry shader %016llx: memory writes not put under a claim (%s): drawn as it is, its writes repeated by the device's runs of each primitive", (unsigned long long)key, e2);
@@ -877,7 +877,7 @@ vka_shader *vka_shader_by_key(uint64_t key) {
     if (ok && V.memu && !vka_shlib_find(&g_lib, key)) { vka_shader *d = vka_memu_by_key(key); if (d) return d; }   // a task / mesh shader's compute or vertex form (the prewarm list's)
     return ok ? vka_shader_make(&g_lib, key) : NULL;
 }
-// PEANUTS: the keys of the library's entries of one stage (DMSH_VK_STAGE_*), at most max of them in out, in key order: how many the library has (more than max: only
+// KIWI: the keys of the library's entries of one stage (DMSH_VK_STAGE_*), at most max of them in out, in key order: how many the library has (more than max: only
 // max written), -1 = no library. For the compute warm-up (vka_pso.c cw_main)
 int vka_shader_lib_stage_keys(int stage, uint64_t *out, int max) {
     pthread_mutex_lock(&g_mu); int ok = lib_load(), n = 0;
@@ -964,7 +964,7 @@ void mtl_prog_release(prog_t *p) {
     if (!p || !p->serial) return;
     pthread_mutex_lock(&g_mu); prent *e = pr_find(p->serial); if (e) { e->serial = ~0ull; memset(&e->ps, 0, sizeof e->ps); } pthread_mutex_unlock(&g_mu);   // a tombstone
 }
-// PEANUTS begin: the program's shader parts are made in the background from now (vka_pso.c pf_main), not at its first draw. On the game's thread only the stage keys
+// KIWI begin: the program's shader parts are made in the background from now (vka_pso.c pf_main), not at its first draw. On the game's thread only the stage keys
 // are copied (made at nvnProgramSetShaders, prog_key); the shaders are resolved on the prefetch thread (vka_shaders_by_keys)
 void mtl_prog_prefetch(const prog_t *p) {
     if (!p || !p->serial || !p->nstage) return;
@@ -989,7 +989,7 @@ int vka_shaders_by_keys(const uint8_t md[6][8], unsigned n, vka_shader *sh[VKA_N
     }
     return 1;
 }
-// PEANUTS end
+// KIWI end
 
 static int mem_read(uint64_t addr, void *out, size_t n) {
     if (vka_addr(addr, n, NULL, NULL, NULL)) { memcpy(out, (const void *)(uintptr_t)addr, n); return 1; }

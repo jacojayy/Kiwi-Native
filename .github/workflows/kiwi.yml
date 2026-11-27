@@ -1,0 +1,58 @@
+# KIWI: the fork's own checks, on a GitHub-hosted Linux runner: the tests under kiwi/tests and the profile and runtime-version checks. Kiwi Native's workflows beside this one need its Mac runner and its lint baseline; here they run only when the repository variable
+# UPSTREAM_CI is 'true' (see each job's `if`).
+name: kiwi
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kiwi-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+# Actions are pinned to commit SHAs (the tag in the comment), as in tests.yml.
+jobs:
+  checks:
+    name: Kiwi tests and checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.14'
+          cache: pip
+          cache-dependency-path: .github/requirements/lint.txt
+      - name: Install the packages the tools import
+        run: python -m pip install -r .github/requirements/lint.txt
+      - name: Tests (kiwi/tests)
+        run: |
+          fail=0
+          for t in kiwi/tests/test_*.py; do
+            echo "::group::$t"
+            python "$t" || fail=1
+            echo "::endgroup::"
+          done
+          exit $fail
+      # KIWI: the importer's own C tests (ctest), ncz_test (.nsz / .xcz, issue #149) among them; they need cmake, a C compiler and zlib, which the runner has
+      - name: Importer tests (dm/kiwi/import, no game data)
+        run: |
+          cmake -S dm/kiwi/import -B "$RUNNER_TEMP/nximport" -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$RUNNER_TEMP/nximport" -j 4
+          ctest --test-dir "$RUNNER_TEMP/nximport" --output-on-failure
+      - name: Profiles, runtime profile and runtime version
+        run: |
+          sh kiwi/scripts/check-profiles.sh
+          sh kiwi/scripts/check-runtime-profile.sh
+          sh kiwi/scripts/check-runtime-version.sh

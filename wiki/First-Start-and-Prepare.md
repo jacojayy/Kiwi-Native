@@ -14,7 +14,7 @@ What to expect while it prepares:
 
 - It runs in the background with a notification. **Pause** and **Resume** on the game's card stop and continue it.
 - Keep the phone on the charger. If the screen going off stops it, turn on Settings > **Keep the screen on while preparing**.
-- A hot phone pauses Prepare ("Paused: the phone is too hot") and it goes on from where it stopped when the phone has cooled. If it keeps pausing, **Go on anyway** on the build card builds without pausing. <!-- PEANUTS -->
+- A hot phone pauses Prepare ("Paused: the phone is too hot") and it goes on from where it stopped when the phone has cooled. If it keeps pausing, **Go on anyway** on the build card builds without pausing. <!-- KIWI -->
 - **How long:** the project's pages disagree and it depends on the game: "about an hour per game" (getting-started guide) and "about 20-45 minutes, mostly translating shaders" for the first Prepare (main page). Mario Tennis Fever (`0400D4201C6EA000`) has 35,045 shaders and takes much longer. Not measured on a range of phones yet.
 - Prepare is incremental: later runs reuse existing shaders and only rewrite code when its key changes (a few minutes).
 - If it stops, the card says why and offers **Retry**. Close other apps if memory ran out; free space if storage is full.
@@ -24,7 +24,7 @@ What to expect while it prepares:
 
 A Mac prepares Donkey Kong Bananza (`040074A01BF12000`) in about 10-15 minutes. The Mac packer is tested; the Windows one is new and not yet tested on a real PC, so please report how it goes.
 
-1. Get the project's repository from the [official site](https://git.eden-emu.dev/moceure/BananaNative) (clone or download). Double-click `scripts\bananative.bat` (Windows) or `scripts/bananative.command` (Mac).
+1. Get the project's repository from the [official site](https://git.eden-emu.dev/moceure/BananaNative) (clone or download). Double-click `scripts\kiwinative.bat` (Windows) or `scripts/kiwinative.command` (Mac).
 2. The first time, it asks for a folder for its tools and installs them there (Python, the shader tools and the .NET runtime, about 400 MB).
 3. In the window, pick the game (**.nup file...** or **Dump folder...**) and click **Prepare**. **Stop** ends it; the next run goes on from where it stopped.
 4. The pack ends up in `<title ID>-work/android-pack` next to the game folder (about 250-400 MB). **Show pack** opens it.
@@ -32,7 +32,7 @@ A Mac prepares Donkey Kong Bananza (`040074A01BF12000`) in about 10-15 minutes. 
    - copy only `android-pack` beside it as `Switch2/<title ID>-work/android-pack`, then tap **Add game** and pick the game folder: the app finds the pack; or
    - copy `android-pack` anywhere, tap **Add game**, and when the app asks **Prepare ...?** choose **Import pack...** > **A pack folder (with pack.tsv and shaders/)**.
 
-If it fails, the window's log and tool check say what is missing; `scripts/bananative.command check` (or `scripts\bananative.bat check`) checks the tools again.
+If it fails, the window's log and tool check say what is missing; `scripts/kiwinative.command check` (or `scripts\kiwinative.bat check`) checks the tools again.
 
 ## Moving a pack between phones
 
@@ -40,7 +40,7 @@ The game's ... button > **Export pack...** writes one `.zip` you can keep or mov
 
 ## Version warnings
 
-If your dump is another version than the one the game was tested with, the card says it is untested; it may still work and the app asks before it starts. If a game is "Not Supported Yet", your app does not include it (Settings > **About** lists the games). <!-- PEANUTS -->
+If your dump is another version than the one the game was tested with, the card says it is untested; it may still work and the app asks before it starts. If a game is "Not Supported Yet", your app does not include it (Settings > **About** lists the games). <!-- KIWI -->
 
 <!-- TODO screenshot: the Prepare progress card -->
 

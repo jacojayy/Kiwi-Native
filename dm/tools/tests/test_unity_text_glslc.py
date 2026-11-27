@@ -109,7 +109,7 @@ class UnityTextGlslc(unittest.TestCase):
 
 class GlslcComputeLayout(unittest.TestCase):
     def test_use_section_offset_only_when_it_recovers_the_compute_header(self):
-        # PEANUTS(upstream-candidate): a valid section may put code after an extended control area.
+        # KIWI(upstream-candidate): a valid section may put code after an extended control area.
         start, nctl, gap, ncode = 0x120, 0x850, 0x180, 0x120
         code_at = start + nctl + gap
         blob = bytearray(code_at + ncode)

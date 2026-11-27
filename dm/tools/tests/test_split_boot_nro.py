@@ -8,7 +8,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(here, '..'))
 sys.path.insert(0, os.path.join(here, '..', '..', 'gfx', 'tools'))
 sys.path.insert(0, here)
-os.environ.setdefault('DM_GAME', '01007EF00011E000')   # PEANUTS: any profile for shader_split's import (upstream: Mario Tennis Fever, a Switch 2 profile Peanuts does not carry)
+os.environ.setdefault('DM_GAME', '01007EF00011E000')   # KIWI: any profile for shader_split's import (upstream: Mario Tennis Fever, a Switch 2 profile Kiwi does not carry)
 import boot_nro, shader_split
 from test_boot_nro import put
 from test_split_cra import Image

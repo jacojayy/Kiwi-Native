@@ -1,4 +1,4 @@
-// PEANUTS: the panel's refresh grid (dm/gfx/vk_android/vka_panel.h): the period estimate from actual present times (jitter, frames held for several refreshes,
+// KIWI: the panel's refresh grid (dm/gfx/vk_android/vka_panel.h): the period estimate from actual present times (jitter, frames held for several refreshes,
 // readings off the grid, pauses, a mode change, a period that jumps), a pacing period as whole refreshes, and the chain of desired present times
 #include <stdio.h>
 #include <stdint.h>
@@ -23,7 +23,7 @@ static uint64_t run(vkpanel *p, uint64_t t, uint64_t r, int frames, int *lost) {
     return t;
 }
 
-// PEANUTS: exercise the compositor's actual queue deadline, including a producer stall and metadata-free fallback.
+// KIWI: exercise the compositor's actual queue deadline, including a producer stall and metadata-free fallback.
 static void deadline_grid_cases(uint64_t r, uint64_t deadline, const char *mode) {
     const uint64_t anchor = 11000000000ull, period = vkpanel_fit(33333333, r);
     const uint64_t hold = vkpanel_hold(33333333, r);
@@ -131,7 +131,7 @@ int main(void) {
     CHECK(vkpanel_fit(22222222, THOR) == 22222222 && vkpanel_fit(25000000, THOR) == 25000000, "45 and 40 on 59.83 Hz stay");
     CHECK(vkpanel_fit(SIXTY, 11111111) == SIXTY && vkpanel_fit(8333333, THOR) == 8333333, "60 on 90 Hz, 120 on 60 Hz stay");
     CHECK(vkpanel_fit(SIXTY, 0) == SIXTY && vkpanel_fit(0, THOR) == 0, "nothing measured, no pacing");
-    // PEANUTS: nominal display modes can differ from the measured panel by more than 1 %.
+    // KIWI: nominal display modes can differ from the measured panel by more than 1 %.
     // Thor's 120 Hz mode measures 8.4375 ms (118.52 Hz). Producer clocks and the four-refresh
     // present grid must share that period; 33.333 ms against 33.75 ms accumulates phase error.
     { const uint64_t r = 8437500, nominal = 8333333;
@@ -207,7 +207,7 @@ int main(void) {
       uint64_t tg = vkgrid_next(&g, a, THOR, SIXTY, a + 1000, &late); g.last = tg + 100 * THOR;
       CHECK(vkgrid_next(&g, a, THOR, SIXTY, a + THOR, &late) == vkpanel_up(a, THOR, a + THOR + THOR / 2) && late, "a chain too far ahead starts again"); }
 
-    // PEANUTS: the measured Thor grids and Android-reported queue deadlines at nominal 120/60 Hz.
+    // KIWI: the measured Thor grids and Android-reported queue deadlines at nominal 120/60 Hz.
     deadline_grid_cases(8437500, 11333333, "Thor 118.52 Hz");
     deadline_grid_cases(16710000, 16666666, "Thor 59.84 Hz");
 

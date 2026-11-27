@@ -8,10 +8,10 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/SceneResJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/SceneResJvmTest.java'
 GRADLE = REPO / 'android/app/build.gradle'
-STUB = '''package dev.nxnative.android;
+STUB = '''package hernandez.kiwinative;
 public final class BuildConfig {
     public static final String NX_PROFILES = "";
     public static final String NX_DMSH_VK_CHAIN = "c0ffee000001", NX_DMSH_VK_ABI = "abc123abc123", NX_DMSH_VK_ABI_COMPAT = "";
@@ -19,12 +19,12 @@ public final class BuildConfig {
 '''
 
 
-FIX = REPO / 'peanuts/tests/fixtures/profiles'   # PEANUTS: Ocarina of Time's and Star Fox's rows, fixtures (their Switch 2 profiles are not carried); no Switch 1
-OOT, STARFOX = str(FIX / 'ocarina'), str(FIX / 'star-fox')   # profile has scene_scale or scene_arg rows (PEANUTS)
+FIX = REPO / 'kiwi/tests/fixtures/profiles'   # KIWI: Ocarina of Time's and Star Fox's rows, fixtures (their Switch 2 profiles are not carried); no Switch 1
+OOT, STARFOX = str(FIX / 'ocarina'), str(FIX / 'star-fox')   # profile has scene_scale or scene_arg rows (KIWI)
 
 
 def rows(game, key):
-    t = (Path(game) if Path(game).is_absolute() else REPO / 'dm/games' / game) / 'game.tsv'   # PEANUTS: or a profile folder's path
+    t = (Path(game) if Path(game).is_absolute() else REPO / 'dm/games' / game) / 'game.tsv'   # KIWI: or a profile folder's path
     return [line.split('\t') for line in t.read_text(encoding='utf-8').splitlines() if line.startswith(key + '\t')]
 
 
@@ -45,28 +45,28 @@ class Wiring(unittest.TestCase):
         self.assertIn('p.scenes = c.length > 21 ? c[21] : "";', (SRC / 'Profile.java').read_text(encoding='utf-8'))
 
     def test_oot_presets(self):
-        s = scene_of(OOT)   # PEANUTS: the fixture
+        s = scene_of(OOT)   # KIWI: the fixture
         self.assertEqual([p.split('|')[0] for p in s.split(';')], ['720p', '720p-min', '540p', '480p', '360p'])
         self.assertTrue(all('|' in p and p.split('|')[1] for p in s.split(';')), s)
         self.assertEqual([tuple(p.split('|')[2:]) for p in s.split(';')], [('0.6133', 'fixed'), ('0.6133', 'floor'), ('0.46875', 'fixed'), ('0.4166667', 'fixed'), ('0.3125', 'fixed')],
                          'each row\'s scale and mode, for the migration to presets (ResPresets.current)')
 
     def test_starfox_args(self):
-        s = scene_of(STARFOX)   # PEANUTS: the fixture
+        s = scene_of(STARFOX)   # KIWI: the fixture
         self.assertEqual([p.split('|')[0] for p in s.split(';')], ['s060', 's075', 's100', 'nodynres'])
         self.assertTrue(all(p.split('|')[3] == 'arg' for p in s.split(';')), s)
         self.assertEqual(s.split(';')[1].split('|')[4], '-render_resolution_scale_console=0.75 -render_resolution_scale_handheld=0.75', 'the scale in both of the engine\'s settings')
         self.assertEqual(s.split(';')[3].split('|')[2:], ['-', 'arg', '-no_render_dynres_enabled'], "a bool setting: the engine's -no_<name>")
         import sys; sys.path.insert(0, str(REPO / 'dm/games')); import game
-        self.assertEqual([(n, a) for n, _, a, _ in game.scene_args(game.load(STARFOX))], [tuple(p.split('|')[0::4]) for p in s.split(';')], "game.py's reading and build.gradle's agree")   # PEANUTS: the fixture
+        self.assertEqual([(n, a) for n, _, a, _ in game.scene_args(game.load(STARFOX))], [tuple(p.split('|')[0::4]) for p in s.split(';')], "game.py's reading and build.gradle's agree")   # KIWI: the fixture
         g = GRADLE.read_text(encoding='utf-8')
         self.assertIn("tsvRows(game, 'scene_arg')", g); self.assertIn("it.replace('{s}', c[2].trim())", g)
         act = (SRC / 'GameActivity.java').read_text(encoding='utf-8')
         self.assertLess(act.index('SceneRes.argLine(scenes, sceneName)'), act.index('env.addAll(user);'), "the player's own DM_GAME_ARGS_ADD line comes later and wins")
 
     def test_games_without_the_palette_have_none(self):
-        # PEANUTS: upstream's two (Donkey Kong Bananza, Mario Kart World) are Switch 2 profiles Peanuts does not carry; every Switch 1 profile has neither
-        for game in sorted(p.parent.name for p in (REPO / 'dm/games').glob('*/game.tsv')):   # PEANUTS
+        # KIWI: upstream's two (Donkey Kong Bananza, Mario Kart World) are Switch 2 profiles Kiwi does not carry; every Switch 1 profile has neither
+        for game in sorted(p.parent.name for p in (REPO / 'dm/games').glob('*/game.tsv')):   # KIWI
             self.assertEqual(scene_of(game), '', game)
 
     def test_start_and_settings(self):
@@ -90,7 +90,7 @@ class SceneResJvm(unittest.TestCase):
             r = subprocess.run(['javac', '-Xlint:all,-try', '-Werror', '-encoding', 'UTF-8', '-d', str(d / 'classes'), *map(str, srcs), str(TEST), str(d / 'stub/BuildConfig.java')],
                                capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-            r = subprocess.run(['java', '-cp', str(d / 'classes'), 'dev.nxnative.android.SceneResJvmTest', str(d / 'run')], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', str(d / 'classes'), 'hernandez.kiwinative.SceneResJvmTest', str(d / 'run')], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertEqual(r.stdout.strip(), 'ok')
 

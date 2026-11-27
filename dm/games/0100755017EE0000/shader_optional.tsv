@@ -1,4 +1,4 @@
-# PEANUTS: FANTASY LIFE i (#800). key <TAB> which dumps have it: the map is the union of 1.5.0 and 2.2.0 (shader_versions). These 1.5.0 shaders are not in 2.2.0's IoStore containers, and as the
+# KIWI: FANTASY LIFE i (#800). key <TAB> which dumps have it: the map is the union of 1.5.0 and 2.2.0 (shader_versions). These 1.5.0 shaders are not in 2.2.0's IoStore containers, and as the
 # first version's rows they carry no version tag. The 2.2.0-only rows carry /v917504/ (README.md, Shaders)
 000f25e783fad216	1.5.0 (v524288) only
 003af7aa75ec155d	1.5.0 (v524288) only

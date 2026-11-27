@@ -221,7 +221,7 @@ class Verdicts(Base):
 
     def test_java_crash_and_tombstone(self):
         d = self.digest(start() + ['[RED] crash: uncaught exception on thread main, the game process ends',
-                                   '[RED] crash: java.lang.IllegalStateException: DM_TEST_CRASH=java: a test crash on purpose', '[RED] crash: \tat dev.nxnative.android.X.run(X.java:1)'])
+                                   '[RED] crash: java.lang.IllegalStateException: DM_TEST_CRASH=java: a test crash on purpose', '[RED] crash: \tat hernandez.kiwinative.X.run(X.java:1)'])
         self.assertEqual(d['verdict']['kind'], 'java_crash')
         self.assertEqual(d['crash']['java']['thread'], 'main')
         lc = self.root / 'lc.txt'
@@ -282,7 +282,7 @@ class Inputs(Base):
 
 class Redaction(Base):
     def test_paths_and_keys(self):
-        # PEANUTS(upstream-candidate): keep the split redaction fixture explicit.
+        # KIWI(upstream-candidate): keep the split redaction fixture explicit.
         lines = start() + [f'title_key = {KEY}', f'master_key_00 : {KEY}{KEY}', f'[dm] [RED] something odd with {KEY}{KEY} in it',
                            '[dm] [RED] cannot read /Us' + 'ers/somebody/Games/x and /home/other/y']
         d = self.digest(lines, tail=40)
@@ -369,7 +369,7 @@ class Tables(unittest.TestCase):
                 self.assertTrue((REPO / f).is_file(), r['doc'])
                 if a: self.assertIn(a, test_docs.anchors(REPO / f), r['doc'])
 
-    def test_catchup_stall_rule(self):   # PEANUTS: a frame held by the game's own threads with the GPU idle and nothing loading (Kirby's mode-0 catch-up, GitHub issue #153)
+    def test_catchup_stall_rule(self):   # KIWI: a frame held by the game's own threads with the GPU idle and nothing loading (Kirby's mode-0 catch-up, GitHub issue #153)
         rows = L.load_rules(); m = L.Matcher(rows)
         stall = ("[dm] [longframe] frame 3068 (105.93 s) whole frame 226.4 ms, submit+present 0.1 ms, GPU 5.0 ms (busy; span 5.0 ms, 0.1 waiting for the recording); "
                  "new pipelines 0 + shader libraries 0, 0.0 ms in all; texture uploads 0 first + 0 re-uploads, 0.0 MB / 0.0 ms; "
@@ -402,7 +402,7 @@ class Tables(unittest.TestCase):
                 self.assertEqual(m.search(line), want, line)
 
     def test_notice_sentences_are_the_launchers(self):
-        java = (REPO / 'android/app/src/main/java/dev/nxnative/android/ExitNotice.java').read_text()
+        java = (REPO / 'android/app/src/main/java/hernandez/kiwinative/ExitNotice.java').read_text()
         for k, v in L.NOTICE.items():
             m = re.search(rf'\b{k} = "([^"]*)"', java)
             assert m, k

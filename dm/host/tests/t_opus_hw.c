@@ -2,12 +2,12 @@
 // InitializeOpusDecoderImpl does (Ocarina of Time's sdk+0x327750: the work buffer at +0 and +8, its size at +0x10, rate and channels at +0x18). No game module is needed.
 // Checked: ResetHardwareOpusDecoder and FinalizeHardwareOpusDecoder of the older interface reach the software decoder's own state, not its work buffer (0.3.12 reset the work
 // buffer as a decoder: Ocarina of Time's sound streams decoded to silence), and a manager's decoder (SDK 21) still enqueues, decodes, dequeues, resets and finalizes.
-// PEANUTS: and a plain libopus decodes only when a game module, not the sdk, exports it; a decoder it refuses leaves nothing behind and its calls answer without a state.
-// On Linux, built with the flags of the Makefile's peanuts tests (PN_ASIF).
+// KIWI: and a plain libopus decodes only when a game module, not the sdk, exports it; a decoder it refuses leaves nothing behind and its calls answer without a state.
+// On Linux, built with the flags of the Makefile's kiwi tests (PN_ASIF).
 #include "../hle_codec.c"
 #include <assert.h>
-#include <sys/wait.h>   // PEANUTS
-#include <unistd.h>     // PEANUTS
+#include <sys/wait.h>   // KIWI
+#include <unistd.h>     // KIWI
 
 static int checks, fails;
 #define CHECK(c, msg) do { checks++; if (!(c)) { fails++; fprintf(stderr, "FAIL: %s\n", msg); } } while (0)
@@ -35,7 +35,7 @@ static int s_decode(void *st, size_t *used, int *samples, int16_t *out, size_t o
     const soft_state *s = st; assert(s->size && s->work0 == s->work8);
     *used = in_size; *samples = 960; for (size_t i = 0; i < 960u * (size_t)s->ch && (i + 1) * 2 <= out_size; i++) out[i] = 1000; return 0;
 }
-// PEANUTS begin: a plain libopus (opus_decode and the rest) in the module plain_mod names ("sdk", as older sdks export theirs, or "main", as Hogwarts Legacy ships
+// KIWI begin: a plain libopus (opus_decode and the rest) in the module plain_mod names ("sdk", as older sdks export theirs, or "main", as Hogwarts Legacy ships
 // its own); NULL = none. module_of (loader.c) names the module of those functions only
 static const char *plain_mod;
 static int p_size(int ch) { return ch == 1 || ch == 2 ? 64 : 0; }
@@ -83,7 +83,7 @@ static void plain_case(const char *mod) {
     int st = 0; waitpid(pid, &st, 0);
     CHECK(WIFEXITED(st) && !WEXITSTATUS(st), mod[0] == 's' ? "plain opus_* in the sdk: the cases above pass" : "plain opus_* in main: the cases above pass");
 }
-// PEANUTS end
+// KIWI end
 void *guest_sym(const char *name) {
     static const struct { const char *n; void *f; } t[] = {
         {"_ZN2nn5codec28GetOpusDecoderWorkBufferSizeEii", s_wsize},
@@ -95,11 +95,11 @@ void *guest_sym(const char *name) {
         {"_ZN2nn5codec21DecodeOpusInterleavedEPNS0_15OpusDecoderTypeEPmPiPsmPKvm", s_decode},
     };
     for (unsigned i = 0; i < sizeof t / sizeof *t; i++) if (!strcmp(t[i].n, name)) return t[i].f;
-    return plain_sym(name);   // PEANUTS
+    return plain_sym(name);   // KIWI
 }
 
 int main(void) {
-    plain_case("sdk"); plain_case("main");   // PEANUTS: first, before this process's popus_on decides
+    plain_case("sdk"); plain_case("main");   // KIWI: first, before this process's popus_on decides
     // The older interface (Ocarina of Time imports only it): Reset and Finalize reach the software state
     static uint8_t game_dec[0x40], work[0x200];
     size_t ws = h_codec_HwOpusWorkSize(48000, 2, 0);

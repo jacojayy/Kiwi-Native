@@ -1,4 +1,4 @@
-# PEANUTS: new file (code mods: IPS/IPS32 before the rewrite, DESIGN-MODS.md)
+# KIWI: new file (code mods: IPS/IPS32 before the rewrite, DESIGN-MODS.md)
 """dm/tools/ips.py: IPS and IPS32 patch parsing/application (Atmosphère's exefs_patches format and offset
 convention), independent of any NSO/module reading — see test_patch_ips.py for the NSO-specific layer."""
 from pathlib import Path

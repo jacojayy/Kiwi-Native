@@ -1,4 +1,4 @@
-# Written by peanuts/scripts/issue_forms.py: change that script, then run it.
+# Written by kiwi/scripts/issue_forms.py: change that script, then run it.
 name: "Setup or app problem"
 description: "Keys, firmware, the game folder and library, storage, a GPU driver, a companion or mod install, saves, the second screen, or the app itself"
 labels: ["bug", "app"]

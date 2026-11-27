@@ -1,4 +1,4 @@
-// PEANUTS begin: rooms for empty-pool command memory grants (dm/gfx/nvn/nvn_cmdarena.h; hle_nvn.c cmdarena_grant / cmdarena_end / cmdarena_reopen). Super Mario Odyssey
+// KIWI begin: rooms for empty-pool command memory grants (dm/gfx/nvn/nvn_cmdarena.h; hle_nvn.c cmdarena_grant / cmdarena_end / cmdarena_reopen). Super Mario Odyssey
 // grants a null pool of 512 bytes before each display list once its display-list heap is full; a 4 KB segment for each took 504 MB in six minutes in the Wooded Kingdom
 // (GitHub issue #807). The command buffers here are driven the way hle_nvn.c drives the arena: grant, records, END, with the command buffer initialized again before a list
 // (Odyssey's case), lists that overflow their room into a host segment, many command buffers granting in turn, and a list recorded without a grant of its own.
@@ -90,4 +90,4 @@ int main(void) {
     if (fails) { printf("t_nvn_cmdarena: %d failures\n", fails); return 1; }
     printf("t_nvn_cmdarena: ok\n"); return 0;
 }
-// PEANUTS end
+// KIWI end

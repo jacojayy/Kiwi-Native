@@ -1,4 +1,4 @@
-# Written by peanuts/scripts/issue_forms.py: change that script, then run it.
+# Written by kiwi/scripts/issue_forms.py: change that script, then run it.
 name: "Desktop builder problem"
 description: "Building a game on a computer (BUILDER.md) or another tool of the repository fails"
 labels: ["bug"]
@@ -8,7 +8,7 @@ body:
       value: |
         **Requests for new games are not accepted.** Issues are for problems with the games and versions the app already supports (the [Supported games](https://github.com/jacojayy/Kiwi-Native#supported-games) list). An issue asking for a game, another version or DLC is closed.
 
-        Building on the device? Use **Build problem**. The desktop builder is described in [BUILDER.md](https://github.com/jacojayy/Kiwi-Native/blob/main/peanuts/docs/BUILDER.md).
+        Building on the device? Use **Build problem**. The desktop builder is described in [BUILDER.md](https://github.com/jacojayy/Kiwi-Native/blob/main/kiwi/docs/BUILDER.md).
         Give paths only as far as they matter, and never attach game files, keys or anything the builder extracted from a game. Write in English if you can; another language is fine too.
   - type: textarea
     id: what
@@ -47,7 +47,7 @@ body:
     attributes:
       label: "Command"
       description: "The command line as you ran it."
-      placeholder: "peanuts/scripts/peanuts-build.sh \"Game.nsp\" \"Game-update.nsp\" --push"
+      placeholder: "kiwi/scripts/kiwi-build.sh \"Game.nsp\" \"Game-update.nsp\" --push"
     validations:
       required: true
   - type: input

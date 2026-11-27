@@ -86,7 +86,7 @@ static void update_limit(lsfg_pacer *p, double now, float base_rate, float targe
     p->probe_until = now + PROBE_DURATION; p->deficit_since = 0; p->output_credit = 0;
 }
 
-// PEANUTS(upstream-candidate): accept sample_interval override when display/FIFO backpressure throttles arrival
+// KIWI(upstream-candidate): accept sample_interval override when display/FIFO backpressure throttles arrival
 lsfg_plan lsfg_pacer_plan_paced(lsfg_pacer *p, size_t capacity, int multiplier, int target_rate, double now, float sample_interval) {
     lsfg_plan none = {0, 0};
     if (multiplier < 2) multiplier = 2;
@@ -96,7 +96,7 @@ lsfg_plan lsfg_pacer_plan_paced(lsfg_pacer *p, size_t capacity, int multiplier, 
     if (!ceiling) { lsfg_pacer_reset(p); return none; }
     size_t previous_generations = p->issued; p->issued = 0;
     if (!p->last_frame) { p->last_frame = now; return none; }
-    float raw_interval = (float)(now - p->last_frame);   // PEANUTS(upstream-candidate): wall-clock arrival vs paced sample_interval
+    float raw_interval = (float)(now - p->last_frame);   // KIWI(upstream-candidate): wall-clock arrival vs paced sample_interval
     p->last_frame = now;
     if (raw_interval <= 0) { stabilize(p, now); return none; }
     float target = (float)target_rate;
@@ -104,7 +104,7 @@ lsfg_plan lsfg_pacer_plan_paced(lsfg_pacer *p, size_t capacity, int multiplier, 
     if (p->smoothed_interval > 0) {
         float burst = BURST_CADENCE_RATIO / p->smoothed_interval;
         if (target > 0 && target * BURST_TARGET_RATIO > burst) burst = target * BURST_TARGET_RATIO;
-        // PEANUTS(upstream-candidate): reject short drained-queue bursts (< 5 frames) while allowing sustained rate recoveries, clamped to the burst bound
+        // KIWI(upstream-candidate): reject short drained-queue bursts (< 5 frames) while allowing sustained rate recoveries, clamped to the burst bound
         if (1.0f / raw_interval > burst) {
             if (++p->burst_streak < 5) { defer_evaluations(p, raw_interval); p->output_credit = 0; return none; }
             min_interval = 1.0f / burst;
@@ -141,7 +141,7 @@ lsfg_plan lsfg_pacer_plan_paced(lsfg_pacer *p, size_t capacity, int multiplier, 
     return (lsfg_plan){generations, 1};
 }
 
-// PEANUTS(upstream-candidate): preserve existing signature for callers without backpressure sensing
+// KIWI(upstream-candidate): preserve existing signature for callers without backpressure sensing
 lsfg_plan lsfg_pacer_plan(lsfg_pacer *p, size_t capacity, int multiplier, int target_rate, double now) {
     return lsfg_pacer_plan_paced(p, capacity, multiplier, target_rate, now, 0.0f);
 }

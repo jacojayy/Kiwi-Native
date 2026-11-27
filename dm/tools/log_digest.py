@@ -38,7 +38,7 @@ HEADER_LINES = 20000      # the header lines come in the first lines of a run
 TRACK_GROUPS = 4000       # distinct groups kept in memory; later new ones are only counted
 KINDS = ('crash', 'fatal', 'red', 'driver', 'oom', 'hang', 'perf', 'info')
 
-# The launcher's sentences (android/app/src/main/java/dev/nxnative/android/ExitNotice.java; test_log_digest.py checks they are the same)
+# The launcher's sentences (android/app/src/main/java/hernandez/kiwinative/ExitNotice.java; test_log_digest.py checks they are the same)
 NOTICE = {
     'JAVA': 'The app ran into an error and had to close the game.',
     'NATIVE': 'The game ran into an error and crashed.',
@@ -571,7 +571,7 @@ JAVA_CRASH_RX = re.compile(r'\[RED\] crash: uncaught exception on thread (.+?), 
 
 # logcat
 LC_RX = re.compile(r'^(?:\d\d-\d\d \d\d:\d\d:\d\d\.\d+\s+)?(?:(\d+)\s+(\d+)\s+([VDIWEFA])\s+([^:]*?)\s*: |([VDIWEFA])/([^(]*?)\(\s*(\d+)\): )(.*)$')
-OURS = re.compile(r':game\b|dev\.nxnative\.android|dev\.bananative\.android|\[nxlaunch\]|\[dm\]')
+OURS = re.compile(r':game\b|hernandez\.kiwinative|hernandez\.kiwinative|\[nxlaunch\]|\[dm\]')
 
 
 class Digest:

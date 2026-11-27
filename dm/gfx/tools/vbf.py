@@ -1,4 +1,4 @@
-"""Virtuos SRYK archives (FFX/X-2 Switch): two MD5 tables, 32-byte file records, names and 64 KB zlib, LZ4 or raw blocks (PEANUTS(upstream-candidate): LZ4).
+"""Virtuos SRYK archives (FFX/X-2 Switch): two MD5 tables, 32-byte file records, names and 64 KB zlib, LZ4 or raw blocks (KIWI(upstream-candidate): LZ4).
 Read members through romfs.open so archives inside a RomFS image need no extraction. Missing/shared entries have offset UINT64_MAX.
 """
 import struct
@@ -33,7 +33,7 @@ def entries(path):
     return out
 
 
-# PEANUTS(upstream-candidate): FFXII The Zodiac Age's compressed blocks are raw LZ4 blocks, not zlib. A block is LZ4 when it parses as one down to its last byte and yields exactly its
+# KIWI(upstream-candidate): FFXII The Zodiac Age's compressed blocks are raw LZ4 blocks, not zlib. A block is LZ4 when it parses as one down to its last byte and yields exactly its
 # uncompressed size, which a zlib stream does not in practice; this reads the format itself (sequences of a token, literals, a 2-byte offset and a match; the last sequence has no match, and
 # the end rules of the LZ4 block format hold) and answers None for anything that breaks a rule, so no exception chooses the codec.
 def lz4_block(src, n):
@@ -65,7 +65,7 @@ def lz4_block(src, n):
         out += out[start:start + size] if offset >= size else (out[start:] * (size // offset + 1))[:size]
 
 
-# PEANUTS(upstream-candidate): the zlib stream header of RFC 1950, which every zlib stream starts with: CMF is deflate with a window of at most 32 KB, FLG has no preset dictionary,
+# KIWI(upstream-candidate): the zlib stream header of RFC 1950, which every zlib stream starts with: CMF is deflate with a window of at most 32 KB, FLG has no preset dictionary,
 # and the two bytes read as a number are a multiple of 31. A block that is neither LZ4 nor has it is not a block of either codec.
 def zlib_header(d):
     return len(d) >= 2 and d[0] & 15 == 8 and d[0] >> 4 < 8 and not d[1] & 32 and (d[0] << 8 | d[1]) % 31 == 0
@@ -79,7 +79,7 @@ def read(f, entry):
         data = f.read(length)
         if len(data) != length: raise ValueError(f'{name}: truncated VBF block')
         if length != n:
-            block = lz4_block(data, n)   # PEANUTS(upstream-candidate): FFXII The Zodiac Age's blocks are LZ4
+            block = lz4_block(data, n)   # KIWI(upstream-candidate): FFXII The Zodiac Age's blocks are LZ4
             if block is not None: data = block
             elif zlib_header(data):
                 dec = zlib.decompressobj()

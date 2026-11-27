@@ -14,13 +14,13 @@
 #include "../nvn/nvn_mtl.h"
 #include "vka_present_rot.h"
 #include "vka_present_fsr.h"
-#include "vka_present_crt.h"   // PEANUTS: the CRT look
+#include "vka_present_crt.h"   // KIWI: the CRT look
 #if __has_include("game_profile.h")
 #include "game_profile.h"
 #endif
 #include "vka_present_fit.h"
 #include "vka_ovl.h"
-#include "vka_panel.h"   // PEANUTS: the panel's measured refresh grid (DM_VK_PACE_PANEL, DM_VK_PRESENT_GRID)
+#include "vka_panel.h"   // KIWI: the panel's measured refresh grid (DM_VK_PACE_PANEL, DM_VK_PRESENT_GRID)
 #include <android/native_window.h>
 #include <dlfcn.h>
 #include <math.h>
@@ -29,15 +29,15 @@
 #include <time.h>
 
 __attribute__((weak)) void dm_guest_frame_tick(void) {}
-__attribute__((weak)) void peanuts_tick(void);   // PEANUTS: absent in a build without dm/peanuts
-__attribute__((weak)) int peanuts_ovl_corner(int slot, int dflt);   // PEANUTS: the stats block's corner chosen in the launcher (dm/peanuts/peanuts_graph.c); absent in a build without dm/peanuts
+__attribute__((weak)) void kiwi_tick(void);   // KIWI: absent in a build without dm/kiwi
+__attribute__((weak)) int kiwi_ovl_corner(int slot, int dflt);   // KIWI: the stats block's corner chosen in the launcher (dm/kiwi/kiwi_graph.c); absent in a build without dm/kiwi
 
 // ---------- The window ----------
 static pthread_mutex_t g_pmu = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t g_pcv = PTHREAD_COND_INITIALIZER;
 static ANativeWindow *g_win_new; static uint64_t g_win_gen, g_win_ack;   // set by nxhost_set_window; the present thread takes it and acknowledges the generation
 static int g_thread_up;
-// PEANUTS(upstream-candidate): Display.getPresentationDeadlineNanos(), updated by the game window on the UI thread.
+// KIWI(upstream-candidate): Display.getPresentationDeadlineNanos(), updated by the game window on the UI thread.
 static _Atomic uint64_t g_presentation_deadline;
 void nxhost_presentation_deadline_set(uint64_t ns) { atomic_store_explicit(&g_presentation_deadline, ns, memory_order_relaxed); }
 static void *selftest_main(void *arg);
@@ -69,7 +69,7 @@ static VkImage g_simg[MAXIMG]; static VkSemaphore g_sdone[MAXIMG]; static uint32
 static struct { VkCommandBuffer cb; VkFence fence; VkSemaphore acq; vka_img *held; int used; } g_fr[NFRAME];
 static VkCommandPool g_ppool; static unsigned g_fi;
 static uint64_t g_refresh_ns, g_last_desired, g_drawable_ns;
-static uint64_t g_fg_acq_ns, g_fg_gpu_ns;   // PEANUTS(upstream-candidate): present-thread only: swapchain acquire and game GPU-fence waits over one game frame
+static uint64_t g_fg_acq_ns, g_fg_gpu_ns;   // KIWI(upstream-candidate): present-thread only: swapchain acquire and game GPU-fence waits over one game frame
 static int g_recreate;
 static struct { uint64_t n; double t; } g_pres[PRING];
 static VkSurfaceTransformFlagBitsKHR g_pre = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;   // the swapchain's preTransform
@@ -240,7 +240,7 @@ static struct { int state; VkFormat fmt; VkPipeline easu, rcas, easu_sc; VkPipel
 static int fsr_wanted(void) { return VKA_ENV("DM_VK_FSR", 0) != 0; }
 static VkPipeline fsr_pipe_lay(const uint32_t *frag, size_t fsize, VkFormat fmt, VkPipelineLayout lay, const char *what);
 #define fsr_pipe(frag, fsize, fmt) fsr_pipe_lay(frag, fsize, fmt, g_fsr.lay, "FSR")
-// A covering-triangle pipeline (fsr.vert) with one fragment shader that writes its target as it is, for the layout lay (the FSR passes, the CRT look). PEANUTS: lay and what
+// A covering-triangle pipeline (fsr.vert) with one fragment shader that writes its target as it is, for the layout lay (the FSR passes, the CRT look). KIWI: lay and what
 static VkPipeline fsr_pipe_lay(const uint32_t *frag, size_t fsize, VkFormat fmt, VkPipelineLayout lay, const char *what) {
     VkShaderModule sm[2] = {0}; VkPipeline p = VK_NULL_HANDLE;
     VkShaderModuleCreateInfo mv = {VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO, .codeSize = sizeof vka_fsr_vert, .pCode = vka_fsr_vert}, mf = mv;
@@ -260,10 +260,10 @@ static VkPipeline fsr_pipe_lay(const uint32_t *frag, size_t fsize, VkFormat fmt,
     VkPipelineDynamicStateCreateInfo ds = {VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO, .dynamicStateCount = 2, .pDynamicStates = dyn};
     VkPipelineRenderingCreateInfo rci = {VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO, .colorAttachmentCount = 1, .pColorAttachmentFormats = &fmt};
     VkGraphicsPipelineCreateInfo gi = {VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO, .pNext = &rci, .stageCount = 2, .pStages = st, .pVertexInputState = &vi, .pInputAssemblyState = &ia,
-        .pViewportState = &vp, .pRasterizationState = &rs, .pMultisampleState = &ms, .pColorBlendState = &cb, .pDynamicState = &ds, .layout = lay};   // PEANUTS: lay (fsr_pipe_lay)
+        .pViewportState = &vp, .pRasterizationState = &rs, .pMultisampleState = &ms, .pColorBlendState = &cb, .pDynamicState = &ds, .layout = lay};   // KIWI: lay (fsr_pipe_lay)
     if (!r) r = rk.vkCreateGraphicsPipelines(V.dev, VK_NULL_HANDLE, 1, &gi, NULL, &p);
     for (int i = 0; i < 2; i++) if (sm[i]) rk.vkDestroyShaderModule(V.dev, sm[i], NULL);
-    if (r) VRED("%s: pipeline for format %d: %d", what, fmt, r);   // PEANUTS: what
+    if (r) VRED("%s: pipeline for format %d: %d", what, fmt, r);   // KIWI: what
     return r ? VK_NULL_HANDLE : p;
 }
 // The layout, sets, sampler and the EASU pipeline once, the RCAS pipeline per swapchain format: 1 = ready. A failure is logged once and leaves the bilinear blit
@@ -405,7 +405,7 @@ static int fsr_copy(VkCommandBuffer cb, unsigned k, uint32_t idx, vka_img *im, i
     return 1;
 }
 
-// ---------- The CRT look: the picture drawn into the letterbox as a CRT shows it (vka_present_crt.h, crt/crt.frag) ---------- PEANUTS
+// ---------- The CRT look: the picture drawn into the letterbox as a CRT shows it (vka_present_crt.h, crt/crt.frag) ---------- KIWI
 // DM_VK_CRT (live; the launcher's Display › CRT filter): 0 off, 1 scanlines, 2 a flat CRT (scanlines, an aperture-grille mask, a light vignette), 3 a curved CRT.
 // It replaces the present's scaling step (the blit, the rotated copy or FSR), so it costs one full-screen pass with one bilinear sample per pixel. DM_VK_CRT_LINES (live,
 // 0 = the look's own) sets the number of scanlines over the picture's height; each look keeps its lines at least 3 screen pixels apart, so that they do not alias
@@ -624,7 +624,7 @@ static void ovl_draw(VkCommandBuffer cb, unsigned k, uint32_t idx) {
     int ew = (int)(rot_quarter(g_pre) ? g_ext.height : g_ext.width), eh = (int)(rot_quarter(g_pre) ? g_ext.width : g_ext.height);   // the display, as the user sees it
     vko_draw d[OVL_SLOTS]; int nd = 0, x0 = INT32_MAX, y0 = INT32_MAX, x1 = 0, y1 = 0;
     for (int s = 0; s < OVL_SLOTS; s++)
-        if (vko_place((int)g_pre, (int)g_ext.width, (int)g_ext.height, ew, eh, (peanuts_ovl_corner ? peanuts_ovl_corner(s, g_ocorner[s]) : g_ocorner[s]) /* PEANUTS: the launcher's corner for the stats block */, g_ovl.w_[s], g_ovl.h_[s], (int)g_ovl.w, (int)g_ovl.h, g_ovl.y[s], &d[nd])) {
+        if (vko_place((int)g_pre, (int)g_ext.width, (int)g_ext.height, ew, eh, (kiwi_ovl_corner ? kiwi_ovl_corner(s, g_ocorner[s]) : g_ocorner[s]) /* KIWI: the launcher's corner for the stats block */, g_ovl.w_[s], g_ovl.h_[s], (int)g_ovl.w, (int)g_ovl.h, g_ovl.y[s], &d[nd])) {
             if (d[nd].x < x0) x0 = d[nd].x;
             if (d[nd].y < y0) y0 = d[nd].y;
             if (d[nd].x + d[nd].w > x1) x1 = d[nd].x + d[nd].w;
@@ -744,7 +744,7 @@ typedef struct { tex_t t; double period; int crop[4], has_crop; uint64_t ticket,
 static pq_item g_pq[PQ];
 static uint64_t g_pq_in, g_pq_read, g_pq_done, g_pq_fill;   // tickets: reserved, taken by the present thread, shown; filled (a ticket is reserved by the game's present, filled when the replay reaches it: vka_worker.c)
 
-// PEANUTS: the panel's refresh grid from the actual present times (vka_panel.h). g_panel and g_grid belong to the present thread; the game's thread, the frame
+// KIWI: the panel's refresh grid from the actual present times (vka_panel.h). g_panel and g_grid belong to the present thread; the game's thread, the frame
 // limiter and the vsync event read the period through g_panel_ns (vka_panel_tick below), and the statistics line reads the counters: atomics, no lock
 static vkpanel g_panel; static vkgrid g_grid;
 static _Atomic uint64_t g_panel_ns, g_panel_seed;
@@ -755,12 +755,12 @@ static void timing_poll(void) {
     VkPastPresentationTimingGOOGLE pt[16]; uint32_t n = 16;
     if (vk.vkGetPastPresentationTimingGOOGLE(V.dev, g_swap, &n, pt) < 0) return;
     for (uint32_t i = 0; i < n; i++) pres_note(pt[i].presentID, pt[i].actualPresentTime / 1e9);
-    // PEANUTS: raw driver feedback, correlated by present ID with the request below and SurfaceFlinger frame history. Disabled outside diagnosis.
+    // KIWI: raw driver feedback, correlated by present ID with the request below and SurfaceFlinger frame history. Disabled outside diagnosis.
     if (VKA_ENV("DM_VK_PRESENT_TRACE", 0)) for (uint32_t i = 0; i < n; i++)
         VLOG("present trace shown id=%u desired=%llu actual=%llu earliest=%llu margin=%llu poll=%llu",
              pt[i].presentID, (unsigned long long)pt[i].desiredPresentTime, (unsigned long long)pt[i].actualPresentTime,
              (unsigned long long)pt[i].earliestPresentTime, (unsigned long long)pt[i].presentMargin, (unsigned long long)now_ns());
-    // PEANUTS: every actual present time (generated frames too) also feeds the estimate of the panel's refresh period and phase (vka_panel.h). When the estimate is
+    // KIWI: every actual present time (generated frames too) also feeds the estimate of the panel's refresh period and phase (vka_panel.h). When the estimate is
     // dropped (readings off the grid: the panel changed its mode on its own) the driver's refresh period is read again, as after a window frame rate change
     vkpanel_seed(&g_panel, g_refresh_ns);
     for (uint32_t i = 0; i < n; i++) if (vkpanel_sample(&g_panel, pt[i].actualPresentTime) && !g_refresh_n) g_refresh_n = 1;
@@ -844,10 +844,10 @@ static int present_one(const pq_item *it) {
         vk.vkAllocateCommandBuffers(V.dev, &ai, &g_fr[k].cb); vk.vkCreateFence(V.dev, &fi, NULL, &g_fr[k].fence); vk.vkCreateSemaphore(V.dev, &sci, NULL, &g_fr[k].acq);
     }
     // The frame's last copy done, bounded: after a GPU hang (vka_dev.c) nothing more is presented
-    VkResult rb_fw = VK_SUCCESS;   // PEANUTS: the wait's result is kept for the texture readback below (it was a variable of the loop)
+    VkResult rb_fw = VK_SUCCESS;   // KIWI: the wait's result is kept for the texture readback below (it was a variable of the loop)
     for (; !vka_hung() && (rb_fw = vk.vkWaitForFences(V.dev, 1, &g_fr[k].fence, VK_TRUE, 100000000ull)) == VK_TIMEOUT;) {}
     if (vka_hung()) { VRED_ONCE("GPU hang: nothing more is presented"); vka_tex_drop(im); return 0; }
-    // PEANUTS: texture readback for the companion runtime (vka_readback.inc): rb is 0 unless a companion's request is queued or its copy in flight, and then this
+    // KIWI: texture readback for the companion runtime (vka_readback.inc): rb is 0 unless a companion's request is queued or its copy in flight, and then this
     // present hands over the copies that rode on frame k's fence (just waited for: rb_fw says how that ended), records the queued ones below and notes their fence
     int rb = atomic_load_explicit(&vka_rb_on, memory_order_relaxed);
     if (rb) vka_rb_poll(g_fr[k].fence, rb_fw);
@@ -857,7 +857,7 @@ static int present_one(const pq_item *it) {
     VkResult r = vk.vkAcquireNextImageKHR(V.dev, g_swap, 1000000000ull, g_fr[k].acq, VK_NULL_HANDLE, &idx);
     uint64_t acq_dt = now_ns() - t0;
     g_drawable_ns += acq_dt;
-    g_fg_acq_ns += acq_dt;   // PEANUTS(upstream-candidate): per-game-frame swapchain acquire wait
+    g_fg_acq_ns += acq_dt;   // KIWI(upstream-candidate): per-game-frame swapchain acquire wait
     if (r == VK_ERROR_OUT_OF_DATE_KHR) { g_recreate = 1; vka_tex_drop(im); return 0; }
     if (r == VK_SUBOPTIMAL_KHR) suboptimal();   // presented this once; the next present recreates when the size or the rotation changed
     if (r && r != VK_SUBOPTIMAL_KHR) { static _Atomic int n; if (atomic_fetch_add(&n, 1) < 8) VRED("vkAcquireNextImageKHR %d", r); vka_tex_drop(im); return 0; }
@@ -865,12 +865,12 @@ static int present_one(const pq_item *it) {
     VkCommandBuffer cb = g_fr[k].cb; vk.vkResetCommandBuffer(cb, 0);
     VkCommandBufferBeginInfo bi = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO, .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT};
     vk.vkBeginCommandBuffer(cb, &bi);
-    // PEANUTS: DM_RES_SCALE (vka_tex.c vka_resscale.inc): from here to the command buffer's end the window texture's size, scale and handle are read under vka_rs_mu,
+    // KIWI: DM_RES_SCALE (vka_tex.c vka_resscale.inc): from here to the command buffer's end the window texture's size, scale and handle are read under vka_rs_mu,
     // which a change of its scale on the recording thread only tries to take (the present holds the texture across frames, so its holds cannot stand for "in use now")
     int rs_lock = vka_rs_on(); if (rs_lock) pthread_mutex_lock(&vka_rs_mu);
     int cx = 0, cy = 0, cw = im ? (int)im->w : 1, ch = im ? (int)im->h : 1;
     if (it->has_crop && it->crop[2] > 0 && it->crop[3] > 0) { cx = it->crop[0]; cy = it->crop[1]; cw = it->crop[2]; ch = it->crop[3];
-        if (im && im->rsc && !vka_rs_rect(im, &cx, &cy, &cw, &ch)) { cx = cy = 0; cw = (int)im->w; ch = (int)im->h; } }   // PEANUTS: the game's crop in a scaled window texture's pixels (all of it when nothing is left of the crop)
+        if (im && im->rsc && !vka_rs_rect(im, &cx, &cy, &cw, &ch)) { cx = cy = 0; cw = (int)im->w; ch = (int)im->h; } }   // KIWI: the game's crop in a scaled window texture's pixels (all of it when nothing is left of the crop)
     int ew = (int)(rot_quarter(g_pre) ? g_ext.height : g_ext.width), eh = (int)(rot_quarter(g_pre) ? g_ext.width : g_ext.height);   // the display, as the user sees it
     // Fit (keep aspect) or stretch to the whole display (DM_VK_STRETCH), at DM_VK_PICTURE_SIZE % of that, placed by nxhost_picture_place; all live (the in-game panel
     // sends the switches through DM_CTL and gives the launcher's touch mapping the same rectangle, PictureFit.rect)
@@ -897,7 +897,7 @@ static int present_one(const pq_item *it) {
         else VRED_ONCE("FSR: swapchain image %u has no attachment view: blitted", idx);
         fsr = 0;
     }
-    // PEANUTS: the CRT look in place of every other scaling step (crt_copy); a texture it cannot sample keeps the present's own path
+    // KIWI: the CRT look in place of every other scaling step (crt_copy); a texture it cannot sample keeps the present's own path
     int crt = crt_mode() && im && im->inited && im->aspect == VK_IMAGE_ASPECT_COLOR_BIT && im->f.kind == 0 && im->samples == 1 && (im->usage & VK_IMAGE_USAGE_SAMPLED_BIT)
               && (fp.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT) && g_sview[idx];
     if (crt_mode() && im && !crt) { static int told; if (!told++) VLOG("CRT wanted but not used: usage %#x, linear filter %d, attachment view %d", (unsigned)im->usage,
@@ -929,15 +929,15 @@ static int present_one(const pq_item *it) {
     if (blit >= 0) vka_img_barrier(cb, g_simg[idx], VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
     ovl_draw(cb, k, idx);   // the launcher's overlay over the picture (generated frames too)
     if (!it->src) vka_ctl_shot_record(cb, im, g_pfmt, cx, cy, cw, ch);   // the game's own frames only
-    if (rb) vka_rb_record(cb);   // PEANUTS: texture readback: a companion's queued copies ride in this command buffer (above)
+    if (rb) vka_rb_record(cb);   // KIWI: texture readback: a companion's queued copies ride in this command buffer (above)
     vk.vkEndCommandBuffer(cb);
-    if (rs_lock) pthread_mutex_unlock(&vka_rs_mu);   // PEANUTS: (above)
+    if (rs_lock) pthread_mutex_unlock(&vka_rs_mu);   // KIWI: (above)
     VkSemaphore ws[2] = {g_fr[k].acq, V.tl}; uint64_t wv[2] = {0, it->fence}; VkPipelineStageFlags st[2] = {VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT};   // the image's first barrier is ALL_COMMANDS
     VkTimelineSemaphoreSubmitInfo ti = {VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO, .waitSemaphoreValueCount = 2, .pWaitSemaphoreValues = wv, .signalSemaphoreValueCount = 1, .pSignalSemaphoreValues = wv};
     VkSubmitInfo si = {VK_STRUCTURE_TYPE_SUBMIT_INFO, .pNext = &ti, .waitSemaphoreCount = it->fence ? 2 : 1, .pWaitSemaphores = ws, .pWaitDstStageMask = st,
                        .commandBufferCount = 1, .pCommandBuffers = &cb, .signalSemaphoreCount = 1, .pSignalSemaphores = &g_sdone[idx]};
     if (!it->fence) ti.waitSemaphoreValueCount = 1;
-    // PEANUTS begin (upstream-candidate): the content-rate hint follows the effective cap; frame generation keeps its output rate.
+    // KIWI begin (upstream-candidate): the content-rate hint follows the effective cap; frame generation keeps its output rate.
     double vote_period = it->period;
     if (!g_fg_on) {
         int nxhost_fps_limit_get(void) __attribute__((weak));
@@ -945,11 +945,11 @@ static int present_one(const pq_item *it) {
         if (lim > 0 && vote_period < 1.0 / lim) vote_period = 1.0 / lim;
     }
     frame_rate(vote_period); refresh_poll();
-    // PEANUTS end
+    // KIWI end
     // The frame done on the GPU before the queue lock is taken: a submission that waits for a timeline value still pending can block inside vkQueueSubmit until it is
     // signalled (Turnip on KGSL emulates timeline semaphores: 25-35 ms a frame with the lock held, so every replay submission behind it waited; Ocarina of Time's note).
     // The copy cannot start before the frame ends anyway; only a value already handed to the queue is waited for here (a later one is handled under the lock below)
-    // PEANUTS (PR #164): Trails on the tested Turnip T30 build is faster without the CPU wait when the host signals the timeline:
+    // KIWI (PR #164): Trails on the tested Turnip T30 build is faster without the CPU wait when the host signals the timeline:
     // Android otherwise stalls in queueBuffer under the queue lock. The submit below still waits for it->fence.
     static int prewait = -1;
     if (prewait < 0) {
@@ -960,11 +960,11 @@ static int present_one(const pq_item *it) {
             prewait = 0;
 #endif
     }
-    int pw_env = VKA_ENV("DM_VK_PRESENT_PREWAIT", -1), pw = pw_env >= 0 ? pw_env : (prewait || g_fg_on);   // PEANUTS: the default is read live (frame generation can start after the first present); an explicit 0 / 1 wins
+    int pw_env = VKA_ENV("DM_VK_PRESENT_PREWAIT", -1), pw = pw_env >= 0 ? pw_env : (prewait || g_fg_on);   // KIWI: the default is read live (frame generation can start after the first present); an explicit 0 / 1 wins
     if (it->fence && !vka_hung() && pw && it->fence <= __atomic_load_n(&V.tl_queued, __ATOMIC_ACQUIRE)) {
         uint64_t gt0 = now_ns();
         VkResult vka_tl_wait(VkSemaphore s, uint64_t v, uint64_t timeout_ns); vka_tl_wait(V.tl, it->fence, vka_hang_ns());   // a timeout: the submission below waits as before, and the hang handling sees it
-        g_fg_gpu_ns += now_ns() - gt0;   // PEANUTS(upstream-candidate): game's GPU wait (excludes present's copy fence)
+        g_fg_gpu_ns += now_ns() - gt0;   // KIWI(upstream-candidate): game's GPU wait (excludes present's copy fence)
     }
     // No gate pending when the copy goes to the queue (vka_dev.c vka_gate_drain): on Turnip the driver would hold the copy back behind the gated work while Android
     // already shows the image. DM_VK_PRESENT_GATE_WAIT=<ms> (live; 30 on Turnip, 0 = off elsewhere): the longest wait, after which the present goes on as before
@@ -995,14 +995,14 @@ static int present_one(const pq_item *it) {
     uint64_t th1 = now_ns();
     VkResult pr = r;
     if (!r) {
-        // PEANUTS: choose the deadline after GPU/gate/queue waits and submission. A time chosen before them could already be past at QueuePresent,
+        // KIWI: choose the deadline after GPU/gate/queue waits and submission. A time chosen before them could already be past at QueuePresent,
         // while grid_late still reported an on-time frame. This samples readiness without adding a wait or changing the queue's submission order.
         uint64_t want = 0, period = (uint64_t)((it->hold > 0 ? it->hold : it->period) * 1e9);
         // With frame generation every image gets a time too, at least one refresh after the one before: a game frame and its generated frames are handed over back to back,
         // and with their hold under 1.5 refreshes (4x at 25 fps: 10 ms) they went out untimed, two landed in one refresh and the compositor dropped one (on the Portal
         // about 48 of 105 a second, mostly generated frames, so the screen showed little more than the game's own rate)
         if (g_fg_on && g_refresh_ns && period < g_refresh_ns) period = g_refresh_ns;
-        // PEANUTS: DM_VK_PRESENT_GRID (live, default 1): without frame generation every game frame whose period is a whole number of the panel's measured refreshes gets
+        // KIWI: DM_VK_PRESENT_GRID (live, default 1): without frame generation every game frame whose period is a whole number of the panel's measured refreshes gets
         // a desired present time on the measured grid, one hold after the last (vka_panel.h vkgrid_next). The period is never shorter than the host's frame limit allows,
         // as in vka_fg_frame: a game on the host's 120 Hz tick held to 60 fps declares 8.3 ms, went out untimed and landed 1 and 3 refreshes apart. The lines below
         // remain for frame generation, for periods that are no whole number of refreshes, and until the grid is measured
@@ -1011,13 +1011,13 @@ static int present_one(const pq_item *it) {
             int nxhost_fps_limit_get(void) __attribute__((weak));
             int lim = &nxhost_fps_limit_get ? nxhost_fps_limit_get() : 0, late = 0; uint64_t per = period;
             if (lim > 0 && per < 1000000000ull / (uint64_t)lim) per = 1000000000ull / (uint64_t)lim;
-            // PEANUTS(upstream-candidate): honor the compositor queue deadline, not merely a future desired-present timestamp.
+            // KIWI(upstream-candidate): honor the compositor queue deadline, not merely a future desired-present timestamp.
             uint64_t lead = VKA_ENV("DM_VK_PRESENT_DEADLINE", 1) ? atomic_load_explicit(&g_presentation_deadline, memory_order_relaxed) : 0;
             grid = vkgrid_next_deadline(&g_grid, g_panel.last, g_panel.period, per, now_ns(), lead, &late);
             if (grid) { want = grid - g_panel.period / 2; g_last_desired = 0; atomic_fetch_add_explicit(&g_grid_timed, 1, memory_order_relaxed); if (late) atomic_fetch_add_explicit(&g_grid_late, 1, memory_order_relaxed); }
         } else g_grid.last = 0;
         if (it->ticket) atomic_fetch_add_explicit(&g_grid_presents, 1, memory_order_relaxed);
-        if (grid) { }   // PEANUTS: timed above
+        if (grid) { }   // KIWI: timed above
         else
         if (g_refresh_ns && (period > g_refresh_ns * 3 / 2 || g_fg_on)) {   // hold each image for its present period: the panel refreshes faster than the game presents
             uint64_t now = now_ns(); want = g_last_desired ? g_last_desired + period : now;
@@ -1027,7 +1027,7 @@ static int present_one(const pq_item *it) {
         VkPresentTimeGOOGLE pt = {(uint32_t)it->ticket, want};
         VkPresentTimesInfoGOOGLE ptv = {VK_STRUCTURE_TYPE_PRESENT_TIMES_INFO_GOOGLE, .swapchainCount = 1, .pTimes = &pt};
         VkPresentInfoKHR pi = {VK_STRUCTURE_TYPE_PRESENT_INFO_KHR, .pNext = V.display_timing ? &ptv : NULL, .waitSemaphoreCount = 1, .pWaitSemaphores = &g_sdone[idx], .swapchainCount = 1, .pSwapchains = &g_swap, .pImageIndices = &idx};
-        // PEANUTS: trace the original target as well as the API timestamp; a midpoint request and a missed GPU deadline are different failures.
+        // KIWI: trace the original target as well as the API timestamp; a midpoint request and a missed GPU deadline are different failures.
         int trace = VKA_ENV("DM_VK_PRESENT_TRACE", 0);
         if (trace) VLOG("present trace queue id=%u at=%llu want=%llu grid=%llu panel=%llu period=%llu submit=%llu lead=%llu",
                         pt.presentID, (unsigned long long)now_ns(), (unsigned long long)want, (unsigned long long)grid,
@@ -1040,7 +1040,7 @@ static int present_one(const pq_item *it) {
     pthread_mutex_unlock(&V.qmu);
     g_fr[k].held = im;
     if (!r) vka_ctl_shot_done(g_fr[k].fence);
-    if (rb) vka_rb_submitted(g_fr[k].fence, !r);   // PEANUTS: texture readback: the copies recorded above are done when this fence signals
+    if (rb) vka_rb_submitted(g_fr[k].fence, !r);   // KIWI: texture readback: the copies recorded above are done when this fence signals
     if (r == VK_ERROR_DEVICE_LOST || pr == VK_ERROR_DEVICE_LOST) vka_device_lost(r ? "the present's submission" : "vkQueuePresentKHR");
     if (r) { static _Atomic int n; if (atomic_fetch_add(&n, 1) < 8) VRED("present submission %d", r); return 0; }
     if (pr == VK_ERROR_OUT_OF_DATE_KHR) g_recreate = 1;
@@ -1054,7 +1054,7 @@ void vka_perf_thread(int nice); void vka_perf_frame(double period_s);   // vka_p
 static void *present_main(void *arg) {
     (void)arg; pthread_setname_np(pthread_self(), "vk-present"); vka_fp_host("vk-present"); vka_perf_thread(-8);
     pthread_mutex_lock(&g_pmu);
-    uint64_t prev_acq_ns = 0, prev_gpu_ns = 0;   // PEANUTS(upstream-candidate)
+    uint64_t prev_acq_ns = 0, prev_gpu_ns = 0;   // KIWI(upstream-candidate)
     for (;;) {
         uint64_t pq_t0 = now_ns();
         while (g_pq_read == g_pq_fill && g_win_ack == g_win_gen) pthread_cond_wait(&g_pcv, &g_pmu);
@@ -1063,19 +1063,19 @@ static void *present_main(void *arg) {
         pq_item it = g_pq[g_pq_read % PQ]; g_pq_read++;
         pthread_mutex_unlock(&g_pmu);
         vka_img *gen[VKA_FG_MAX]; double hold = 0, out_period = 0;   // frame generation: the images shown before this frame, each for hold seconds
-        if (vka_rs_on()) pthread_mutex_lock(&vka_rs_mu);   // PEANUTS: DM_RES_SCALE: frame generation reads the window texture's size and handle too (present_one)
+        if (vka_rs_on()) pthread_mutex_lock(&vka_rs_mu);   // KIWI: DM_RES_SCALE: frame generation reads the window texture's size and handle too (present_one)
         int ng = g_surf ? vka_fg_frame(it.t.serial, it.has_crop ? it.crop : NULL, it.period, it.fence, (int)it.t.d.format,
-                                       (double)prev_acq_ns / 1e9, (double)(pq_wait_ns + prev_gpu_ns) / 1e9, gen, &hold, &out_period) : 0;   // PEANUTS(upstream-candidate)
-        if (vka_rs_on()) pthread_mutex_unlock(&vka_rs_mu);   // PEANUTS
+                                       (double)prev_acq_ns / 1e9, (double)(pq_wait_ns + prev_gpu_ns) / 1e9, gen, &hold, &out_period) : 0;   // KIWI(upstream-candidate)
+        if (vka_rs_on()) pthread_mutex_unlock(&vka_rs_mu);   // KIWI
         double game_period = it.period;
         g_fg_on = out_period > 0;
         if (out_period > 0) it.period = out_period;
-        g_fg_acq_ns = 0; g_fg_gpu_ns = 0;   // PEANUTS(upstream-candidate)
+        g_fg_acq_ns = 0; g_fg_gpu_ns = 0;   // KIWI(upstream-candidate)
         for (int g = 0; g < ng; g++) { pq_item gi = it; gi.src = gen[g]; gi.has_crop = 0; gi.ticket = 0; gi.fence = 0; gi.hold = hold; vka_fps_note(present_one(&gi), 1); }
         it.hold = ng ? hold : game_period;
         int shown = present_one(&it);
-        prev_acq_ns = g_fg_acq_ns; prev_gpu_ns = g_fg_gpu_ns;   // PEANUTS(upstream-candidate)
-        if (shown) { dm_guest_frame_tick(); if (peanuts_tick) peanuts_tick(); }   // PEANUTS: the companion's per-frame tick (dm/peanuts)
+        prev_acq_ns = g_fg_acq_ns; prev_gpu_ns = g_fg_gpu_ns;   // KIWI(upstream-candidate)
+        if (shown) { dm_guest_frame_tick(); if (kiwi_tick) kiwi_tick(); }   // KIWI: the companion's per-frame tick (dm/kiwi)
         if (!shown || !V.display_timing) pres_note(it.ticket, shown ? now_ns() / 1e9 : -1);
         vka_fps_note(shown, 0);
         pthread_mutex_lock(&g_pmu);
@@ -1143,7 +1143,7 @@ int mtl_link_stalled(void) { return 0; }
 int mtl_link_tick(uint64_t n, double *target, double *lead_ms, int *ticks, double *gap_ms) { (void)n; if (target) *target = 0; if (lead_ms) *lead_ms = 0; if (ticks) *ticks = 0; if (gap_ms) *gap_ms = 0; return 0; }
 int mtl_link_wait_tick(int vsyncs, uint64_t timeout_ns) { (void)vsyncs; (void)timeout_ns; return 0; }
 int mtl_link_wait_ticks(int ticks, uint64_t timeout_ns) { (void)ticks; (void)timeout_ns; return 0; }
-// PEANUTS begin: the panel's measured refresh for the host's pacing clocks, and the statistics line (vka_panel.h)
+// KIWI begin: the panel's measured refresh for the host's pacing clocks, and the statistics line (vka_panel.h)
 // A pacing period in whole refreshes of the panel (DM_VK_PACE_PANEL, live, default 1): the acquire pacer's slot period (hle_nvn.c), the frame limiter's (hle_fpslock.c)
 // and the vi vsync event's (hle_sdk16.c). The period as given when the switch is off, nothing is measured yet, or it is no whole number of refreshes within 2 %.
 // Any thread
@@ -1154,7 +1154,7 @@ uint64_t vka_panel_tick(uint64_t period_ns) {
 // One line per statistics window of the game's thread (hle_nvn.c tsummary, after its on-screen line): the panel's period, what the acquire pacer ticks on, and how
 // many refreshes each game frame stayed on screen. iv_ms: the window's on-screen intervals (-1 discarded, 0 no reading); nominal_ns / tick_ns: the pacer's period on
 // the host's clock and the one it used at the last present
-int nxhost_peanuts_rt_state(void) __attribute__((weak)); unsigned peanuts_frame_polls(void) __attribute__((weak));
+int nxhost_kiwi_rt_state(void) __attribute__((weak)); unsigned kiwi_frame_polls(void) __attribute__((weak));
 void vka_panel_line(unsigned long long frame, const double *iv_ms, unsigned n, uint64_t nominal_ns, uint64_t tick_ns) {
     uint64_t p = atomic_load_explicit(&g_panel_ns, memory_order_relaxed), seed = atomic_load_explicit(&g_panel_seed, memory_order_relaxed);
     double ref = p ? p / 1e6 : seed ? seed / 1e6 : 1000.0 / 60;
@@ -1166,8 +1166,8 @@ void vka_panel_line(unsigned long long frame, const double *iv_ms, unsigned n, u
     }
     const char *src = !nominal_ns ? "no pacing" : !VKA_ENV("DM_VK_PACE_PANEL", 1) ? "fallback: DM_VK_PACE_PANEL=0" : !p ? "fallback: no measured refresh"
                     : vkpanel_fit(nominal_ns, p) == nominal_ns && tick_ns == nominal_ns && nominal_ns % p ? "fallback: no whole number of refreshes" : "panel";
-    int rs = &nxhost_peanuts_rt_state ? nxhost_peanuts_rt_state() : -1; char comp[64];
-    if (rs == 1) snprintf(comp, sizeof comp, "loaded, its page asked for %u times", &peanuts_frame_polls ? peanuts_frame_polls() : 0);
+    int rs = &nxhost_kiwi_rt_state ? nxhost_kiwi_rt_state() : -1; char comp[64];
+    if (rs == 1) snprintf(comp, sizeof comp, "loaded, its page asked for %u times", &kiwi_frame_polls ? kiwi_frame_polls() : 0);
     else snprintf(comp, sizeof comp, "%s", rs < 0 ? "not in this build" : rs == 0 ? "pending" : rs == 2 ? "none" : "refused");
     VLOG("panel up to frame %llu: refresh %.3f ms (%.2f Hz, %s); acquire pacer %.3f ms a frame (%s); on-screen for 1 / 2 / 3 / 4+ refreshes: %u / %u / %u / %u frames, no timing %u, discarded %u; "
          "desired present times on the grid: %u of %u presents, %u started over late%s; companion %s",
@@ -1175,7 +1175,7 @@ void vka_panel_line(unsigned long long frame, const double *iv_ms, unsigned n, u
          atomic_exchange_explicit(&g_grid_timed, 0, memory_order_relaxed), atomic_exchange_explicit(&g_grid_presents, 0, memory_order_relaxed), atomic_exchange_explicit(&g_grid_late, 0, memory_order_relaxed),
          VKA_ENV("DM_VK_PRESENT_GRID", 1) ? "" : " (DM_VK_PRESENT_GRID=0)", comp);
 }
-// PEANUTS end
+// KIWI end
 int mtl_snap_on(void) { return 0; }
 uint64_t mtl_snap_acquire_wait(void) { return 0; }
 

@@ -1,4 +1,4 @@
-// PEANUTS: Pack a tightly laid-out Vulkan image readback into NVN's 2D block-linear storage.
+// KIWI: Pack a tightly laid-out Vulkan image readback into NVN's 2D block-linear storage.
 #version 450
 layout(local_size_x = 64) in;
 layout(set = 0, binding = 0, std430) readonly buffer Linear { uint words[]; } src;

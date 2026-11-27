@@ -1,5 +1,5 @@
 # DRAGON BALL: Sparking! ZERO (Unreal Engine 4/5, SDK 14.3.0)
-# PEANUTS: provisional profile generated on Linux
+# KIWI: provisional profile generated on Linux
 
 # ---- Identity ----
 title_id	010035F022078000
@@ -21,7 +21,7 @@ romfs_marker	SparkingZERO/Content/Paks/pakchunk0-Switch.ucas
 zip_store	.pak:.ttf:.ucas:.usm:.utoc:.metallib
 
 # ---- Graphics ----
-# PEANUTS: 60 fps with patches.py (dnyan007, #302)
+# KIWI: 60 fps with patches.py (dnyan007, #302)
 fps_target	60
 fps_modes	60
 ue_texture_pool	1000

@@ -10,8 +10,8 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/ReadinessJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/ReadinessJvmTest.java'
 PROBE = REPO / 'dm/gfx/vk_android/vka_readiness.c'
 FIXTURE = REPO / 'android/app/src/jvmtest/honor-pnm-n49.readiness.txt'   # the tested phone's facts on its own driver (nxhost_vk_readiness, 2026-11-03)
 VK_HEADER = REPO / 'dm/third_party/vulkan-headers/include/vulkan/vulkan_core.h'
@@ -41,7 +41,7 @@ def probe_facts():
     for line in re.findall(r'"limit\.[^"]*"', src):
         keys |= set(re.findall(r'(limit\.[A-Za-z0-9_]+)=', line))
     match = re.search(r'k_exts\[\] = \{(.*?)\};', src, re.S)
-    assert match is not None   # PEANUTS(upstream-candidate): require the source pattern before reading it.
+    assert match is not None   # KIWI(upstream-candidate): require the source pattern before reading it.
     ext = match.group(1)
     names = dict(re.findall(r'#define (VK_\w+_EXTENSION_NAME)\s+"(\w+)"', VK_HEADER.read_text(encoding='utf-8')))   # the macros' strings, as the driver lists them
     for macro in re.findall(r'\b(VK_\w+_EXTENSION_NAME)\b', ext): keys.add('ext.' + names[macro])
@@ -92,7 +92,7 @@ class ReadinessJvm(unittest.TestCase):
         cls.tmp.cleanup()
 
     def java(self, *args):
-        return subprocess.run(['java', '-cp', str(self.classes), 'dev.nxnative.android.ReadinessJvmTest', *map(str, args)], capture_output=True, text=True)
+        return subprocess.run(['java', '-cp', str(self.classes), 'hernandez.kiwinative.ReadinessJvmTest', *map(str, args)], capture_output=True, text=True)
 
     def test_decisions(self):
         r = self.java()

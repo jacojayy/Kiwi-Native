@@ -14,7 +14,7 @@ def tool_function(name):
     node = next(n for n in ast.parse(src).body if isinstance(n, ast.FunctionDef) and n.name == name)
     ns = {'re': re}
     exec(compile(ast.Module([node], []), 'vk_android_build.py', 'exec'), ns)
-    # PEANUTS(upstream-candidate): the extracted function must be callable before staticmethod binds it.
+    # KIWI(upstream-candidate): the extracted function must be callable before staticmethod binds it.
     fn = ns[name]
     assert callable(fn)
     return fn

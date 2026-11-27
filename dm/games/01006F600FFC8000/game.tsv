@@ -1,8 +1,8 @@
 # Game profile of LEGO MARVEL Super Heroes (Switch, update 1.0.1 = v65536 over the base game 1.0.0 = v0)
 # Format: see dm/games/README.md
-# PEANUTS: a Kiwi Native profile (Kiwi Native has none for this title); whole file Peanuts' own
+# KIWI: a Kiwi Native profile (Kiwi Native has none for this title); whole file Kiwi' own
 # TT Games / Warner Bros. Games, TT Games' own engine (Nu2, as LEGO CITY UNDERCOVER: DAT archives, NuUbershader), SDK 9.3.1, NVN, Havok; GLSLC in subsdk0, the movie module in subsdk1.
-# Status: provisional profile (dm/games/profile_guess.py from the survey, peanuts/docs/NEW-GAME.md); the note (README.md) says what is a guess
+# Status: provisional profile (dm/games/profile_guess.py from the survey, kiwi/docs/NEW-GAME.md); the note (README.md) says what is a guess
 
 # ---- Identity ----
 title_id	01006F600FFC8000

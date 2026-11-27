@@ -9,9 +9,9 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/SaveZipJvmTest.java'
-STUB = '''package dev.nxnative.android;
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/SaveZipJvmTest.java'
+STUB = '''package hernandez.kiwinative;
 public final class BuildConfig {
     public static final String NX_PROFILES = "040074A01BF12000\\tDonkey Kong Bananza\\t22852\\tabcdef012345\\t458752 main=aa";
     public static final String NX_DMSH_VK_CHAIN = "6607c8d19abc";
@@ -27,13 +27,13 @@ class SaveZipJvm(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             t = Path(d)
             (t / 'BuildConfig.java').write_text(STUB)
-            srcs = [SRC / f'{n}.java' for n in ('Streams', 'SaveZip', 'SaveStore', 'PackZip', 'CopyPlan', 'GameFile', 'GameList', 'Frontend', 'Pack', 'DumpLayout', 'BuildCheck',   # PEANUTS: Streams.java (Android 12: the stream helpers)
+            srcs = [SRC / f'{n}.java' for n in ('Streams', 'SaveZip', 'SaveStore', 'PackZip', 'CopyPlan', 'GameFile', 'GameList', 'Frontend', 'Pack', 'DumpLayout', 'BuildCheck',   # KIWI: Streams.java (Android 12: the stream helpers)
                                                 'RomfsCheck', 'Nup', 'Nsp', 'Zstd', 'Profile', 'ShaderLibs')]
             r = subprocess.run(['javac', '-Xlint:all,-try', '-Werror', '-encoding', 'UTF-8', '-d', str(t / 'classes'), *map(str, srcs), str(TEST), str(t / 'BuildConfig.java')],
                                capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             (t / 'run').mkdir()
-            r = subprocess.run(['java', '-cp', str(t / 'classes'), 'dev.nxnative.android.SaveZipJvmTest', str(t / 'run')], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', str(t / 'classes'), 'hernandez.kiwinative.SaveZipJvmTest', str(t / 'run')], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout[-3000:] + r.stderr[-3000:])
             self.assertRegex(r.stdout, r'^ok \d+')
 

@@ -1,6 +1,6 @@
 """vk_android_upgrade.py: a shader library of an older DMSH_VK_CHAIN rewritten into this tree's version without the translator. Small synthetic libraries written by
 vk_android_build.py's own write_library (through the upgrader's borrow): the hop path for each known version and unknown ones (exit 3), the unchecked marker, a dual module made
-again as dual_source of the stored base module, a type-2 sampler record rewritten, the header restamped, and no partial file after an error. No game files needed."""  # PEANUTS: the in-place shader upgrade (0.1.8)
+again as dual_source of the stored base module, a type-2 sampler record rewritten, the header restamped, and no partial file after an error. No game files needed."""  # KIWI: the in-place shader upgrade (0.1.8)
 import os
 import shutil
 import struct
@@ -163,7 +163,7 @@ class Upgrade(unittest.TestCase):
 
     def test_unchecked_marker_names_its_library(self):
         # the marker refuses the library whose id it holds (shader_reuse.py library_id), not a library rebuilt at that path since
-        sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'peanuts/reuse'))
+        sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'kiwi/reuse'))
         try: import shader_reuse as sr
         finally: sys.path.pop(0)
         p = self.old_lib(); L = delta.Library(str(p)); lid = sr.library_id(L); L.close()

@@ -1,4 +1,4 @@
-# PEANUTS: new file (code mods: IPS/IPS32 before the rewrite, DESIGN-MODS.md)
+# KIWI: new file (code mods: IPS/IPS32 before the rewrite, DESIGN-MODS.md)
 """dm/tools/patch_ips.py: applying a code mod's exefs_patches (IPS/IPS32, by build ID) to a module before
 dm/tools/patch_nso.py's ARM64 rewrite. Builds a synthetic NSO0 the same way test_nso.py's make_nso() does, so the
 layout matches dm/tools/nso.py exactly without needing a real game module."""

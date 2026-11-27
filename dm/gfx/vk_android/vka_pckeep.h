@@ -97,7 +97,7 @@ static inline int vka_pck_decide(const vka_pck_stamp *old, uint64_t cur, int kee
 static inline char *vka_pck_format(uint64_t lib, uint64_t dead, const vka_pck_ent *keep, size_t nk, const vka_pck_ent *run, size_t nr, size_t *len) {
     vka_pck_ent *k = malloc((nk ? nk : 1) * sizeof *k), *r = malloc((nr ? nr : 1) * sizeof *r), *all = malloc((nk + nr ? nk + nr : 1) * sizeof *all);
     if (!k || !r || !all) { free(k); free(r); free(all); return NULL; }
-    // PEANUTS: a cold cache has no kept shaders; an empty list may be null.
+    // KIWI: a cold cache has no kept shaders; an empty list may be null.
     if (nk) memcpy(k, keep, nk * sizeof *k);
     if (nr) memcpy(r, run, nr * sizeof *r);
     qsort(k, nk, sizeof *k, vka_pck_cmp_); qsort(r, nr, sizeof *r, vka_pck_cmp_);

@@ -1,7 +1,7 @@
 """A process pool over pipes for a Python that has no python executable and no _multiprocessing: the on-device packer (android/ONDEVICE.md) runs the tools in
 CPython embedded in the app, and the official Android build has no sem_open, so multiprocessing's queues, locks and pools (and concurrent.futures'
 ProcessPoolExecutor on them) cannot run there. shader_split.py's scan uses this pool when DM_SPLIT_WORKER=<command> names what runs a worker: a program that
-takes `<flags> -c <code> <args>` as python3 does (the phone's nxpack_worker, dm/peanuts/pack_worker, through /system/bin/linker64; python3 itself on a computer).
+takes `<flags> -c <code> <args>` as python3 does (the phone's nxpack_worker, dm/kiwi/pack_worker, through /system/bin/linker64; python3 itself on a computer).
 
 J workers, each started as `<command> -c BOOT <read fd> <write fd>` and fed one job at a time over a pipe of its own; a thread of this process per worker feeds
 it and fulfils its futures. submit / map / with as concurrent.futures' executors. vk_android_build.py's shaders step uses it too (DMSH_VK_WORKER, a script: PipePool argv).
@@ -12,7 +12,7 @@ import collections, concurrent.futures as cf, os, pickle, subprocess, sys, threa
 
 BOOT = r'''
 import os, pickle, runpy, sys, traceback, types
-if os.name == 'nt':   # PEANUTS(upstream-candidate): Windows passes the pipes as inherited handles (PipePool), not descriptors
+if os.name == 'nt':   # KIWI(upstream-candidate): Windows passes the pipes as inherited handles (PipePool), not descriptors
     import msvcrt
     r, w = os.fdopen(msvcrt.open_osfhandle(int(sys.argv[1]), os.O_RDONLY), 'rb'), os.fdopen(msvcrt.open_osfhandle(int(sys.argv[2]), 0), 'wb')
 else: r, w = os.fdopen(int(sys.argv[1]), 'rb'), os.fdopen(int(sys.argv[2]), 'wb')
@@ -45,7 +45,7 @@ def _fileno(stream):
 
 
 def _start(args, cr, cw, pass_fds, out, err):
-    """A worker reading jobs from descriptor cr and writing answers to cw, its stdout and stderr this process's. PEANUTS(upstream-candidate): Windows has no
+    """A worker reading jobs from descriptor cr and writing answers to cw, its stdout and stderr this process's. KIWI(upstream-candidate): Windows has no
     pass_fds: the pipes' handles are made inheritable and handed to that worker alone (handle_list), and the worker opens them by handle (BOOT). Before, the
     pool could not start there, so vk_android_build.py ran every shader in one interpreter and its Python half on one core (CPU at 25-50 % with J=8)"""
     if os.name != 'nt':

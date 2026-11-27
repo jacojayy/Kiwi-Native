@@ -12,10 +12,10 @@ typedef struct { uint64_t v[2]; } Uid;                 // nn::account::Uid, 16 b
 typedef struct { uint64_t v[3]; } UserHandle;          // nn::account::UserHandle, 24 bytes
 _Static_assert(sizeof(Uid) == 16, "Uid");
 static const Uid k_uid = {{0x78626c0000000001ull, 0x53574e4154495645ull}};   // Non-zero means valid
-// PEANUTS begin(upstream-candidate): nxnative 84e63860 (issue #239)
+// KIWI begin(upstream-candidate): nxnative 84e63860 (issue #239)
 // The handle's third word is the SDK's session object; the host has no sessions and writes this marker, which helps reading a dump but which nothing checks:
 // games also pass handles they built themselves (see GetUserId)
-// PEANUTS end
+// KIWI end
 #define HANDLE_MAGIC 0x55534552484e444cull                                    // "USERHNDL"
 #define USERS_MAX 8                                                           // the console's limit
 #define RES_ACC_CANCELLED ((Result)(124 | (1 << 9)))                          // account module 124, description 1: the user selector was cancelled (2124-0001)
@@ -76,8 +76,8 @@ int dm_account_save_dir(const void *uid, const char *base, char *out, size_t cap
     snprintf(out, cap, "%s_user_%s", base, h);
     return 0;
 }
-// PEANUTS: the save directory of the user the game starts with (DM_USER, else the first), as dm_account_save_dir names it: what the companion runtime reads as the
-// game's save (dm/peanuts/peanuts.c rt_start), which read the first user's whoever played
+// KIWI: the save directory of the user the game starts with (DM_USER, else the first), as dm_account_save_dir names it: what the companion runtime reads as the
+// game's save (dm/kiwi/kiwi.c rt_start), which read the first user's whoever played
 int dm_account_start_save_dir(const char *base, char *out, size_t cap) { users(); return dm_account_save_dir(&g_users[g_def].uid, base, out, cap); }
 // How many users the console has (DM_USERS, else the one fixed user): hle_fs.c frees a save's mount name on Unmount only when there is more than one
 int dm_account_users(void) { users(); return g_nusers; }
@@ -138,10 +138,10 @@ HLE_FORCE("_ZN2nn7account8OpenUserEPNS0_10UserHandleERKNS0_3UidE", "open user; t
     h->v[0] = uid->v[0]; h->v[1] = uid->v[1]; h->v[2] = HANDLE_MAGIC; return RES_OK;
 }
 HLE_FORCE("_ZN2nn7account9GetUserIdEPNS0_3UidERKNS0_10UserHandleE", "gets the Uid from the handle", Result, h_acc_GetUserId, Uid *out, const UserHandle *h) {
-    // PEANUTS begin(upstream-candidate): nxnative 84e63860 (issue #239), the host's marker check removed
+    // KIWI begin(upstream-candidate): nxnative 84e63860 (issue #239), the host's marker check removed
     // The SDK's accessor copies the Uid, the handle's first 16 bytes, and returns 0; it never reads the third word (FC 27: nn::account::GetUserId sdk+0x1c0040 calls
     // detail::GetUserId sdk+0x1bede0, ldp x8, x1, [x0]). EA SPORTS FC 27 passes a handle it built and never filled for a second controller's player (third word 0x2)
-    // PEANUTS end
+    // KIWI end
     out->v[0] = h->v[0]; out->v[1] = h->v[1]; return RES_OK;
 }
 // nn::account::Nickname = struct { char name[33]; }, UTF-8
@@ -194,7 +194,7 @@ HLE_FORCE("_ZN2nn7account16GetUserExistenceEPbRKNS0_3UidE", "whether a user exis
     *out = user_index(uid) >= 0; return RES_OK;
 }
 HLE_FORCE("_ZN2nn7account15ShowUserCreatorEv", "user creation applet; users are added in the launcher's settings", Result, h_acc_ShowCreator, void) { DM_APPLET("user creator"); return RES_OK; }
-// PEANUTS begin: the users' profile pictures (Settings › Users, dev.peanuts.users.UserImages): DM_USER_IMAGES=<folder> with <uid>.jpg, the 256 x 256 JPEG the console
+// KIWI begin: the users' profile pictures (Settings › Users, hernandez.kiwinative.kiwi.users.UserImages): DM_USER_IMAGES=<folder> with <uid>.jpg, the 256 x 256 JPEG the console
 // keeps for each user. LoadProfileImage gives a game its bytes (the console's size limit is 128 KiB); a user without one fails as before
 #define USER_IMAGE_MAX (128u << 10)
 static int user_image(const Uid *uid, void *buf, uint64_t cap, uint64_t *n) {
@@ -213,9 +213,9 @@ static int user_image(const Uid *uid, void *buf, uint64_t cap, uint64_t *n) {
     free(b);
     return 0;
 }
-// PEANUTS end
-HLE_FORCE_BIG("_ZN2nn7account16LoadProfileImageEPmPvmRKNS0_3UidE", "user profile image: the user's picture from the launcher (DM_USER_IMAGES), else none (fails)", Result, h_acc_LoadImage, uint64_t *n, void *buf, uint64_t sz, const Uid *uid) {   // PEANUTS: big stack (fopen), the picture
-    if (!user_image(uid, buf, sz, n)) return RES_OK;   // PEANUTS: the user's picture
+// KIWI end
+HLE_FORCE_BIG("_ZN2nn7account16LoadProfileImageEPmPvmRKNS0_3UidE", "user profile image: the user's picture from the launcher (DM_USER_IMAGES), else none (fails)", Result, h_acc_LoadImage, uint64_t *n, void *buf, uint64_t sz, const Uid *uid) {   // KIWI: big stack (fopen), the picture
+    if (!user_image(uid, buf, sz, n)) return RES_OK;   // KIWI: the user's picture
     (void)buf; (void)sz; (void)uid; if (n) *n = 0; return RES_FAIL;
 }
 // The save-data thumbnail is what the system's data management screen shows next to a save (The Great Ace Attorney Chronicles, SDK 10); the host has no such screen and keeps none

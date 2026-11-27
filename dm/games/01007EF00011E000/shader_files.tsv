@@ -1,7 +1,7 @@
 # kind: evidence  RomFS files containing shaders, checked against both full split references
-# PEANUTS: the same paths contain shaders in the two registered builds.
-# PEANUTS: v786432 main 8e9978d50bdd20b4c8395a106c27ffde
-# PEANUTS: v1114112 main cd57b23fa4bbad65803d9788c01821ee
+# KIWI: the same paths contain shaders in the two registered builds.
+# KIWI: v786432 main 8e9978d50bdd20b4c8395a106c27ffde
+# KIWI: v1114112 main cd57b23fa4bbad65803d9788c01821ee
 Effect/AncientBall.sesetlist
 Effect/AncientBall_Big.sesetlist
 Effect/Animal_Bear_A.sesetlist

@@ -116,9 +116,9 @@ enum { OBS_UE_MALLOC = 21,                                       // Unreal's FMa
        OBS_STDALLOC_INIT = 25,                                         // StandardAllocator::Initialize's entry, the same way: its callback writes the size (hle_svc.c)
        OBS_UE_REGION = 26,                                             // the store of Unreal's engine region size before nninitStartup reserves it: the register its upper bits name (dm/tools/ue_region.py, hle_svc.c)
        OBS_SEAD_RATE = 27,                                             // sead's frame-rate controller's sdiv of 60 by its interval: dividend, divisor and controller registers in its upper bits (dm/tools/nso_code.py sead_find, hle_fpslock.c)
-       // PEANUTS: 28-34 were Switch 2 games' gates (Pokopia, Ocarina of Time, Donkey Kong Bananza, Mario Kart World, Mario Tennis Fever), removed with
-       // their profiles and host files (Switch 1 only; peanuts/upstream-dropped.txt). The numbers stay taken: a rewritten module may still name them
-       OBS_MAX = 35 };   // PEANUTS: 28-34 have no callback here (the Switch 2 games' gates, above)
+       // KIWI: 28-34 were Switch 2 games' gates (Pokopia, Ocarina of Time, Donkey Kong Bananza, Mario Kart World, Mario Tennis Fever), removed with
+       // their profiles and host files (Switch 1 only; kiwi/upstream-dropped.txt). The numbers stay taken: a rewritten module may still name them
+       OBS_MAX = 35 };   // KIWI: 28-34 have no callback here (the Switch 2 games' gates, above)
 // A gate number's bits from 8 up are a parameter for its callback (OBS_REGION_GOT: the register that holds the address). Callbacks read the registers; a write to x0–x29 takes
 // effect when the gate returns (entry.S restores them from the frame), which OBS_STDALLOC_INIT and OBS_UE_REGION do
 void gate_obs_set(int id, void (*fn)(uint64_t *regs, int param));

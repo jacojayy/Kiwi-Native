@@ -134,7 +134,7 @@ class Targeted(unittest.TestCase):
         self.same(full, t)
         self.assertEqual(sorted(os.listdir(scan)), ['full', 'targeted', 'targeted.failed'])
         t2, said = self.split('again', True, scan)   # a rerun (the phone's after a stop) goes straight to the full scan, from its kept results
-        self.assertIn("targeted split: not taken, the targeted scan's tables were found to differ from the profile's by an earlier run on these inputs: every file is scanned", said)   # PEANUTS: the wording since the direct mode (DM_SPLIT_DIRECT: each mode names itself)
+        self.assertIn("targeted split: not taken, the targeted scan's tables were found to differ from the profile's by an earlier run on these inputs: every file is scanned", said)   # KIWI: the wording since the direct mode (DM_SPLIT_DIRECT: each mode names itself)
         self.assertIn('resuming the split: 24 file(s) already scanned', said)
         self.assertNotIn('only these are scanned', said)
         self.same(full, t2)
@@ -156,7 +156,7 @@ class Targeted(unittest.TestCase):
         self.assertIn(f"targeted split: not taken, main's build {BUILD.hex()} is not one the profile was made from", said)
         self.same(full, t)
 
-    def test_registered_build_outside_shader_versions_scans_new_files(self):   # PEANUTS: a supported executable can have unprofiled RomFS shaders
+    def test_registered_build_outside_shader_versions_scans_new_files(self):   # KIWI: a supported executable can have unprofiled RomFS shaders
         known, _ = self.split('known', False)
         self.profile_from(known)
         self.game_tsv('12' * 16)
@@ -168,7 +168,7 @@ class Targeted(unittest.TestCase):
         self.same(full, actual)
         self.assertIn('every file is scanned', log)
 
-    def test_single_update_matches_version_tagged_profile(self):   # PEANUTS: the union profile has v327680 paths, the Android update-only split does not
+    def test_single_update_matches_version_tagged_profile(self):   # KIWI: the union profile has v327680 paths, the Android update-only split does not
         present, _ = self.split('present', False)
         self.profile_from(present)
         mapping = self.prof / 'shader_map.tsv'
@@ -179,7 +179,7 @@ class Targeted(unittest.TestCase):
         self.assertEqual(len(old_rows), 2)
         with mapping.open('a') as f:
             f.write(old_rows[0].replace('\t/Old/', '\t/v65536/Old/') + '\n')
-            f.write(old_rows[1].rsplit('\t', 1)[0] + '\tmain#BNSH@0x0#var0@v65536\n')   # PEANUTS: a version tag at the end of an executable source
+            f.write(old_rows[1].rsplit('\t', 1)[0] + '\tmain#BNSH@0x0#var0@v65536\n')   # KIWI: a version tag at the end of an executable source
         for table in TABLES[1:]:
             shutil.copyfile(full_union / table, self.prof / table)
         (self.rom / 'Old/old.bnsh').unlink()
@@ -190,7 +190,7 @@ class Targeted(unittest.TestCase):
         self.assertIn('targeted split: its tables match the profile for v327680', log)
         self.same(present, actual)
 
-        pso = self.prof / 'pso_pairs.tsv'   # PEANUTS: supplemental pairs can be optional for a particular build
+        pso = self.prof / 'pso_pairs.tsv'   # KIWI: supplemental pairs can be optional for a particular build
         pair = f'{self.key(vs(1))}\t{self.key(ps(2))}\n'
         with pso.open('a') as f:
             f.write(pair)
@@ -204,7 +204,7 @@ class Targeted(unittest.TestCase):
         self.assertIn('targeted split: its tables match the profile for v327680', log)
         self.same(present, actual)
 
-        # PEANUTS: regular variation pairs between shared shader keys can differ too.
+        # KIWI: regular variation pairs between shared shader keys can differ too.
         with (self.prof / 'shader_pairs.tsv').open('a') as f:
             f.write(pair)
         actual, log = self.split('update-with-required-variation', True)
@@ -262,7 +262,7 @@ class Targeted(unittest.TestCase):
         self.assertEqual((big, [f[1] for f in todo]), ([], ['Shader/a.bnsh']))
         with self.assertRaises(FileNotFoundError): ss.scan_jobs(files)
 
-    def test_a_cpk_source_can_end_with_an_entry_offset(self):   # PEANUTS: Diablo III names a CPK offset before the shader record
+    def test_a_cpk_source_can_end_with_an_entry_offset(self):   # KIWI: Diablo III names a CPK offset before the shader record
         m = self.prof / 'shader_map.tsv'
         m.write_text('ps_main.bin\t0\tps\t0000000000001234\t/CPKs/ClientCommon.cpk@0x1478f23#D3@0x4f54\n')
         with mock.patch.object(ss, 'GAME', ss._game.Game(self.prof)):
@@ -270,7 +270,7 @@ class Targeted(unittest.TestCase):
 
     def test_the_full_zip_probe_prints_progress(self):   # the full scan's probe of every file counts them for the phone's card ('progress: <done>/<total>')
         files = [(str(self.rom / 'Shader/a.bnsh'), f'f{i}') for i in range(1000)]
-        clock = iter(range(10 ** 6))   # PEANUTS(upstream-candidate): range already starts at zero.
+        clock = iter(range(10 ** 6))   # KIWI(upstream-candidate): range already starts at zero.
         out = io.StringIO()
         with mock.patch.object(ss.time, 'monotonic', lambda: next(clock)), contextlib.redirect_stdout(out): ss.zip_jobs(files)
         lines = out.getvalue().splitlines()

@@ -27,7 +27,7 @@ defaults:
 # Actions are pinned to commit SHAs (the tag in the comment), as in tests.yml.
 jobs:
   lint:
-    if: vars.UPSTREAM_CI == 'true'   # PEANUTS: this job needs Kiwi Native's runner or its lint baseline; the fork's checks are in peanuts.yml
+    if: vars.UPSTREAM_CI == 'true'   # KIWI: this job needs Kiwi Native's runner or its lint baseline; the fork's checks are in kiwi.yml
     name: ruff and pyright (ratchet)
     runs-on: ubuntu-24.04   # pyproject.toml fixes the platform pyright assumes (Darwin), so the findings match a Mac's
     timeout-minutes: 10

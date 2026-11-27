@@ -118,7 +118,7 @@ static timg *img_make(const tb_t *t, int is2d) {   // (g_mu held)
         w = t->elems; h = 1;
         if (w > V.props.limits.maxImageDimension1D) { w = V.props.limits.maxImageDimension1D; VRED_ONCE("buffer texture of %u elements read as a 1D image: only its first %u (the device's 1D images)", t->elems, w); }
     }
-    int mut = t->f.vk != t->f.view;   // PEANUTS: #503
+    int mut = t->f.vk != t->f.view;   // KIWI: #503
     VkFormat fls[2] = {t->f.vk, t->f.view};
     VkImageFormatListCreateInfo fli = {VK_STRUCTURE_TYPE_IMAGE_FORMAT_LIST_CREATE_INFO, .viewFormatCount = 2, .pViewFormats = fls};
     VkImageCreateInfo ci = {VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO, .pNext = mut && VKA_ENV("DM_VK_UBWC", 1) ? &fli : NULL,
@@ -195,12 +195,12 @@ void vka_tbuf_refresh(int id, uint8_t dim, VkCommandBuffer cb) {
                                          is2d ? "2D (16384-texel rows)" : "1D", id, t.elems, t.f.vk);
     pthread_mutex_unlock(&g_mu);
 }
-VkImageView vka_tbuf_image_view(int id, uint8_t dim, VkFormat *actual) {   // PEANUTS
+VkImageView vka_tbuf_image_view(int id, uint8_t dim, VkFormat *actual) {   // KIWI
     tb_t t; int is2d;
     if (!shape(dim, &is2d) || !tb_of(id, &t)) return VK_NULL_HANDLE;
     pthread_mutex_lock(&g_mu);
     timg *x = img_find(&t, is2d); VkImageView v = VK_NULL_HANDLE;
-    if (x && x->copied_frame) { x->last = vka_frame(); v = x->v; if (actual) *actual = t.f.view; }   // PEANUTS: img_make's VkImageViewCreateInfo::format
+    if (x && x->copied_frame) { x->last = vka_frame(); v = x->v; if (actual) *actual = t.f.view; }   // KIWI: img_make's VkImageViewCreateInfo::format
     pthread_mutex_unlock(&g_mu);
     return v;
 }

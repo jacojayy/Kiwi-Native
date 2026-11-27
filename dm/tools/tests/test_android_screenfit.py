@@ -8,8 +8,8 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-JAVA = REPO / 'android/app/src/main/java/dev/nxnative/android'
-TESTS = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android'
+JAVA = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+TESTS = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative'
 
 
 class Wiring(unittest.TestCase):
@@ -44,7 +44,7 @@ class ScreenFitJvm(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             c = subprocess.run(['javac', '-Xlint:all', '-Werror', '-encoding', 'UTF-8', '-d', d, str(JAVA / src), str(TESTS / test)], capture_output=True, text=True)
             self.assertEqual(c.returncode, 0, c.stderr)
-            r = subprocess.run(['java', '-cp', d, 'dev.nxnative.android.' + name], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', d, 'hernandez.kiwinative.' + name], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertEqual(r.stdout.strip(), 'ok')
 
@@ -54,7 +54,7 @@ class ScreenFitJvm(unittest.TestCase):
             c = subprocess.run(['javac', '-Xlint:all', '-Werror', '-encoding', 'UTF-8', '-d', d, str(JAVA / 'ScreenShape.java'), str(JAVA / 'GameOrientation.java'),
                                 str(TESTS / 'ScreenShapeJvmTest.java')], capture_output=True, text=True)
             self.assertEqual(c.returncode, 0, c.stderr)
-            r = subprocess.run(['java', '-cp', d, 'dev.nxnative.android.ScreenShapeJvmTest'], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', d, 'hernandez.kiwinative.ScreenShapeJvmTest'], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertEqual(r.stdout.strip(), 'ok')
 

@@ -8,8 +8,8 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android/SkipNotice.java'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/SkipNoticeJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative/SkipNotice.java'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/SkipNoticeJvmTest.java'
 
 
 class Wiring(unittest.TestCase):
@@ -17,7 +17,7 @@ class Wiring(unittest.TestCase):
         self.assertIn('DM_VK_SKIP_WARN\t', (REPO / 'docs/env_switches.tsv').read_text(encoding='utf-8'))
         self.assertIn('nxhost_skip_status', (REPO / 'dm/gfx/vk_android/vka_exec.c').read_text(encoding='utf-8'))
         self.assertIn('Native_skipStatus', (REPO / 'android/app/src/main/cpp/nxlaunch.c').read_text(encoding='utf-8'))
-        self.assertIn('native String skipStatus', (REPO / 'android/app/src/main/java/dev/nxnative/android/Native.java').read_text(encoding='utf-8'))
+        self.assertIn('native String skipStatus', (REPO / 'android/app/src/main/java/hernandez/kiwinative/Native.java').read_text(encoding='utf-8'))
 
 
 @unittest.skipUnless(shutil.which('javac') and shutil.which('java'), 'no JDK')
@@ -31,7 +31,7 @@ class Notice(unittest.TestCase):
     def tearDownClass(cls): shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def java(self, *a):
-        r = subprocess.run(['java', '-Dstdout.encoding=UTF-8', '-cp', str(self.tmp / 'classes'), 'dev.nxnative.android.SkipNoticeJvmTest', *map(str, a)],
+        r = subprocess.run(['java', '-Dstdout.encoding=UTF-8', '-cp', str(self.tmp / 'classes'), 'hernandez.kiwinative.SkipNoticeJvmTest', *map(str, a)],
                            capture_output=True, text=True, encoding='utf-8')
         self.assertEqual(r.returncode, 0, r.stderr)
         return r.stdout.rstrip('\n').split(' ', 1)[1] if ' ' in r.stdout else ''

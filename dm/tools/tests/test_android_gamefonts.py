@@ -8,9 +8,9 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-JAVA = REPO / 'android/app/src/main/java/dev/nxnative/android'
+JAVA = REPO / 'android/app/src/main/java/hernandez/kiwinative'
 SRC = JAVA / 'GameFonts.java'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/GameFontsJvmTest.java'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/GameFontsJvmTest.java'
 FONTS = REPO / 'dm/third_party/fonts'
 
 
@@ -45,7 +45,7 @@ class GameFontsJvm(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             c = subprocess.run(['javac', '-Xlint:all', '-Werror', '-encoding', 'UTF-8', '-d', d, str(SRC), str(TEST)], capture_output=True, text=True)
             self.assertEqual(c.returncode, 0, c.stderr)
-            r = subprocess.run(['java', '-cp', d, 'dev.nxnative.android.GameFontsJvmTest'], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', d, 'hernandez.kiwinative.GameFontsJvmTest'], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertEqual(r.stdout.strip(), 'ok')
 

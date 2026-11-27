@@ -1,4 +1,4 @@
-# PEANUTS(upstream-candidate): worker processes for patch_nso.py's parallel phases (the x18 scan, the spin wait search) where there is no fork (Windows).
+# KIWI(upstream-candidate): worker processes for patch_nso.py's parallel phases (the x18 scan, the spin wait search) where there is no fork (Windows).
 # patch_nso.py is a script whose top level is the rewrite itself, so a spawned worker cannot import it (multiprocessing's spawn would run the whole rewrite
 # again as __mp_main__). Instead each worker builds the script's namespace here: its imports and its function and class definitions from the script's
 # syntax tree, then the module globals the job function reads (sent by the parent, pickled), and last the top-level statements that make the globals that

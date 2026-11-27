@@ -1,5 +1,5 @@
 #version 450
-// PEANUTS: the present's CRT look (vka_present.c crt_copy, DM_VK_CRT): the window texture drawn into the letterbox of the swapchain image as a CRT shows it: scanlines
+// KIWI: the present's CRT look (vka_present.c crt_copy, DM_VK_CRT): the window texture drawn into the letterbox of the swapchain image as a CRT shows it: scanlines
 // whose beam widens with brightness, an aperture-grille mask, an optional barrel curvature and a vignette. One pass, drawn with fsr.vert's covering triangle.
 // The swapchain pixel q is turned back to the letterbox pixel by q.x * m.xy + q.y * m.zw + t (fsr_copy's turns, for a pre-rotated swapchain).
 layout(set = 0, binding = 0) uniform sampler2D tex;

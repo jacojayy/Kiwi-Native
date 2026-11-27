@@ -37,14 +37,14 @@ def parse(data, name='list'):
     else:
         raise Error(f'{name}: not a prewarm list (NXVKPW1 / NXVKPW2)')
     recs = []
-    for index in range(n):   # PEANUTS(upstream-candidate): a bad record still counts towards the header's total.
+    for index in range(n):   # KIWI(upstream-candidate): a bad record still counts towards the header's total.
         if o + REC.size > len(data):
             raise Error(f'{name}: missing or incomplete header for record {index + 1} of {n}')
         kind, bad, i0, i1, klen, *keys = REC.unpack_from(data, o)
         size = REC.size + ((klen + 7) & ~7)
         if klen > gsz or o + size > len(data):
             raise Error(f'{name}: record {index} runs past the file')
-        if not bad:   # PEANUTS(upstream-candidate): retained records already have a zero bad flag.
+        if not bad:   # KIWI(upstream-candidate): retained records already have a zero bad flag.
             recs.append((bytes(data[o:o + size]), kind))
         o += size
     return gsz, layout, recs

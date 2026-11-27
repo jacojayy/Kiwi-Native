@@ -78,7 +78,7 @@ Update 1.3.0 (v327680) over the base game, with four DLC packages (one is only a
 
 ## Android (Kiwi Native)
 
-PEANUTS: packed on Linux from 1.3.0 with its four DLC (`01002B00111A3001` to `3004`): all 40,729 shaders and 58,163 modules valid for spirv-val, a 1,316 MB library; the targeted split reads 3 of 1,101 RomFS files (9.5 s, against 12.7 s for the full scan, with the same tables and package hashes). Played on an AYN Thor (Adreno 740) with Turnip v26.2.0 R5, 2026-11-21:
+KIWI: packed on Linux from 1.3.0 with its four DLC (`01002B00111A3001` to `3004`): all 40,729 shaders and 58,163 modules valid for spirv-val, a 1,316 MB library; the targeted split reads 3 of 1,101 RomFS files (9.5 s, against 12.7 s for the full scan, with the same tables and package hashes). Played on an AYN Thor (Adreno 740) with Turnip v26.2.0 R5, 2026-11-21:
 
 - First boot on an empty save, the intro movie, the opening battle on Hyrule Field with combat, KOs, the tutorial prompts and the captain's dialogue: 43 to 59 fps in battle (GPU 12 to 18 ms a frame), about 3.5 GB. All four DLC mount (`aoc: reporting 4 add-on contents`); their content was not exercised. Audio without underruns in 12,000 callbacks. A relaunch loads the save into the battle. No crash in about 15 minutes over several runs. The system driver was not tested.
 - Frame limits ([`game.tsv`](game.tsv)): the frame step takes 0, 30 or 60, so the launcher offers Game owned, 30 and 60 (`fps_modes 30,60`); 20 and 15 had run the game's own 30. The stubs' vsync counter on the frame-step state page (`+0x30`) against wall time gave game speed 0.99 at the 60 cap (59.5 updates a second while battle frames were presented at 46 to 56 fps, as `fps_hold off` intends) and 1.00 at the 30 cap.

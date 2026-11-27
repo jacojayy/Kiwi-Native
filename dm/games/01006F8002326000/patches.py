@@ -1,4 +1,4 @@
-# PEANUTS: new file (the 60 fps variant: tmouh's "ACNH 60 FPS + SpeedFix" v1.4.5, CC BY-NC 4.0, speedfix60/NOTICE.md)
+# KIWI: new file (the 60 fps variant: tmouh's "ACNH 60 FPS + SpeedFix" v1.4.5, CC BY-NC 4.0, speedfix60/NOTICE.md)
 """Animal Crossing: New Horizons' rewriter patches (dm/tools/patch_nso.py). The game's own code needs no cut: only its 60 fps variant has rows.
 
 VARIANT_CUTS['60']: the speed fix of "ACNH 60 FPS + SpeedFix" v1.4.5 by tmouh (https://github.com/tmouh/acnh-60fps, CC BY-NC 4.0) for 3.0.3's main, the 6,810

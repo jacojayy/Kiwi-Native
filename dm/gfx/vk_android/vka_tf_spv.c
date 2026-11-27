@@ -1,4 +1,4 @@
-// PEANUTS: transform feedback for the Vulkan replay, the part with no Vulkan in it (vka_tf.h): the capture layout a vertex shader's control section declares, and the
+// KIWI: transform feedback for the Vulkan replay, the part with no Vulkan in it (vka_tf.h): the capture layout a vertex shader's control section declares, and the
 // rewrite that makes a library module capture it. The library's modules carry no capture (entry flag DMSH_VK_F_TF only says the shader has one), so the replay adds it
 // when a capturing draw first needs the module: no library has to be built again for it.
 // The approach (VK_EXT_transform_feedback with XfbBuffer / XfbStride / Offset on the captured outputs) is the one nx2android's Vulkan backend uses, whose translator

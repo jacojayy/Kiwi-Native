@@ -1,4 +1,4 @@
-// The launcher's JNI shim (dev.nxnative.android.Native): starts the host's nxhost_main on a thread of its own and carries the host's output to a log file and to logcat.
+// The launcher's JNI shim (hernandez.kiwinative.Native): starts the host's nxhost_main on a thread of its own and carries the host's output to a log file and to logcat.
 // It also hands the game screen's Surface, the input events and the Activity lifecycle on to the host, and runs the Vulkan selftest, through the C entry points libnxhost.so
 // exports (dm/host/android/input_android.h, dm/gfx/vk_android/vk_android.h). They are weak, so a host without one still loads, and the call does nothing (android/README.md).
 #define _GNU_SOURCE   // cpu_set_t and sched_setaffinity (thread placement)
@@ -33,8 +33,8 @@ int nxhost_main(int argc, char **argv);
 void nxhost_env_changed(void);
 #pragma weak nxhost_set_window
 #pragma weak nxhost_vk_selftest
-#pragma weak nxhost_prewarm_progress   // PEANUTS: optional startup shader progress
-#pragma weak nxhost_prewarm_skip       // PEANUTS: Play anyway on the Preparing shaders screen
+#pragma weak nxhost_prewarm_progress   // KIWI: optional startup shader progress
+#pragma weak nxhost_prewarm_skip       // KIWI: Play anyway on the Preparing shaders screen
 void nxhost_prewarm_skip(void);
 #pragma weak nxhost_input_device_added
 #pragma weak nxhost_input_device_removed
@@ -58,12 +58,12 @@ void nxhost_motion_sens(float factor);
 #pragma weak nxhost_fps
 #pragma weak nxhost_overlay_set
 #pragma weak nxhost_overlay_state
-#pragma weak nxhost_presentation_deadline_set   // PEANUTS: active display's compositor queue lead
-#pragma weak peanuts_ovl_block   // PEANUTS: dm/peanuts/peanuts_graph.c, in libnxhost: the overlay graph's bars painted by the host every game frame
-void peanuts_ovl_block(int slot, void *px, int w, int h, int stride);   // PEANUTS: its prototype
+#pragma weak nxhost_presentation_deadline_set   // KIWI: active display's compositor queue lead
+#pragma weak kiwi_ovl_block   // KIWI: dm/kiwi/kiwi_graph.c, in libnxhost: the overlay graph's bars painted by the host every game frame
+void kiwi_ovl_block(int slot, void *px, int w, int h, int stride);   // KIWI: its prototype
 #pragma weak nxhost_framegen_set
 #pragma weak nxhost_framegen_status
-#pragma weak nxhost_framegen_enabled   // PEANUTS: requested state for the running display policy
+#pragma weak nxhost_framegen_enabled   // KIWI: requested state for the running display policy
 #pragma weak nxhost_picture_place
 #pragma weak nxhost_fps_cap_set
 #pragma weak nxhost_fps_cap_status
@@ -234,7 +234,7 @@ static int text_input(void *ctx, const char *title, const char *sub, const char 
 }
 static void text_input_setup(JNIEnv *env) {
     if (!nxhost_text_input_callback) { fprintf(stderr, "[nxlaunch] keyboard: not in this host (the applet cancels)\n"); return; }
-    jclass k = (*env)->FindClass(env, "dev/nxnative/android/TextInput");
+    jclass k = (*env)->FindClass(env, "hernandez/kiwinative/TextInput");
     jmethodID m = k ? (*env)->GetStaticMethodID(env, k, "ask", "([B[B[B[BII)[B") : NULL;
     if (!m || (*env)->GetJavaVM(env, &g_vm) != JNI_OK) { (*env)->ExceptionClear(env); fprintf(stderr, "[RED] [nxlaunch] keyboard: no TextInput.ask: the applet cancels\n"); return; }
     g_ti_class = (*env)->NewGlobalRef(env, k); g_ti_ask = m;
@@ -269,7 +269,7 @@ static int user_select(void *ctx, const char *const *names, const int *offered, 
 }
 static void user_select_setup(JNIEnv *env) {
     if (!nxhost_user_select_callback) { fprintf(stderr, "[nxlaunch] user selector: not in this host (the preselected user)\n"); return; }
-    jclass k = (*env)->FindClass(env, "dev/nxnative/android/UserPicker");
+    jclass k = (*env)->FindClass(env, "hernandez/kiwinative/UserPicker");
     jmethodID m = k ? (*env)->GetStaticMethodID(env, k, "ask", "([B[II)I") : NULL;
     if (!m || (!g_vm && (*env)->GetJavaVM(env, &g_vm) != JNI_OK)) { (*env)->ExceptionClear(env); fprintf(stderr, "[RED] [nxlaunch] user selector: no UserPicker.ask: the preselected user\n"); return; }
     g_up_class = (*env)->NewGlobalRef(env, k); g_up_ask = m;
@@ -294,18 +294,18 @@ static void ctrl_changed(void *ctx, int open) {
 }
 static void ctrl_setup(JNIEnv *env) {
     if (!nxhost_ctrl_callback) { fprintf(stderr, "[nxlaunch] controller applet: not in this host (it answers at once)\n"); return; }
-    jclass k = (*env)->FindClass(env, "dev/nxnative/android/CtrlScreen");
+    jclass k = (*env)->FindClass(env, "hernandez/kiwinative/CtrlScreen");
     jmethodID m = k ? (*env)->GetStaticMethodID(env, k, "changed", "(Z)V") : NULL;
     if (!m || (!g_vm && (*env)->GetJavaVM(env, &g_vm) != JNI_OK)) { (*env)->ExceptionClear(env); fprintf(stderr, "[RED] [nxlaunch] controller applet: no CtrlScreen.changed: it answers at once\n"); return; }
     g_cs_class = (*env)->NewGlobalRef(env, k); g_cs_changed = m;
     nxhost_ctrl_callback(ctrl_changed, NULL);
 }
-JNIEXPORT jbyteArray JNICALL Java_dev_nxnative_android_Native_ctrlState(JNIEnv *env, jclass cls) {   // UTF-8: the game's texts may hold any character
+JNIEXPORT jbyteArray JNICALL Java_hernandez_kiwinative_Native_ctrlState(JNIEnv *env, jclass cls) {   // UTF-8: the game's texts may hold any character
     (void)cls; char buf[2048] = "closed\n";
     if (nxhost_ctrl_state) nxhost_ctrl_state(buf, sizeof buf);
     return jbytes(env, buf);
 }
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_ctrlButton(JNIEnv *env, jclass cls, jint what) { (void)env; (void)cls; if (nxhost_ctrl_button) nxhost_ctrl_button(what); }
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_ctrlButton(JNIEnv *env, jclass cls, jint what) { (void)env; (void)cls; if (nxhost_ctrl_button) nxhost_ctrl_button(what); }
 
 // A surface can arrive while the readiness dialog is still up, before Native.start opens the log file and applies env.txt / env-<id>.txt (DM_VK_DRIVER, DM_VK_GPL,
 // DM_VK_MESH, DM_VK_VALIDATE, ...). Hold the window here and hand it to nxhost_set_window only once Native.start has set the environment
@@ -314,7 +314,7 @@ static pthread_mutex_t g_win_mu = PTHREAD_MUTEX_INITIALIZER;
 static int g_win_ready;
 
 // start(args, env, log path, cwd): args[0] is the program name (main.c reads args[1] as the pack folder), env is KEY=VALUE strings. 0 = started; the host runs on
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_start(JNIEnv *env, jclass cls, jobjectArray args, jobjectArray envs, jstring log, jstring cwd) {
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_Native_start(JNIEnv *env, jclass cls, jobjectArray args, jobjectArray envs, jstring log, jstring cwd) {
     (void)cls;
     if (atomic_exchange(&g_started, 1)) return -1;
     char *lp = jstr(env, log); int lr = log_open(lp); free(lp);
@@ -351,12 +351,12 @@ JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_start(JNIEnv *env, jclas
     pthread_detach(t);
     return 0;
 }
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_note(JNIEnv *env, jclass cls, jstring line) {   // a launcher line into the same log
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_note(JNIEnv *env, jclass cls, jstring line) {   // a launcher line into the same log
     (void)cls; char *s = jstr(env, line); fprintf(stderr, "[nxlaunch] %s\n", s); free(s);
 }
 
 // ---- Surface, input and lifecycle, forwarded when the host has the entry points ----
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_setSurface(JNIEnv *env, jclass cls, jobject surface) {
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_setSurface(JNIEnv *env, jclass cls, jobject surface) {
     (void)cls;
     ANativeWindow *w = surface ? ANativeWindow_fromSurface(env, surface) : NULL;
     pthread_mutex_lock(&g_win_mu);
@@ -365,36 +365,36 @@ JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_setSurface(JNIEnv *env, 
     g_window = w;
     pthread_mutex_unlock(&g_win_mu);
 }
-JNIEXPORT jboolean JNICALL Java_dev_nxnative_android_Native_hasInput(JNIEnv *env, jclass cls) { (void)env; (void)cls; return nxhost_input_key != NULL; }
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_deviceAdded(JNIEnv *env, jclass cls, jint device, jstring name, jboolean labelled) {
+JNIEXPORT jboolean JNICALL Java_hernandez_kiwinative_Native_hasInput(JNIEnv *env, jclass cls) { (void)env; (void)cls; return nxhost_input_key != NULL; }
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_Native_deviceAdded(JNIEnv *env, jclass cls, jint device, jstring name, jboolean labelled) {
     (void)cls; if (!nxhost_input_device_added) return -1;
     char *n = name ? jstr(env, name) : NULL; int p = nxhost_input_device_added(device, n, labelled); free(n); return p;
 }
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_deviceRemoved(JNIEnv *env, jclass cls, jint device) { (void)env; (void)cls; if (nxhost_input_device_removed) nxhost_input_device_removed(device); }
-JNIEXPORT jboolean JNICALL Java_dev_nxnative_android_Native_key(JNIEnv *env, jclass cls, jint device, jint keycode, jboolean down) {
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_deviceRemoved(JNIEnv *env, jclass cls, jint device) { (void)env; (void)cls; if (nxhost_input_device_removed) nxhost_input_device_removed(device); }
+JNIEXPORT jboolean JNICALL Java_hernandez_kiwinative_Native_key(JNIEnv *env, jclass cls, jint device, jint keycode, jboolean down) {
     (void)env; (void)cls; return nxhost_input_key ? nxhost_input_key(device, keycode, down) : JNI_FALSE;
 }
-JNIEXPORT jboolean JNICALL Java_dev_nxnative_android_Native_axes(JNIEnv *env, jclass cls, jint device, jintArray axes, jfloatArray values) {
+JNIEXPORT jboolean JNICALL Java_hernandez_kiwinative_Native_axes(JNIEnv *env, jclass cls, jint device, jintArray axes, jfloatArray values) {
     (void)cls; if (!nxhost_input_axes) return JNI_FALSE;
     jsize n = (*env)->GetArrayLength(env, axes), m = (*env)->GetArrayLength(env, values); if (m < n) n = m; if (n > 64) n = 64;
     jint a[64]; jfloat v[64];
     (*env)->GetIntArrayRegion(env, axes, 0, n, a); (*env)->GetFloatArrayRegion(env, values, 0, n, v);
     return nxhost_input_axes(device, (const int *)a, v, n);
 }
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_touch(JNIEnv *env, jclass cls, jint action, jint pointer, jfloat x, jfloat y) {
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_touch(JNIEnv *env, jclass cls, jint action, jint pointer, jfloat x, jfloat y) {
     (void)env; (void)cls; if (nxhost_input_touch) nxhost_input_touch(action, pointer, x, y);
 }
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_touchLayout(JNIEnv *env, jclass cls, jfloat vw, jfloat vh, jfloat px, jfloat py, jfloat pw, jfloat ph) {
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_touchLayout(JNIEnv *env, jclass cls, jfloat vw, jfloat vh, jfloat px, jfloat py, jfloat pw, jfloat ph) {
     (void)env; (void)cls; if (nxhost_touch_layout) nxhost_touch_layout(vw, vh, px, py, pw, ph);
 }
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_picturePlace(JNIEnv *env, jclass cls, jfloat x, jfloat y) {
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_picturePlace(JNIEnv *env, jclass cls, jfloat x, jfloat y) {
     (void)env; (void)cls; if (nxhost_picture_place) nxhost_picture_place(x, y);
 }
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_touchControlsEnable(JNIEnv *env, jclass cls, jboolean on) {
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_touchControlsEnable(JNIEnv *env, jclass cls, jboolean on) {
     (void)env; (void)cls; if (nxhost_touch_controls_enable) nxhost_touch_controls_enable(on);
 }
 // The launcher's layout (TouchControlsView): six floats per control, kind, buttons, stick, x, y, r (input_android.h). The number the host kept; -1 = this host draws none
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_touchControlsSet(JNIEnv *env, jclass cls, jfloatArray a) {
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_Native_touchControlsSet(JNIEnv *env, jclass cls, jfloatArray a) {
     (void)cls; if (!nxhost_touch_controls_set || !nxhost_touch_controls_state) return -1;
     int n = a ? (*env)->GetArrayLength(env, a) / 6 : 0; if (n > NXT_MAX) n = NXT_MAX;
     jfloat f[NXT_MAX * 6]; nxhost_touch_control t[NXT_MAX]; memset(t, 0, sizeof t);
@@ -403,7 +403,7 @@ JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_touchControlsSet(JNIEnv 
     return nxhost_touch_controls_set(n > 0 ? t : NULL, n);
 }
 // What each control holds now (pressed[i]) and the sticks' deflection (lx, ly, rx, ry; -1..1, y up), for drawing and the haptic tick
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_touchControlsState(JNIEnv *env, jclass cls, jlongArray pressed, jfloatArray stick) {
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_touchControlsState(JNIEnv *env, jclass cls, jlongArray pressed, jfloatArray stick) {
     (void)cls; if (!nxhost_touch_controls_state) return;
     uint64_t p[NXT_MAX] = {0}; float s[4] = {0};
     nxhost_touch_controls_state(p, NXT_MAX, s);
@@ -411,22 +411,22 @@ JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_touchControlsState(JNIEn
     if (stick && (*env)->GetArrayLength(env, stick) >= 4) (*env)->SetFloatArrayRegion(env, stick, 0, 4, s);
 }
 // A gamepad's own accelerometer (m/s²) and gyroscope (rad/s), PadMotion.java. False: the host takes no controller motion (switched off, or an older host): the launcher stops reading
-JNIEXPORT jboolean JNICALL Java_dev_nxnative_android_Native_padMotion(JNIEnv *env, jclass cls, jint device, jfloat ax, jfloat ay, jfloat az, jfloat gx, jfloat gy, jfloat gz) {
+JNIEXPORT jboolean JNICALL Java_hernandez_kiwinative_Native_padMotion(JNIEnv *env, jclass cls, jint device, jfloat ax, jfloat ay, jfloat az, jfloat gx, jfloat gy, jfloat gz) {
     (void)env; (void)cls; if (!nxhost_input_motion) return JNI_FALSE;
     const float a[3] = {ax, ay, az}, g[3] = {gx, gy, gz};
     return nxhost_input_motion(device, a, g);
 }
-JNIEXPORT jboolean JNICALL Java_dev_nxnative_android_Native_motionStart(JNIEnv *env, jclass cls) { (void)env; (void)cls; return nxhost_motion_start ? nxhost_motion_start() : JNI_FALSE; }
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_motionStop(JNIEnv *env, jclass cls) { (void)env; (void)cls; if (nxhost_motion_stop) nxhost_motion_stop(); }
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_motionSens(JNIEnv *env, jclass cls, jfloat f) { (void)env; (void)cls; if (nxhost_motion_sens) nxhost_motion_sens(f); }
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_motionRotation(JNIEnv *env, jclass cls, jint r) { (void)env; (void)cls; if (nxhost_motion_rotation) nxhost_motion_rotation(r); }
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_lifecycle(JNIEnv *env, jclass cls, jint ev) { (void)env; (void)cls; if (nxhost_lifecycle) nxhost_lifecycle(ev); }
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_paused(JNIEnv *env, jclass cls) { (void)env; (void)cls; return nxhost_paused ? nxhost_paused() : -1; }
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_audioInterrupt(JNIEnv *env, jclass cls, jboolean on) { (void)env; (void)cls; if (nxhost_audio_interrupt) nxhost_audio_interrupt(on); }
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_audioRouteChanged(JNIEnv *env, jclass cls) { (void)env; (void)cls; if (nxhost_audio_route_changed) nxhost_audio_route_changed(); }
+JNIEXPORT jboolean JNICALL Java_hernandez_kiwinative_Native_motionStart(JNIEnv *env, jclass cls) { (void)env; (void)cls; return nxhost_motion_start ? nxhost_motion_start() : JNI_FALSE; }
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_motionStop(JNIEnv *env, jclass cls) { (void)env; (void)cls; if (nxhost_motion_stop) nxhost_motion_stop(); }
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_motionSens(JNIEnv *env, jclass cls, jfloat f) { (void)env; (void)cls; if (nxhost_motion_sens) nxhost_motion_sens(f); }
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_motionRotation(JNIEnv *env, jclass cls, jint r) { (void)env; (void)cls; if (nxhost_motion_rotation) nxhost_motion_rotation(r); }
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_lifecycle(JNIEnv *env, jclass cls, jint ev) { (void)env; (void)cls; if (nxhost_lifecycle) nxhost_lifecycle(ev); }
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_Native_paused(JNIEnv *env, jclass cls) { (void)env; (void)cls; return nxhost_paused ? nxhost_paused() : -1; }
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_audioInterrupt(JNIEnv *env, jclass cls, jboolean on) { (void)env; (void)cls; if (nxhost_audio_interrupt) nxhost_audio_interrupt(on); }
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_audioRouteChanged(JNIEnv *env, jclass cls) { (void)env; (void)cls; if (nxhost_audio_route_changed) nxhost_audio_route_changed(); }
 
 // The overlay's frame rate (nxhost_fps): fills out (base fps, output fps, frame time ms, frame generation state, images per game frame, GPU ms a frame or -1); false = stale or not in this host
-JNIEXPORT jboolean JNICALL Java_dev_nxnative_android_Native_fps(JNIEnv *env, jclass cls, jfloatArray out) {
+JNIEXPORT jboolean JNICALL Java_hernandez_kiwinative_Native_fps(JNIEnv *env, jclass cls, jfloatArray out) {
     (void)cls; if (!nxhost_fps || !out) return JNI_FALSE;
     float v[6] = {0, 0, 0, 0, 0, -1}; int n = (*env)->GetArrayLength(env, out); if (n > 6) n = 6;
     int r = nxhost_fps(v, n);
@@ -436,21 +436,21 @@ JNIEXPORT jboolean JNICALL Java_dev_nxnative_android_Native_fps(JNIEnv *env, jcl
 
 // The overlay's blocks for the present to draw into the game's images (nxhost_overlay_set): px a direct ByteBuffer of stride-byte rows (an ARGB_8888 bitmap's pixels), null
 // empties the slot; false = the present does not draw it (or a host without it): the launcher's views show it. The state: 1 drawn, 0 not yet, -1 not drawn by the present
-JNIEXPORT jboolean JNICALL Java_dev_nxnative_android_Native_overlaySet(JNIEnv *env, jclass cls, jint slot, jobject px, jint w, jint h, jint stride) {
+JNIEXPORT jboolean JNICALL Java_hernandez_kiwinative_Native_overlaySet(JNIEnv *env, jclass cls, jint slot, jobject px, jint w, jint h, jint stride) {
     (void)cls; if (!nxhost_overlay_set) return JNI_FALSE;
     const void *p = px ? (*env)->GetDirectBufferAddress(env, px) : NULL;
     if (p && (w <= 0 || h <= 0 || stride < w * 4 || (jlong)stride * h > (*env)->GetDirectBufferCapacity(env, px))) p = NULL;
-    if (peanuts_ovl_block) peanuts_ovl_block(slot, (void *)p, p ? w : 0, p ? h : 0, stride);   // PEANUTS: JNI entry points forwarded to dm/peanuts: the host keeps the block and paints the graph's bars into it
+    if (kiwi_ovl_block) kiwi_ovl_block(slot, (void *)p, p ? w : 0, p ? h : 0, stride);   // KIWI: JNI entry points forwarded to dm/kiwi: the host keeps the block and paints the graph's bars into it
     return nxhost_overlay_set(slot, p, p ? w : 0, p ? h : 0, stride) ? JNI_TRUE : JNI_FALSE;
 }
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_overlayState(JNIEnv *env, jclass cls) { (void)env; (void)cls; return nxhost_overlay_state ? nxhost_overlay_state() : -1; }
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_Native_overlayState(JNIEnv *env, jclass cls) { (void)env; (void)cls; return nxhost_overlay_state ? nxhost_overlay_state() : -1; }
 
 // Frame generation (nxhost_framegen_set / _status): the in-game settings, and the state with its reason as "<state> <reason>" (state 0 off, 1 generating, 2 on and not
 // generating, -1 unavailable; "-2 ..." when this host has no frame generation)
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_frameGenSet(JNIEnv *env, jclass cls, jboolean on, jint mult, jint target, jint flow) {
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_frameGenSet(JNIEnv *env, jclass cls, jboolean on, jint mult, jint target, jint flow) {
     (void)env; (void)cls; if (nxhost_framegen_set) nxhost_framegen_set(on, mult, target, flow);
 }
-JNIEXPORT jstring JNICALL Java_dev_nxnative_android_Native_frameGenStatus(JNIEnv *env, jclass cls) {
+JNIEXPORT jstring JNICALL Java_hernandez_kiwinative_Native_frameGenStatus(JNIEnv *env, jclass cls) {
     (void)cls; char buf[300], out[320];
     if (!nxhost_framegen_status) return (*env)->NewStringUTF(env, "-2 not in this host");
     int st = nxhost_framegen_status(buf, sizeof buf);
@@ -458,20 +458,20 @@ JNIEXPORT jstring JNICALL Java_dev_nxnative_android_Native_frameGenStatus(JNIEnv
     return (*env)->NewStringUTF(env, out);
 }
 
-// PEANUTS: an unavailable requested-FG interface leaves display selection unrestricted.
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_frameGenEnabled(JNIEnv *env, jclass cls) {
+// KIWI: an unavailable requested-FG interface leaves display selection unrestricted.
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_Native_frameGenEnabled(JNIEnv *env, jclass cls) {
     (void)env; (void)cls; return nxhost_framegen_enabled ? nxhost_framegen_enabled() : -1;
 }
 
-// PEANUTS: negative/unavailable Java deadlines fall back to zero; older hosts safely ignore the hint.
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_presentationDeadlineSet(JNIEnv *env, jclass cls, jlong ns) {
+// KIWI: negative/unavailable Java deadlines fall back to zero; older hosts safely ignore the hint.
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_presentationDeadlineSet(JNIEnv *env, jclass cls, jlong ns) {
     (void)env; (void)cls;
     if (nxhost_presentation_deadline_set) nxhost_presentation_deadline_set(ns > 0 ? (uint64_t)ns : 0);
 }
 
 // The frame rate cap (nxhost_fps_cap_set / _status): "<cap> <rates> <game fps> <limit held>" (input_android.h), "-1 0 0" when this host has no cap
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_fpsCapSet(JNIEnv *env, jclass cls, jint fps) { (void)env; (void)cls; if (nxhost_fps_cap_set) nxhost_fps_cap_set(fps); }
-JNIEXPORT jstring JNICALL Java_dev_nxnative_android_Native_fpsCapStatus(JNIEnv *env, jclass cls) {
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_fpsCapSet(JNIEnv *env, jclass cls, jint fps) { (void)env; (void)cls; if (nxhost_fps_cap_set) nxhost_fps_cap_set(fps); }
+JNIEXPORT jstring JNICALL Java_hernandez_kiwinative_Native_fpsCapStatus(JNIEnv *env, jclass cls) {
     (void)cls; char buf[64] = "-1 0 0";
     if (nxhost_fps_cap_status) nxhost_fps_cap_status(buf, sizeof buf);
     return (*env)->NewStringUTF(env, buf);
@@ -481,7 +481,7 @@ JNIEXPORT jstring JNICALL Java_dev_nxnative_android_Native_fpsCapStatus(JNIEnv *
 // environment as start will set it (Readiness.gameEnv: KEY=VALUE, the last of each winning as in start, without the paths start sets): all of it is set here, since the
 // check makes the process's first Vulkan device and a driver reads some variables only then (Mesa's FD_DEV_FEATURES, GitHub #40). Null when this host has no such entry point ----
 #pragma weak nxhost_vk_readiness
-JNIEXPORT jstring JNICALL Java_dev_nxnative_android_Native_readiness(JNIEnv *env, jclass cls, jobjectArray envs) {
+JNIEXPORT jstring JNICALL Java_hernandez_kiwinative_Native_readiness(JNIEnv *env, jclass cls, jobjectArray envs) {
     (void)cls; if (!nxhost_vk_readiness) return NULL;
     for (jsize i = 0, n = envs ? (*env)->GetArrayLength(env, envs) : 0; i < n; i++) {
         char *kv = jstr(env, (jstring)(*env)->GetObjectArrayElement(env, envs, i)); char *eq = strchr(kv, '=');
@@ -496,12 +496,12 @@ JNIEXPORT jstring JNICALL Java_dev_nxnative_android_Native_readiness(JNIEnv *env
 }
 
 // ---- The graphics selftest (SelftestActivity, in a process of its own): no host start, only the log and nxhost_vk_selftest ----
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_openLog(JNIEnv *env, jclass cls, jstring log) {
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_Native_openLog(JNIEnv *env, jclass cls, jstring log) {
     (void)cls; char *lp = jstr(env, log); int r = log_open(lp); free(lp); return r;
 }
-JNIEXPORT jboolean JNICALL Java_dev_nxnative_android_Native_hasSelftest(JNIEnv *env, jclass cls) { (void)env; (void)cls; return nxhost_vk_selftest != NULL; }
-// PEANUTS: the selftest's environment (the picked GPU driver: DM_VK_DRIVER), set before its Vulkan device is made and written to its log, as start does for a game
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_selftestEnv(JNIEnv *env, jclass cls, jobjectArray envs) {
+JNIEXPORT jboolean JNICALL Java_hernandez_kiwinative_Native_hasSelftest(JNIEnv *env, jclass cls) { (void)env; (void)cls; return nxhost_vk_selftest != NULL; }
+// KIWI: the selftest's environment (the picked GPU driver: DM_VK_DRIVER), set before its Vulkan device is made and written to its log, as start does for a game
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_selftestEnv(JNIEnv *env, jclass cls, jobjectArray envs) {
     (void)cls;
     for (jsize i = 0, n = envs ? (*env)->GetArrayLength(env, envs) : 0; i < n; i++) {
         char *kv = jstr(env, (jstring)(*env)->GetObjectArrayElement(env, envs, i)); char *eq = strchr(kv, '=');
@@ -510,7 +510,7 @@ JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_selftestEnv(JNIEnv *env,
     }
 }
 // Blocks for about frames / 60 s: call it on a thread of its own. 0 = every check passed; -1 = this host has no selftest
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_selftest(JNIEnv *env, jclass cls, jobject surface, jint frames) {
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_Native_selftest(JNIEnv *env, jclass cls, jobject surface, jint frames) {
     (void)cls; if (!nxhost_vk_selftest) return -1;
     ANativeWindow *w = surface ? ANativeWindow_fromSurface(env, surface) : NULL;
     // The selftest never calls Native.start: let setSurface forward its resizes and the null on leaving to the host, as start does for a game
@@ -522,10 +522,10 @@ JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_selftest(JNIEnv *env, jc
     return r;
 }
 
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_devicePlayer(JNIEnv *env, jclass cls, jint device) {
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_Native_devicePlayer(JNIEnv *env, jclass cls, jint device) {
     (void)env; (void)cls; return nxhost_input_device_player ? nxhost_input_device_player(device) : -1;
 }
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_deviceFirst(JNIEnv *env, jclass cls, jint device, jstring name) {   // PadOrder: this device is player 1
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_Native_deviceFirst(JNIEnv *env, jclass cls, jint device, jstring name) {   // PadOrder: this device is player 1
     (void)cls; if (!nxhost_input_device_first) return -1;
     char *n = name ? jstr(env, name) : NULL; int p = nxhost_input_device_first(device, n); free(n); return p;
 }
@@ -543,7 +543,7 @@ static void rumble(void *ctx, int player, float intensity, float sharpness) {
     if ((*env)->ExceptionCheck(env)) (*env)->ExceptionClear(env);
 }
 // Once, before Native.start: the host starts its rumble thread when the callback is set. false when this host has no rumble
-JNIEXPORT jboolean JNICALL Java_dev_nxnative_android_Native_setRumbleListener(JNIEnv *env, jclass cls, jobject listener) {
+JNIEXPORT jboolean JNICALL Java_hernandez_kiwinative_Native_setRumbleListener(JNIEnv *env, jclass cls, jobject listener) {
     (void)cls; if (!nxhost_rumble_callback || !listener || g_rumble) return JNI_FALSE;
     jmethodID m = (*env)->GetMethodID(env, (*env)->GetObjectClass(env, listener), "onRumble", "(IFF)V");
     if (!m) { (*env)->ExceptionClear(env); return JNI_FALSE; }
@@ -554,7 +554,7 @@ JNIEXPORT jboolean JNICALL Java_dev_nxnative_android_Native_setRumbleListener(JN
     return JNI_TRUE;
 }
 // Whether a player has a vibrator: the host sends that player's vibration only while it has one
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_rumbleRoute(JNIEnv *env, jclass cls, jint player, jboolean on) {
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_rumbleRoute(JNIEnv *env, jclass cls, jint player, jboolean on) {
     (void)env; (void)cls; if (nxhost_rumble_route) nxhost_rumble_route(player, on);
 }
 
@@ -567,7 +567,7 @@ static long cpu_max_khz(int c) {
     FILE *f = fopen(path, "r"); long v = 0; if (f) { if (fscanf(f, "%ld", &v) != 1) v = 0; fclose(f); }
     return v;
 }
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_pinThreads(JNIEnv *env, jclass cls) {
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_Native_pinThreads(JNIEnv *env, jclass cls) {
     (void)env; (void)cls;
     static cpu_set_t fast, mid; static int ready;
     if (!ready) {
@@ -603,10 +603,10 @@ JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_pinThreads(JNIEnv *env, 
     closedir(d);
     return placed;
 }
-// PEANUTS: the placement undone (Native.unpinThreads): the threads pinThreads places get every core of the device again. GameActivity places them only while Android
+// KIWI: the placement undone (Native.unpinThreads): the threads pinThreads places get every core of the device again. GameActivity places them only while Android
 // has the game out of its top-app group (a tap on another app's window on the other screen); back in top-app the scheduler places them again. Android's move between
 // cpusets did not reset them (seen on the AYN Thor, 2026-11-24: the game's threads stayed on 3-6 as the top app). Returns the number given all cores
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_unpinThreads(JNIEnv *env, jclass cls) {
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_Native_unpinThreads(JNIEnv *env, jclass cls) {
     (void)env; (void)cls;
     cpu_set_t all; CPU_ZERO(&all);
     int n = (int)sysconf(_SC_NPROCESSORS_CONF); if (n > CPU_SETSIZE) n = CPU_SETSIZE;
@@ -625,78 +625,78 @@ JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_unpinThreads(JNIEnv *env
     closedir(d);
     return freed;
 }
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_fpsLimitSet(JNIEnv *env, jclass cls, jint fps) { (void)env; (void)cls; if (nxhost_fps_limit_set) nxhost_fps_limit_set(fps); }
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_fpsLimitSet(JNIEnv *env, jclass cls, jint fps) { (void)env; (void)cls; if (nxhost_fps_limit_set) nxhost_fps_limit_set(fps); }
 // Full game speed at low frame rates, live from the in-game panel (Native.decoupleSet)
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_decoupleSet(JNIEnv *env, jclass cls, jboolean on) { (void)env; (void)cls; if (nxhost_fps_decouple_set) nxhost_fps_decouple_set(on ? 1 : 0); }
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_decoupleSet(JNIEnv *env, jclass cls, jboolean on) { (void)env; (void)cls; if (nxhost_fps_decouple_set) nxhost_fps_decouple_set(on ? 1 : 0); }
 // Hold 60 fps, live from the in-game panel (Native.hold60Set)
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_hold60Set(JNIEnv *env, jclass cls, jboolean on) { (void)env; (void)cls; if (nxhost_fps_hold60_set) nxhost_fps_hold60_set(on ? 1 : 0); }
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_hold60Set(JNIEnv *env, jclass cls, jboolean on) { (void)env; (void)cls; if (nxhost_fps_hold60_set) nxhost_fps_hold60_set(on ? 1 : 0); }
 // A cheat on or off by its key, live from the in-game panel's Cheats section (Native.cheatSet): 1 now in that state, 0 no plain cheat, -1 no such key, -2 not in this host
 #pragma weak nxhost_cheat_set
 int nxhost_cheat_set(const char *key, int on);   // hle_cheats.c dm_cheat_set
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_cheatSet(JNIEnv *env, jclass cls, jstring key, jboolean on) {
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_Native_cheatSet(JNIEnv *env, jclass cls, jstring key, jboolean on) {
     (void)cls; if (!nxhost_cheat_set) return -2;
     char *k = jstr(env, key); int r = k ? nxhost_cheat_set(k, on ? 1 : 0) : -1; free(k); return r;
 }
-// PEANUTS begin: every cheat's state for the in-game panel (Native.cheatStatus, as UTF-8 bytes: a cheat's name may hold a character outside the BMP) and a reload of the
-// merged cheat file while the game runs (Native.cheatsReload): dm/peanuts/peanuts_cheats.inc. A host without them: no bytes, -2
+// KIWI begin: every cheat's state for the in-game panel (Native.cheatStatus, as UTF-8 bytes: a cheat's name may hold a character outside the BMP) and a reload of the
+// merged cheat file while the game runs (Native.cheatsReload): dm/kiwi/kiwi_cheats.inc. A host without them: no bytes, -2
 #pragma weak nxhost_cheat_status
 size_t nxhost_cheat_status(char *out, size_t cap);
 #pragma weak nxhost_cheats_reload
 int nxhost_cheats_reload(void);
-JNIEXPORT jbyteArray JNICALL Java_dev_nxnative_android_Native_cheatStatusUtf8(JNIEnv *env, jclass cls) {
+JNIEXPORT jbyteArray JNICALL Java_hernandez_kiwinative_Native_cheatStatusUtf8(JNIEnv *env, jclass cls) {
     (void)cls; if (!nxhost_cheat_status) return jbytes(env, "");
     size_t cap = 16384; char *b = malloc(cap); if (!b) return jbytes(env, "");
     size_t n = nxhost_cheat_status(b, cap);
     if (n + 1 > cap) { char *g = realloc(b, n + 1); if (g) { b = g; nxhost_cheat_status(b, n + 1); } }
     jbyteArray a = jbytes(env, b); free(b); return a;
 }
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_cheatsReload(JNIEnv *env, jclass cls) { (void)env; (void)cls; return nxhost_cheats_reload ? nxhost_cheats_reload() : -2; }
-// PEANUTS end
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_Native_cheatsReload(JNIEnv *env, jclass cls) { (void)env; (void)cls; return nxhost_cheats_reload ? nxhost_cheats_reload() : -2; }
+// KIWI end
 // Game resolution of a game that sizes its scenes by the graphics scale, live from the in-game panel (Native.graphicsModeSet): the host changes the scale and operation mode
 // and posts the console's notifications (300, 30 / 31), which the game answers by querying them again
 #pragma weak nxhost_graphics_mode_set
 void nxhost_graphics_mode_set(int scale, int opmode);   // hle_oe.c: -1 = the game's own
-JNIEXPORT jboolean JNICALL Java_dev_nxnative_android_Native_graphicsModeSet(JNIEnv *env, jclass cls, jint scale, jint opmode) {
+JNIEXPORT jboolean JNICALL Java_hernandez_kiwinative_Native_graphicsModeSet(JNIEnv *env, jclass cls, jint scale, jint opmode) {
     (void)env; (void)cls; if (!nxhost_graphics_mode_set) return JNI_FALSE;
     nxhost_graphics_mode_set(scale, opmode); return JNI_TRUE;
 }
 // The same with the graphics size of a game whose size gate draws below its scales (Native.graphicsStateSet): scale, mode and size together, one round of notifications
 #pragma weak nxhost_graphics_set
 void nxhost_graphics_set(int scale, int opmode, int w, int h);   // hle_oe.c: 0x0 = the game's own size
-JNIEXPORT jboolean JNICALL Java_dev_nxnative_android_Native_graphicsStateSet(JNIEnv *env, jclass cls, jint scale, jint opmode, jint w, jint h) {
+JNIEXPORT jboolean JNICALL Java_hernandez_kiwinative_Native_graphicsStateSet(JNIEnv *env, jclass cls, jint scale, jint opmode, jint w, jint h) {
     (void)env; (void)cls; if (!nxhost_graphics_set) return JNI_FALSE;
     nxhost_graphics_set(scale, opmode, w, h); return JNI_TRUE;
 }
 // Resolution and Upscaling quality of a game with a render_cfg row, live from the in-game panel (Native.renderSet): the host keeps the setting pending and posts notification 31
 #pragma weak nxhost_render_set
 void nxhost_render_set(int outh, int pct, int quality);   // hle_render.c: -1 keeps one
-JNIEXPORT jboolean JNICALL Java_dev_nxnative_android_Native_renderSet(JNIEnv *env, jclass cls, jint outh, jint pct, jint quality) {
+JNIEXPORT jboolean JNICALL Java_hernandez_kiwinative_Native_renderSet(JNIEnv *env, jclass cls, jint outh, jint pct, jint quality) {
     (void)env; (void)cls; if (!nxhost_render_set) return JNI_FALSE;
     nxhost_render_set(outh, pct, quality); return JNI_TRUE;
 }
 // Dynamic resolution, live from the in-game panel (Native.drsSet)
 #pragma weak nxhost_drs_set
 void nxhost_drs_set(int min_pct, int max_pct);   // probe.c: Donkey Kong Bananza's dynamic resolution range, % of the window (0 = the game's own)
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_drsSet(JNIEnv *env, jclass cls, jint lo, jint hi) { (void)env; (void)cls; if (nxhost_drs_set) nxhost_drs_set(lo, hi); }
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_drsSet(JNIEnv *env, jclass cls, jint lo, jint hi) { (void)env; (void)cls; if (nxhost_drs_set) nxhost_drs_set(lo, hi); }
 // The in-game panel's Upscaler rows (SidePanel, GameUpscaler.shown): whether the running game dispatched a network DM_VK_NDSR can replace; -1 when this host cannot say
 #pragma weak nxhost_ndsr_status
 int nxhost_ndsr_status(void);   // vka_draw.c
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_ndsrStatus(JNIEnv *env, jclass cls) { (void)env; (void)cls; return nxhost_ndsr_status ? nxhost_ndsr_status() : -1; }
-// PEANUTS: startup shader progress
-JNIEXPORT void JNICALL Java_dev_nxnative_android_Native_prewarmSkip(JNIEnv *env, jclass cls) { (void)env; (void)cls; if (nxhost_prewarm_skip) nxhost_prewarm_skip(); }   // PEANUTS
-JNIEXPORT jlong JNICALL Java_dev_nxnative_android_Native_prewarmProgress(JNIEnv *env, jclass cls) {
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_Native_ndsrStatus(JNIEnv *env, jclass cls) { (void)env; (void)cls; return nxhost_ndsr_status ? nxhost_ndsr_status() : -1; }
+// KIWI: startup shader progress
+JNIEXPORT void JNICALL Java_hernandez_kiwinative_Native_prewarmSkip(JNIEnv *env, jclass cls) { (void)env; (void)cls; if (nxhost_prewarm_skip) nxhost_prewarm_skip(); }   // KIWI
+JNIEXPORT jlong JNICALL Java_hernandez_kiwinative_Native_prewarmProgress(JNIEnv *env, jclass cls) {
     (void)env; (void)cls;
     return nxhost_prewarm_progress ? nxhost_prewarm_progress() : 0;
 }
 // The skipped-work notice (SkipNotice): "<percent> <causes>" once the replay's warning fired (DM_VK_SKIP_WARN), else ""
 #pragma weak nxhost_skip_status
 void nxhost_skip_status(char *buf, size_t n);   // vka_exec.c
-JNIEXPORT jstring JNICALL Java_dev_nxnative_android_Native_skipStatus(JNIEnv *env, jclass cls) {
+JNIEXPORT jstring JNICALL Java_hernandez_kiwinative_Native_skipStatus(JNIEnv *env, jclass cls) {
     (void)cls; char buf[256] = "";
     if (nxhost_skip_status) nxhost_skip_status(buf, sizeof buf);
     return (*env)->NewStringUTF(env, buf);
 }
-// PEANUTS: the "Preparing graphics" notice (dev.peanuts.ui.WarmNotice): pipelines still waiting while draws are skipped for them, 0 = none, -1 = this host cannot say
+// KIWI: the "Preparing graphics" notice (hernandez.kiwinative.kiwi.ui.WarmNotice): pipelines still waiting while draws are skipped for them, 0 = none, -1 = this host cannot say
 #pragma weak nxhost_warm_status
 int nxhost_warm_status(void);   // vka_exec.c
-JNIEXPORT jint JNICALL Java_dev_nxnative_android_Native_warmStatus(JNIEnv *env, jclass cls) { (void)env; (void)cls; return nxhost_warm_status ? nxhost_warm_status() : -1; }
+JNIEXPORT jint JNICALL Java_hernandez_kiwinative_Native_warmStatus(JNIEnv *env, jclass cls) { (void)env; (void)cls; return nxhost_warm_status ? nxhost_warm_status() : -1; }

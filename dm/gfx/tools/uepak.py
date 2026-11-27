@@ -41,7 +41,7 @@
 #        uepak.py job <RomFS> <main NSO> <work dir> [<Mac host> <rewritten modules>]   the shader code archives of every pak, and an Oodle job of their Oodle-compressed shaders (LZ4 ones
 #                                                                       decoded at once); IoStore shader libraries (UE 5.6) decoded at once through the game's Oodle in the host (OodleHost)
 #        uepak.py finish <work dir> <out dir>                           after the host has run the job: the archives with every shader decoded
-import ctypes, json, os, posixpath, re, struct, sys   # PEANUTS(upstream-candidate): posixpath for container paths on Windows
+import ctypes, json, os, posixpath, re, struct, sys   # KIWI(upstream-candidate): posixpath for container paths on Windows
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../tools'))
 from romfs import os, open
 
@@ -53,9 +53,9 @@ _cc = None
 def aes_decrypt(key, data):
     """AES-256 ECB decryption through CommonCrypto (every Mac has it; no Python package needed)"""
     global _cc
-    if _cc is None and sys.platform != 'darwin':   # PEANUTS: off the Mac (the on-device packer: no CommonCrypto, no OpenSSL) through _nxaes, dm/peanuts/pack_worker/nxaes.c
+    if _cc is None and sys.platform != 'darwin':   # KIWI: off the Mac (the on-device packer: no CommonCrypto, no OpenSSL) through _nxaes, dm/kiwi/pack_worker/nxaes.c
         import _nxaes; _cc = _nxaes
-    if _cc is not None and not hasattr(_cc, 'argtypes'): return _cc.ecb_decrypt(key, data)   # PEANUTS
+    if _cc is not None and not hasattr(_cc, 'argtypes'): return _cc.ecb_decrypt(key, data)   # KIWI
     if _cc is None:
         _cc = ctypes.CDLL('/usr/lib/libSystem.B.dylib').CCCrypt
         _cc.restype = ctypes.c_int32
@@ -339,7 +339,7 @@ def archive(b, what='shader code archive') -> dict:
     indices = list(r.array('I', r.take('<I')))
     return dict(maps=maps, shaders=shaders, indices=indices, code=r.o)
 
-# PEANUTS begin: a decoded Unreal archive can exceed 1.5 GB. Write its header and shaders directly to the working file.
+# KIWI begin: a decoded Unreal archive can exceed 1.5 GB. Write its header and shaders directly to the working file.
 def write_decoded_archive(out, b, a, raws):
     """Keep the archive tables and serialize shader records in entry order with their uncompressed offsets and sizes."""
     r = R(b, what='shader code archive'); r.take('<I')
@@ -361,7 +361,7 @@ def decoded_archive(b, raws):
     out = io.BytesIO()
     write_decoded_archive(out, b, archive(b), raws)
     return out.getvalue()
-# PEANUTS end
+# KIWI end
 
 LZ4_RATIO = 255   # the most an LZ4 block expands: a match-length byte of 255 adds 255 output bytes for one input byte, every other part of a sequence less
 def lz4_raw(b, k, where):
@@ -369,7 +369,7 @@ def lz4_raw(b, k, where):
     if k > LZ4_RATIO * len(b): raise ValueError(f'{where}: an LZ4 block of {len(b):#x} bytes cannot hold {k:#x}')
     return k
 
-# PEANUTS begin: retain one decoded shader at a time. Only an unrecognized block requests an Oodle retry.
+# KIWI begin: retain one decoded shader at a time. Only an unrecognized block requests an Oodle retry.
 class NotLz4(ValueError): pass
 
 def lz4_records(b, a):
@@ -388,7 +388,7 @@ def lz4_records(b, a):
 def lz4_shaders(b, a):
     try: return list(lz4_records(b, a))
     except NotLz4: return None
-# PEANUTS end
+# KIWI end
 
 TOC_MAGIC, IO_SHADER_LIBRARY, IO_SHADER_CODE = b'-==--==--==--==-', 8, 9   # EIoChunkType in Unreal Engine 5 (TOC version 4 and later; 4.27 numbers its chunk types otherwise)
 IO_EXPORT_BUNDLE, IO_EXPORT_BUNDLE_427 = 1, 2   # a cooked package's exports: EIoChunkType in Unreal Engine 5 (TOC version 4 and later), in Unreal Engine 4.27 (TOC version 3)
@@ -447,7 +447,7 @@ class Toc:
             if sib != none: todo.append((sib, at))
             if child != none: todo.append((child, here))
             while f != none: nm, f, chunk = files[f]; out[chunk] = here + strs[nm]
-        # PEANUTS(upstream-candidate): posixpath: a container path uses '/' on every host (os.path on Windows gives '\' and keeps the leading ../)
+        # KIWI(upstream-candidate): posixpath: a container path uses '/' on every host (os.path on Windows gives '\' and keeps the leading ../)
         return {c: re.sub(r'^(\.\./)+', '', posixpath.normpath(mount + v)) for c, v in out.items()}
     def ucas(self, part):
         if part not in self.files: self.files[part] = open(self.path[:-5] + ('.ucas' if not part else f'_s{part}.ucas'), 'rb')
@@ -564,7 +564,7 @@ def inline_shaders(path, key=None):
     shaders are in its container's shader libraries (neither counts). An encrypted index is read with key, main's (Keys; Octopath Traveler 0's holds the archives, DRAGON BALL Sparking! ZERO's
     pakchunk0-Switch.pak the global shader cache, its cooked packages in the encrypted containers beside it); without a key it counts as one with archives, as before keys were tried here.
     None: the pak names no shader archive, cooked export or global shader cache (including empty paks and movie paks)."""
-    # PEANUTS: Movie-only and empty paks can have no shader payload.
+    # KIWI: Movie-only and empty paks can have no shader payload.
     with open(path, 'rb') as f:
         enc, ioff, isz, _, ver = footer(f)
         if ver in LEGACY: return True
@@ -580,7 +580,7 @@ def inline_shaders(path, key=None):
     if b'.ushaderbytecode\0' in d: return False
     if b'.uexp\0' in d: return True
     if b'GlobalShaderCache-' in d: return inline_in_containers(path)
-    return None   # PEANUTS(upstream-candidate): movie and other asset-only paks do not require a shader archive decode
+    return None   # KIWI(upstream-candidate): movie and other asset-only paks do not require a shader archive decode
 
 def unreal_paks(romfs, inline=None, mains=()):
     """The paks under the RomFS that Unreal wrote (its magic in the footer; inline None = any, True = those whose shaders are inline in the cooked packages, False = those with shader code
@@ -622,7 +622,7 @@ def job(romfs, main_nso, work, decode=None):
         for path in sorted(x for x in p.files if x.endswith('.ushaderbytecode')):
             b = p.read(path); a = archive(b, f'{pak}: {path}'); name = os.path.basename(path)
             comp = [i for i, (_, size, raw, _) in enumerate(a['shaders']) if size != raw]
-            # PEANUTS begin: the work file is private until finish succeeds. On an Oodle block, replace the partial LZ4 attempt with the original archive.
+            # KIWI begin: the work file is private until finish succeeds. On an Oodle block, replace the partial LZ4 attempt with the original archive.
             target = os.path.join(work, 'archives', name)
             how = 'Oodle' if comp else ''
             if comp:
@@ -632,7 +632,7 @@ def job(romfs, main_nso, work, decode=None):
                 except NotLz4: pass
             if how != 'LZ4':
                 with open(target, 'wb') as f: f.write(b)
-            # PEANUTS end
+            # KIWI end
             for i in comp:
                 off, size, raw, _ = a['shaders'][i]; recs.append((name, i, b[a['code'] + off:a['code'] + off + size], raw))
             listing.append(dict(name=name, pak=os.path.relpath(pak, romfs), path=path, shaders=len(a['shaders']), compressed=len(comp), compression=how))
@@ -655,7 +655,7 @@ def finish(work, out):
         dec[(name, i)] = b[o:o + l]; o += l
     os.makedirs(out, exist_ok=True)
     for x in meta['archives']:
-        # PEANUTS begin: the job already wrote decoded LZ4 and IoStore archives in the final layout.
+        # KIWI begin: the job already wrote decoded LZ4 and IoStore archives in the final layout.
         source = os.path.join(work, 'archives', x['name'])
         tmp = os.path.join(out, x['name'] + '.partial')
         if x.get('compression') in ('LZ4', 'IoStore, decoded'):
@@ -667,7 +667,7 @@ def finish(work, out):
             raws = (dec.get((x['name'], i)) or src[a['code'] + off:a['code'] + off + size] for i, (off, size, _, _) in enumerate(a['shaders']))
             with open(tmp, 'wb') as f: write_decoded_archive(f, src, a, raws)
         os.replace(tmp, os.path.join(out, x['name']))
-        # PEANUTS end
+        # KIWI end
     return [x['name'] for x in meta['archives']]
 
 def lslg(s):

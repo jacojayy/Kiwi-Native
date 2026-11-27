@@ -141,7 +141,7 @@ HLE_FORCE("_ZN2nn4nifm18GetCurrentIpConfigEPNS0_10Ipv4ConfigEPiPNS0_10Ipv6Config
           void *v4, int *n4, void *v6, int *n6, int c4, int c6) { (void)v4; (void)v6; (void)c4; (void)c6; if (n4) *n4 = 0; if (n6) *n6 = 0; return RES_FAIL; }
 // EnvironmentIdentifier = char[8]: retail environment "lp1"
 HLE_FORCE("_ZN2nn3nsd24GetEnvironmentIdentifierEPNS0_21EnvironmentIdentifierE", "server environment name: retail lp1", void, h_nsd_EnvId, char *out) { memset(out, 0, 8); memcpy(out, "lp1", 3); }
-// PEANUTS(upstream-candidate): the SDK's application environment query returns the retail enum (Lp = 1) for the same environment.
+// KIWI(upstream-candidate): the SDK's application environment query returns the retail enum (Lp = 1) for the same environment.
 HLE_FORCE("_ZN2nn3nsd35GetApplicationServerEnvironmentTypeEv", "server environment type: retail lp", uint32_t, h_nsd_EnvType, void) { return 1; }
 
 // ---------- friends: newer SDK overloads ----------

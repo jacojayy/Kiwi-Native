@@ -1,4 +1,4 @@
-# PEANUTS: new file (a frame rate that starts a variant: Animal Crossing: New Horizons' 60 fps speed fix, dm/games/01006F8002326000/speedfix60)
+# KIWI: new file (a frame rate that starts a variant: Animal Crossing: New Horizons' 60 fps speed fix, dm/games/01006F8002326000/speedfix60)
 """A variant's game data as rows of changed bytes (dm/tools/romfs_rows.py), a third-party IPS as cut rows (dm/tools/ips_rows.py), the pack step's variant rows
 (scripts/pack_android.py variant_overlays) and Animal Crossing: New Horizons' data, licence notice and wiring. No game data: the files here are made up, and the
 ACNH checks read only the repository's own rows."""
@@ -24,7 +24,7 @@ import ips_rows   # noqa: E402
 import pack_android   # noqa: E402
 
 ACNH = REPO / 'dm/games/01006F8002326000'
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
 
 
 def made_up(n=5000, seed=1):
@@ -267,7 +267,7 @@ class AnimalCrossing(unittest.TestCase):
 
     def test_credits(self):
         for f, want in ((ACNH / 'README.md', 'tmouh'), (REPO / 'README.md', 'tmouh'), (REPO / 'android/NOTICE.md', 'tmouh'),
-                        (REPO / 'android/app/src/main/java/dev/peanuts/ui/AboutData.java', '{"ACNH 60 FPS + SpeedFix", "tmouh\'s 60 fps for Animal Crossing", "CC BY-NC 4.0", "https://github.com/tmouh/acnh-60fps"}')):
+                        (REPO / 'android/app/src/main/java/hernandez/kiwinative/kiwi/ui/AboutData.java', '{"ACNH 60 FPS + SpeedFix", "tmouh\'s 60 fps for Animal Crossing", "CC BY-NC 4.0", "https://github.com/tmouh/acnh-60fps"}')):
             with self.subTest(f=f.name):
                 t = f.read_text(encoding='utf-8')
                 self.assertIn(want, t); self.assertIn('acnh-60fps', t)
@@ -295,17 +295,17 @@ class AnimalCrossing(unittest.TestCase):
 @unittest.skipUnless(shutil.which('javac') and shutil.which('java'), 'no JDK')
 class FpsVariantJvm(unittest.TestCase):
     def test_jvm(self):
-        stub = ('package dev.nxnative.android;\npublic final class BuildConfig {\n    public static final String NX_PROFILES = "";\n'
+        stub = ('package hernandez.kiwinative;\npublic final class BuildConfig {\n    public static final String NX_PROFILES = "";\n'
                 '    public static final String NX_DMSH_VK_CHAIN = "c0ffee000001", NX_DMSH_VK_ABI = "abc123abc123", NX_DMSH_VK_ABI_COMPAT = "";\n}\n')
         with tempfile.TemporaryDirectory() as d:
             d = Path(d); (d / 'stub').mkdir(); (d / 'run').mkdir()
             (d / 'stub/BuildConfig.java').write_text(stub)
             srcs = [SRC / f'{n}.java' for n in ('Pack', 'DumpLayout', 'BuildCheck', 'RomfsCheck', 'Nup', 'Nsp', 'Zstd', 'Profile', 'ShaderLibs', 'FrameRateCaps')]
-            test = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/FpsVariantJvmTest.java'
+            test = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/FpsVariantJvmTest.java'
             r = subprocess.run(['javac', '-Xlint:all,-try', '-Werror', '-encoding', 'UTF-8', '-d', str(d / 'classes'), *map(str, srcs), str(test), str(d / 'stub/BuildConfig.java')],
                                capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-            r = subprocess.run(['java', '-cp', str(d / 'classes'), 'dev.nxnative.android.FpsVariantJvmTest', str(d / 'run')], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', str(d / 'classes'), 'hernandez.kiwinative.FpsVariantJvmTest', str(d / 'run')], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertEqual(r.stdout.strip(), 'ok')
 

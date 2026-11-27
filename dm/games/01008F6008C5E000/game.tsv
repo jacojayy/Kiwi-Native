@@ -1,7 +1,7 @@
 # Pokémon Violet 1.0.0, Game Freak's Trinity engine, SDK 13.3.5.
 # Pokémon Scarlet's twin (0100A3D008C5C000): the same sdk and subsdk0 builds, only main is its own.
 # Made from Scarlet's profile with Violet's title, name, IPA name, build row and shader tables.
-# PEANUTS: Android uses 4.0.0. Select the Mac base build with -p v0.
+# KIWI: Android uses 4.0.0. Select the Mac base build with -p v0.
 
 # ---- Identity ----
 title_id	01008F6008C5E000
@@ -16,7 +16,7 @@ pad_layout	full
 
 # ---- Versions ----
 build	v0	1.0.0	main=959ed651bf1ae0cccafe8c3f4c64bfd2	sdk=3644a6760469451cabc99f00c540acc2
-# PEANUTS: 4.0.0 update build, independently split with the supplied DLC.
+# KIWI: 4.0.0 update build, independently split with the supplied DLC.
 build	v786432	4.0.0	main=709bfd66115298640155fcc4979dba15	sdk=bb560bdfa85b4a97786ae2c3b7995df6
 package	v786432
 shader_versions	v0 v786432
@@ -35,7 +35,7 @@ zip_store	.bk2:.bnk:.pck:.trpfd:.trpfs:.metallib
 # ---- Memory ----
 # The host's StandardAllocator cap, the 62 MB SDK node area and the SDK-wide
 # region alignment fit in the alias region. See Scarlet's README.md for the startup probes.
-# PEANUTS: 4.0.0 reserves a 12 GiB StandardAllocator region at startup.
+# KIWI: 4.0.0 reserves a 12 GiB StandardAllocator region at startup.
 mem_reserve	0x740000000
 mem_alias	0x718000000
 mem_stack	0x10000000
@@ -48,7 +48,7 @@ sys_resource	0x1000000
 shader_groups	#arc/system_resource=system #arc/ik_effect=effect #arc/ik_pokemon=pokemon #arc/ui=layout /arc/=arc
 shader_note	Pokémon Violet shaders
 
-# PEANUTS begin: cap-controlled Trinity timing, 4.0.0 only.
+# KIWI begin: cap-controlled Trinity timing, 4.0.0 only.
 # The main frame controller selects period 0. Six consumers read a private copy of
 # the stock five-period table, with the measured elapsed time in its first entry.
 # Allow slow frames up to the stock 83.3 ms period, and retain the four other periods.
@@ -79,4 +79,4 @@ fps_plan	709bfd66115298640155fcc4979dba15	d0x18	-	ab40f903
 fps_plan	709bfd66115298640155fcc4979dba15	d0x1c	-	00000000
 fps_plan	709bfd66115298640155fcc4979dba15	d0x20	-	d690f704
 fps_plan	709bfd66115298640155fcc4979dba15	d0x24	-	00000000
-# PEANUTS end
+# KIWI end

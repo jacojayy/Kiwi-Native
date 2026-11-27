@@ -1,4 +1,4 @@
-// PEANUTS: which draws are not skipped while their pipeline is made in the background (DM_VK_PSO_ASYNC; vka_draw.c draw_body, vka_pso.c vka_gfx_pipeline_now), as pure
+// KIWI: which draws are not skipped while their pipeline is made in the background (DM_VK_PSO_ASYNC; vka_draw.c draw_body, vka_pso.c vka_gfx_pipeline_now), as pure
 // logic, free of Android and Vulkan so a unit test on Linux can check it (dm/host/tests/t_android_psosync.c).
 // With the asynchronous threads on, a draw whose pipeline the cache lacks is skipped until a background thread has made it. That costs the draw in a few frames, which
 // is the point, except where the game keeps what the draw made: then the picture stays wrong after every pipeline is there. Super Mario Odyssey on an AYN Thor (Adreno

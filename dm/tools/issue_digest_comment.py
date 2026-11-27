@@ -161,7 +161,7 @@ def call(method, path, token, payload=None):
 def own_comment(n, token):
     """The comment an earlier run made: carries the mark and, when the token's user can be read, is that user's"""
     try:
-        reply = call('GET', 'user', token)   # PEANUTS(upstream-candidate): an empty API response has no login.
+        reply = call('GET', 'user', token)   # KIWI(upstream-candidate): an empty API response has no login.
         me = reply['login'] if reply is not None else None
     except (OSError, KeyError, TypeError, ValueError): me = None
     page = 1
@@ -209,7 +209,7 @@ def one(n, dry_run):
             except urllib.error.HTTPError as e:
                 if e.code not in (403, 404): raise
         c = call('POST', f'{repo}/issues/{n}/comments', token, {'body': text})
-        if c is None: raise ValueError('the comment API returned an empty response')   # PEANUTS(upstream-candidate): no comment ID without a response.
+        if c is None: raise ValueError('the comment API returned an empty response')   # KIWI(upstream-candidate): no comment ID without a response.
         print(f'issue_digest_comment: #{n}: comment {c["id"]} posted')
     except (OSError, ValueError, KeyError) as e:
         print(f'issue_digest_comment: #{n}: {e}', file=sys.stderr); return 2

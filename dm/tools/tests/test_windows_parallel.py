@@ -1,4 +1,4 @@
-"""PEANUTS(upstream-candidate): the pieces that put the rewriter and the shader build on every thread where there is no fork (Windows), without game files:
+"""KIWI(upstream-candidate): the pieces that put the rewriter and the shader build on every thread where there is no fork (Windows), without game files:
 nso_code.count_undecodable against the word-by-word count it replaced, data_blocks with its pieces counted elsewhere, and split_pool.PipePool, whose
 workers receive their pipes as handles on Windows. Each runs on any system."""
 import os, random, struct, sys, unittest

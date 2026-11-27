@@ -8,19 +8,19 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
 WIKI = REPO / 'wiki'
-JAVA = REPO / 'android/app/src/main/java/dev/nxnative/android'
+JAVA = REPO / 'android/app/src/main/java/hernandez/kiwinative'
 SETTING = re.compile(r'new Ui\.Setting\(\s*\w+\s*,\s*"[^"]*"\s*,\s*"([^"]+)"')
 # Titles of rows that are not settings a player changes (testers' knobs, dialogs, or shared with another row). Each needs a reason.
 UNDOCUMENTED = {
     'Extra environment': 'testers only (env lines)',
     'ADB control (debug)': 'a debug switch for developers and testers, off for players',
-    # PEANUTS begin: this fork's own rows. The wiki is Kiwi Native's (published to its Forgejo wiki); Kiwi Native describes them in peanuts/docs
-    'Build again': 'Kiwi Native: the game sheet\'s build (peanuts/docs/FAQ.md)',
+    # KIWI begin: this fork's own rows. The wiki is Kiwi Native's (published to its Forgejo wiki); Kiwi Native describes them in kiwi/docs
+    'Build again': 'Kiwi Native: the game sheet\'s build (kiwi/docs/FAQ.md)',
     'Delete save data': 'Kiwi Native: a row of its Saves tab',
-    'Copy to another user': 'Kiwi Native: a row of its Saves tab with two or more users (UserSaves; peanuts/docs/FAQ.md)',
-    'Resolution scale': 'Kiwi Native: DM_RES_SCALE (ResScale.java, PEANUTS.md)',
-    'Questions and answers': 'Kiwi Native: the row that opens its own FAQ (peanuts/docs/FAQ.md) where upstream\'s opens this wiki',
-    # PEANUTS end
+    'Copy to another user': 'Kiwi Native: a row of its Saves tab with two or more users (UserSaves; kiwi/docs/FAQ.md)',
+    'Resolution scale': 'Kiwi Native: DM_RES_SCALE (ResScale.java, KIWI.md)',
+    'Questions and answers': 'Kiwi Native: the row that opens its own FAQ (kiwi/docs/FAQ.md) where upstream\'s opens this wiki',
+    # KIWI end
 }
 BAD_CHARS = set('›⋯−✕')   # > as a single quote, midline ellipsis, minus sign, multiplication X: Forgejo flags them as ambiguous
 

@@ -5,14 +5,14 @@ Playable on the Mac: language and character selection, the academy opening,
 the native Bink movie, getting up in the bedroom, walking downstairs and
 through the living room and kitchen, camera control, dialogue and save/reload.
 The unsigned 1.0.0 IPA is built (~7.0 GB); iPhone testing is pending.
-<!-- PEANUTS: preserve the Mac route and record the new Android build separately. -->
+<!-- KIWI: preserve the Mac route and record the new Android build separately. -->
 The Mac route below was tested on 1.0.0. Select it with
 `scripts/build_ipa_from_nsp.py <dump folder> --platform mac -p v0`.
-Peanuts for Android uses 4.0.0 from a later, verified input.
+Kiwi for Android uses 4.0.0 from a later, verified input.
 [Pokémon Violet](../01008F6008C5E000/README.md) is its twin: the same `sdk`
 and `subsdk0` builds and the same shader tables, with a `main` of its own.
 
-<!-- PEANUTS begin -->
+<!-- KIWI begin -->
 ## Kiwi Native on Android
 
 - 4.0.0 (`v786432`), main `421c5411b487eb4d049dd065fec95477`, SDK 13.3.13,
@@ -39,7 +39,7 @@ and `subsdk0` builds and the same shader tables, with a `main` of its own.
   reached 19.75 FPS. Higher caps are selectable and depend on the scene.
 - The captured 270-key seed finished in 5.5 s before guest entry. The next
   launch reused 6.6 MB of driver cache and skipped blocking preparation.
-<!-- PEANUTS end -->
+<!-- KIWI end -->
 
 ## Memory
 
@@ -91,7 +91,7 @@ game's own Oodle decoder extract them. Chain `157e1b96c8da`, profile inputs
 bindings. The complete build supplies the stamped `c1_full.tsv` and
 `cb_extent.tsv`; no shader override is needed.
 
-<!-- PEANUTS: the historical failure concerns the earlier input. -->
+<!-- KIWI: the historical failure concerns the earlier input. -->
 The earlier, damaged 4.0.0 input described [below](#files-and-builds) failed
 on 195 malformed Trinity packs. Its partial Mac startup used the base shader
 libraries and reported missing update keys.
@@ -263,7 +263,7 @@ existing [per-depth-mode entry-point mechanism](../../../docs/reference/shaders.
   `main+0x28f872c` sets the flag (+0x14) and reads the state word (+0x28). The
   rewriter now puts a barrier between those two
   ([the mechanism](../../../docs/reference/threads.md#trinitys-rendezvous-loses-its-release-on-apple-cores)).
-  <!-- PEANUTS --> The barrier was checked by disassembly and a standalone test.
+  <!-- KIWI --> The barrier was checked by disassembly and a standalone test.
   Long gameplay runs on an affected build are still needed.
 
 ## Open

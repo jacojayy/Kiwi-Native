@@ -85,7 +85,7 @@ typedef struct {
     struct { int in, off, size; int64_t pts; uint32_t flags; } pend[MD_NIN]; int npend;   // input packets waiting to be decoded (in arrival order)
     // Decoding: dmu lets only one guest thread take and decode packets at a time (packets enter libvpx in order); wmu / wcv hand one job to the host thread and wait for it
     pthread_mutex_t dmu, wmu; pthread_cond_t wcv; pthread_t wk;
-    pthread_mutex_t pkm; pthread_cond_t pkc; pthread_t pk; int pk_go, pk_quit, pk_on; // PEANUTS: nxnative 75c1a8cf (video decoder on its own thread); // the decoder's own thread: the SDK decodes on a codec thread, not on the caller's
+    pthread_mutex_t pkm; pthread_cond_t pkc; pthread_t pk; int pk_go, pk_quit, pk_on; // KIWI: nxnative 75c1a8cf (video decoder on its own thread); // the decoder's own thread: the SDK decodes on a codec thread, not on the caller's
     int job; const uint8_t *jp; int jn, jslot, jgot; int64_t jpts, jpts_out; int jflush;
     mavc *avc; int avc_drain; int64_t drain_pts; // H.264 (hle_movie_avc.c); avc_drain: the end-of-stream packet's output had a picture; the pictures still queued leave one per free slot, then an empty output with the
                                                  // end-of-stream flag and the packet's time (drain_pts)
@@ -126,20 +126,20 @@ static struct {
 static _Atomic uint64_t g_movie_pic_ns;   // when a video decoder last handed out a picture (0 = stopped since)
 int dm_movie_playing(void) { uint64_t t = atomic_load_explicit(&g_movie_pic_ns, memory_order_relaxed); return t && now_ns() - t < MD_PLAYING_NS; }
 static void *msym(const char *n) { void *p = guest_sym(n); if (!p) die("movie: missing SDK symbol %s", n); return p; }
-// PEANUTS: SDK 1.3.1's movie module (LEGO CITY UNDERCOVER, subsdk4 ad84f543…) declares movie::Buffer's getters without const (_ZN5movie6Buffer4DataEv, not _ZNK…): the same
+// KIWI: SDK 1.3.1's movie module (LEGO CITY UNDERCOVER, subsdk4 ad84f543…) declares movie::Buffer's getters without const (_ZN5movie6Buffer4DataEv, not _ZNK…): the same
 // functions and calling convention, another mangled name. The const name first, then the older one; neither stops the game as before
 static void *msym2(const char *n, const char *old) { void *p = guest_sym(n); if (!p) p = guest_sym(old); if (!p) die("movie: missing SDK symbol %s (nor %s)", n, old); return p; }
 static void md_syms(void) {
     if (G.signal) return;
     G.set_data = msym("_ZN5movie6Buffer18SetDataAndCapacityEPvm");
     G.set_range = msym("_ZN5movie6Buffer8SetRangeEii");
-    G.data = msym2("_ZNK5movie6Buffer4DataEv", "_ZN5movie6Buffer4DataEv");   // PEANUTS: msym2
+    G.data = msym2("_ZNK5movie6Buffer4DataEv", "_ZN5movie6Buffer4DataEv");   // KIWI: msym2
     G.cap = msym2("_ZNK5movie6Buffer8CapacityEv", "_ZN5movie6Buffer8CapacityEv");
     G.set_i32 = msym("_ZN5movie9MediaData8SetInt32EPKci");
     G.set_rect = msym("_ZN5movie9MediaData7SetRectEPKciiii");
     G.find_i32 = msym("_ZNK5movie9MediaData9FindInt32EPKcPi");
     G.find_buf = msym("_ZNK5movie9MediaData10FindBufferEPKcPPNS_6BufferE");
-    G.size = msym2("_ZNK5movie6Buffer4SizeEv", "_ZN5movie6Buffer4SizeEv");   // PEANUTS: SDK 1.3.1 movie::Buffer getters (0.1.8)
+    G.size = msym2("_ZNK5movie6Buffer4SizeEv", "_ZN5movie6Buffer4SizeEv");   // KIWI: SDK 1.3.1 movie::Buffer getters (0.1.8)
     G.signal = msym("_ZN2nn2os11SignalEventEPNS0_9EventTypeE");
 }
 static mdec_t *md_of(void **self) { return self ? (mdec_t *)self[1] : NULL; }
@@ -558,7 +558,7 @@ static void md_job(mdec_t *d, int job) {
 // lock, so none is delivered after Stop. Open: 2 runs in 12 still crashed on one Mac (none in 30 on another), both after GetOutputBuffer, which in texture mode still writes
 // the whole frame on the caller (md_out_tex) where the SDK starts a GPU copy and returns (docs/reference/movies.md). Audio decoders decode on the caller and signal at once:
 // their players feed one packet per signal and a packet decodes quickly
-// PEANUTS: nxnative 75c1a8cf
+// KIWI: nxnative 75c1a8cf
 static void md_pump_ev(mdec_t *d, int ev) { if (MD_AUDIO(d)) md_event(d, ev); else md_defer_at(d, ev, now_ns()); }
 static void md_pump(mdec_t *d);
 static void *md_pump_thread(void *arg) {
@@ -566,7 +566,7 @@ static void *md_pump_thread(void *arg) {
 #ifdef __APPLE__
     pthread_setname_np("dm movie pump");
 #else
-    pthread_setname_np(pthread_self(), "dm movie pump");   // PEANUTS: Linux/Android take the thread as well
+    pthread_setname_np(pthread_self(), "dm movie pump");   // KIWI: Linux/Android take the thread as well
 #endif
     pthread_mutex_lock(&d->pkm);
     for (;;) {
@@ -597,7 +597,7 @@ static void md_pump(mdec_t *d) {
             d->out[s].pic = got; d->out[s].pts = got ? d->jpts_out : d->drain_pts; d->out[s].flags = got ? 0 : 4; d->outq[d->noutq++] = s;
             if (!got) d->avc_drain = 0;
             pthread_mutex_unlock(&d->mu);
-            md_pump_ev(d, 1); // PEANUTS: nxnative 75c1a8cf (video decoder on its own thread)
+            md_pump_ev(d, 1); // KIWI: nxnative 75c1a8cf (video decoder on its own thread)
             continue;
         }
         int slot = -1;
@@ -624,7 +624,7 @@ static void md_pump(mdec_t *d) {
         if (more) { d->avc_drain = 1; d->drain_pts = pk.pts; }
         int ineos = d->in_eos;
         pthread_mutex_unlock(&d->mu);
-        if (!ineos) md_pump_ev(d, 0);   // PEANUTS: nxnative 75c1a8cf; no input is announced after an end-of-stream packet (h_movie_AcqIn)
+        if (!ineos) md_pump_ev(d, 0);   // KIWI: nxnative 75c1a8cf; no input is announced after an end-of-stream packet (h_movie_AcqIn)
         if (ready) md_pump_ev(d, 1);
     }
     pthread_mutex_unlock(&d->dmu);
@@ -660,7 +660,7 @@ HLE_FORCE("_ZN5movie7DecoderC1ENS_11DecoderTypeENS_19DecoderOutputFormatENS_11De
     d->nout = !audio ? MD_NOUT_VIDEO : type == MD_TYPE_AAC ? MD_NOUT_AAC : MD_NOUT;
     for (int i = 0; i < MD_NIN; i++) { d->in[i] = malloc(MD_INCAP); d->infree[i] = i; }
     d->ninfree = MD_NIN;
-    /*PEANUTS 75c1a8cf*/ pthread_mutex_init(&d->pkm, NULL); pthread_cond_init(&d->pkc, NULL);
+    /*KIWI 75c1a8cf*/ pthread_mutex_init(&d->pkm, NULL); pthread_cond_init(&d->pkc, NULL);
     if (!audio) { if (pthread_create(&d->pk, NULL, md_pump_thread, d)) die("movie: failed to create the decoder's thread"); d->pk_on = 1; }
     pthread_attr_t a; pthread_attr_init(&a); pthread_attr_setstacksize(&a, 1 << 20);
     if (pthread_create(&d->wk, &a, md_worker, d)) die("movie: failed to create the decoder thread");
@@ -684,7 +684,7 @@ static void md_free(void **self) {
     mdec_t *d = md_of(self); if (!d) return;
     // The pump thread first, before its pending signals are dropped, the decoder thread is told to quit and any buffer is freed: a pump still running queues signals for
     // this decoder (md_defer_at), and one queued after the drop would reach the deferred thread after free(d)
-    // PEANUTS: nxnative 75c1a8cf
+    // KIWI: nxnative 75c1a8cf
     if (d->pk_on) { pthread_mutex_lock(&d->pkm); d->pk_quit = 1; pthread_cond_signal(&d->pkc); pthread_mutex_unlock(&d->pkm); pthread_join(d->pk, NULL); }
     md_defer_drop(d);
     if (!MD_AUDIO(d)) atomic_store_explicit(&g_movie_pic_ns, 0, memory_order_relaxed);
@@ -696,7 +696,7 @@ static void md_free(void **self) {
     for (int i = 0; i < MD_NIN; i++) free(d->in[i]);
     for (int k = 0; k < MD_NOUT; k++) free(d->out[k].frm);
     free(d->bgra); free(d->vhdr[0]); free(d->vhdr[1]); free(d->hold);
-    /*PEANUTS*/ pthread_mutex_destroy(&d->pkm); pthread_cond_destroy(&d->pkc);
+    /*KIWI*/ pthread_mutex_destroy(&d->pkm); pthread_cond_destroy(&d->pkc);
     pthread_mutex_destroy(&d->mu); pthread_mutex_destroy(&d->dmu); pthread_mutex_destroy(&d->wmu); pthread_cond_destroy(&d->wcv); free(d);
 }
 HLE_FORCE("_ZN5movie7DecoderD2Ev", "movie decoder destructor: frees the host object", void, h_movie_DecD2, void **self) { md_free(self); }
@@ -822,7 +822,7 @@ HLE_FORCE("_ZN5movie7Decoder24SendInputBufferForDecodeEiiilj", "movie decoder: s
     if (i < 0 || i >= MD_NIN || off < 0 || size < 0 || (uint32_t)off + (uint32_t)size > MD_INCAP) return 0x100b;
     dm_host_mutex_lock(&d->mu);
     for (int k = 0; k < d->npend; k++) if (d->pend[k].in == i) { pthread_mutex_unlock(&d->mu); if (!d->red_dec++) LOG("[RED] movie: input index %d sent twice, the second packet is dropped (first case)", i); return 0x100b; }
-    // PEANUTS: nxnative 637f3fa7
+    // KIWI: nxnative 637f3fa7
     // ACodec::BaseState::onInputBufferFilled takes ownership of a client buffer but keeps it once mPortEOS[input] is set; MediaCodec's queueInputBuffer still succeeds.
     // Inputs already acquired before EOS can arrive afterwards, with or without the flag. Tied Together's Unity player submits all four held indices as EOS: decoding
     // each one produced four completion callbacks, and the first freed the event list still being traversed. Return only a client's buffer, once, without another decode or signal.
@@ -844,18 +844,18 @@ HLE_FORCE("_ZN5movie7Decoder24SendInputBufferForDecodeEiiilj", "movie decoder: s
         break;
     }
     d->inown[i] = d->instale[i] = 0;
-    // PEANUTS: nxnative 637f3fa7: the duplicate and full-queue checks are made above, before any state change, and in_eos is set below, for an accepted packet only
+    // KIWI: nxnative 637f3fa7: the duplicate and full-queue checks are made above, before any state change, and in_eos is set below, for an accepted packet only
     int fmt_now = 0;
     if (d->type == MD_TYPE_VP9 && !d->w && size > 0 && vp9_size(d->in[i] + off, size, &d->w, &d->h)) LOG("[movie] VP9 key frame: %d×%d", d->w, d->h);
     if (d->type == MD_TYPE_VP8 && !d->w && size > 0 && vp8_size(d->in[i] + off, size, &d->w, &d->h)) LOG("[movie] VP8 key frame: %d×%d", d->w, d->h);
     if (!d->fmt_sent) { d->fmt_sent = 1; fmt_now = 1; if (!d->w && !MD_AUDIO(d)) { d->w = 1920; d->h = 1080; } }   // the size is fixed from here on (slots are allocated by it)
     d->pend[d->npend].in = i; d->pend[d->npend].off = off; d->pend[d->npend].size = size; d->pend[d->npend].pts = pts; d->pend[d->npend].flags = flags; d->npend++;
-    if (flags & 4) d->in_eos = 1; // PEANUTS: nxnative 637f3fa7 (inputs kept after end of stream); commit only an accepted EOS: no more input until Flush / Stop
+    if (flags & 4) d->in_eos = 1; // KIWI: nxnative 637f3fa7 (inputs kept after end of stream); commit only an accepted EOS: no more input until Flush / Stop
     int queued = d->npend;
     pthread_mutex_unlock(&d->mu);
     MD_TRACE(d, 7, "SendInputBufferForDecode index %d offset %d length %d time %lld µs flags %#x (%d packets queued)", i, off, size, (long long)pts, flags, queued);
     if (fmt_now) md_event(d, 2);
-    md_pump_async(d); // PEANUTS: nxnative 75c1a8cf (video decoder on its own thread)
+    md_pump_async(d); // KIWI: nxnative 75c1a8cf (video decoder on its own thread)
     return 0;
 }
 
@@ -965,7 +965,7 @@ static int md_out_tex(mdec_t *d, int i, void *buf) {
     int n = md_rendered(d, i), queued = d->npend, drain = d->avc_drain;
     pthread_mutex_unlock(&d->mu);
     if (n) MD_TRACE(d, 13, "GetOutputBuffer index %d: %d earlier rendered output%s returned (%d packets queued%s)", i, n, n > 1 ? "s" : "", queued, drain ? ", H.264 pictures draining" : "");
-    if (n && (queued || drain)) md_pump_async(d); // PEANUTS: nxnative 75c1a8cf (video decoder on its own thread)
+    if (n && (queued || drain)) md_pump_async(d); // KIWI: nxnative 75c1a8cf (video decoder on its own thread)
     return 0;
 }
 HLE_FORCE("_ZN5movie7Decoder15GetOutputBufferEiPNS_6BufferE", "movie decoder: get a frame", int, h_movie_GetOut, void **self, int i, void *buf) {
@@ -1012,7 +1012,7 @@ static int md_rel(mdec_t *d, int i) {
     MD_TRACE(d, 13, "release output index %d%s (%d packets queued%s)", i, held ? "" : ": not held by the client, nothing to release", queued, drain ? ", H.264 pictures draining" : "");
     // An H.264 drain waits for a free slot too: AI: THE SOMNIUM FILES (Unity 2017.4) held all 16 video slots when its logo movie's end-of-stream packet came, the drain stopped
     // with no packet queued, the last pictures and the end-of-stream flag never came out, and the game waited for the movie's end for good
-    if (held && (queued || drain)) md_pump_async(d); // PEANUTS: nxnative 75c1a8cf (video decoder on its own thread)
+    if (held && (queued || drain)) md_pump_async(d); // KIWI: nxnative 75c1a8cf (video decoder on its own thread)
     return held;
 }
 HLE_FORCE("_ZN5movie7Decoder24ReleaseOutputBufferIndexEi", "movie decoder: release an output index (decodes queued packets again)", int, h_movie_RelOut, void **self, int i) {

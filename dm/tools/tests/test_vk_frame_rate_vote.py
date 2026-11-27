@@ -1,4 +1,4 @@
-# PEANUTS: exercise the production content-rate hint without Android.
+# KIWI: exercise the production content-rate hint without Android.
 """A capped game's content-rate hint can differ from its presentation tick."""
 from pathlib import Path
 import shutil
@@ -13,8 +13,8 @@ class FrameRateVote(unittest.TestCase):
     @unittest.skipUnless(shutil.which('cc'), 'C compiler required')
     def test_cap_vote_preserves_generated_output(self):
         source = (ROOT / 'dm/gfx/vk_android/vka_present.c').read_text()
-        start = source.index('    // PEANUTS begin (upstream-candidate): the content-rate hint follows')
-        block = source[start:source.index('    // PEANUTS end', start)]
+        start = source.index('    // KIWI begin (upstream-candidate): the content-rate hint follows')
+        block = source[start:source.index('    // KIWI end', start)]
         preamble = r'''
 #include <assert.h>
 #include <math.h>

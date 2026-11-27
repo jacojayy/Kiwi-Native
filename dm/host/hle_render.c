@@ -29,7 +29,7 @@ int dm_rt_pool_top(unsigned *w, unsigned *h);        // loader.c: the max_render
 #define DM_RENDER_QUALITY DM_GAME_RENDER_QUALITY
 #define DM_RENDER_DEFAULT_OUT DM_GAME_RENDER_DEFAULT_OUT
 #endif
-#ifdef DM_RUNTIME_PROFILE   // PEANUTS: the generic host's rows and quality table come from the profile at run time, not a static const initialized from the macro
+#ifdef DM_RUNTIME_PROFILE   // KIWI: the generic host's rows and quality table come from the profile at run time, not a static const initialized from the macro
 const rcfg_row_t *dm_pf_rcfg_rows(void);   // loader.c
 #define k_rcfg (dm_pf_rcfg_rows())
 #define k_rq (g_profile.render_quality)

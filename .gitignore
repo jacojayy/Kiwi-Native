@@ -11,8 +11,8 @@ dm/games/*/cb_extent.tsv
 .coverage
 .coverage.*
 /coverage.json
-# The packer environment scripts/bananative.command / .bat uses (a local path)
-/.bananative-env
+# The packer environment scripts/kiwinative.command / .bat uses (a local path)
+/.kiwinative-env
 
 # Internal notes: kept in the private repository only
 /internal/

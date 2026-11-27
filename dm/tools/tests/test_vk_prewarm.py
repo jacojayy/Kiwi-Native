@@ -1,7 +1,7 @@
 """dm/tools/vk_prewarm.py: prewarm lists (dm/gfx/vk_android/vka_pwlist.h) merged into a profile's seed, each record once in first-seen order, lists of another key
 layout refused; and dm/games/game.py seed, which compiles a profile's seed into the Android host's vk_prewarm_seed.h byte for byte."""
 import re
-# PEANUTS(upstream-candidate): omit the unused struct import.
+# KIWI(upstream-candidate): omit the unused struct import.
 import subprocess
 import sys
 import tempfile
@@ -55,7 +55,7 @@ class Formats(unittest.TestCase):
         self.assertEqual(recs, [], 'a record marked bad is left out')
 
     def test_record_count_includes_bad_records(self):
-        # PEANUTS(upstream-candidate): stop at the declared count and require every declared record header.
+        # KIWI(upstream-candidate): stop at the declared count and require every declared record header.
         bad = bytearray(rec(1, [1])); bad[1] = 1
         good = rec(1, [2])
         for magic in (vk_prewarm.MAGIC1, vk_prewarm.MAGIC2):
@@ -94,7 +94,7 @@ class SeedHeader(unittest.TestCase):
         for g in game.all_games():
             text = game.seed_header(g)
             match = re.search(r'dm_vk_prewarm_seed_len = (\d+);', text)
-            assert match is not None   # PEANUTS(upstream-candidate): require the source pattern before reading it.
+            assert match is not None   # KIWI(upstream-candidate): require the source pattern before reading it.
             n = int(match.group(1))
             body = text.split('= {', 1)[1].split('};', 1)[0]
             vals = [int(x) for x in re.findall(r'\d+', body)]

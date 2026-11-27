@@ -17,8 +17,8 @@ No `patches.py`.
 
 ## Frame rate
 
-<!-- PEANUTS: Android preparation -->
-- Peanuts Dev offers 20, 30, 40, 45, 60, 90 and 120 FPS, with 30 FPS as the starting cap and Game owned available. The profile applies the existing build's frame-period constant through the Android timing rows and uses display pacing. [FPSLocker Warehouse build listing](https://github.com/masagrator/FPSLocker-Warehouse) · [nx2android port checklist](https://github.com/shirai91/nx2android/blob/main/docs/PORT_CHECKLIST.md)
+<!-- KIWI: Android preparation -->
+- Kiwi Dev offers 20, 30, 40, 45, 60, 90 and 120 FPS, with 30 FPS as the starting cap and Game owned available. The profile applies the existing build's frame-period constant through the Android timing rows and uses display pacing. [FPSLocker Warehouse build listing](https://github.com/masagrator/FPSLocker-Warehouse) · [nx2android port checklist](https://github.com/shirai91/nx2android/blob/main/docs/PORT_CHECKLIST.md)
 - On Thor, 90-frame lobby samples measured 19.94, 29.91 and 39.99 FPS at the 20, 30 and 40 caps. The 60 cap ran near 60 FPS. Measurements for the other caps and Game owned remain open.
 - **Current:** 60 fps (30 on the Switch). At the end of each frame the main thread calls its frame callbacks (`main+0xb7c308`) with the milliseconds since the frame began; the frame limiter among them (`main+0x7a3e70`) runs jobs or sleeps until 33.333 ms have passed, a float in read-only data (`main+0x13c94dc`, read only there), and the game steps by the time that really passed. The host writes the profile's `fps_target` there as a frame time (`hle_fpslock.c`): 16.167 ms at 60, half a millisecond under the vsync so the presents set the pace. At exactly 16.667 the work after the limiter made it 59.6 fps with a frame shown twice every 2.5 s.
 - On the Mac the lobby holds 60.0 fps (display interval p99 16.67 ms); the same 2 s walk and 1.5 s turn from the same save end at the same spot at 30 and 60 fps, and the title's animation matches at time scale 1.00 (`DM_NVN_REGLUM`). `DM_FPS_TARGET=30` keeps the game's 33.333 ms.
@@ -49,7 +49,7 @@ A deferred renderer: the scene draws into a G-buffer of two integer targets (R32
 
 ### Texture memory (2026-10-27)
 
-<!-- PEANUTS: AYN Thor bring-up -->
+<!-- KIWI: AYN Thor bring-up -->
 - On AYN Thor with Turnip v26.2.0 R5, the opening bus cutscene stalled with 8,094 MiB of Vulkan images. A smaller cache budget could not evict the GPU-written images and the hotel arrival still stalled. The Android profile recommends fixed docked resolution on Turnip. For main `79e5950ffa85acf63e28c9aec051eac2`, six build-checked loads now use the full-resolution constant. The opening bus route then stayed around 460 MiB of Vulkan images and reached controllable gameplay in the hotel lobby. Both Multiplayer Pack notices appeared, and the game opened audio output. [Build-matched fixed-resolution reference](https://github.com/OldManKain/Ryujinx-Cheats-Mods-Saves/blob/main/Mods/0100DCA0064A6000/1.4.0/Disable-Dynamic-Resoluiton.rar)
 - **Confirmed:** [#257](https://github.com/seedds/nxnative/issues/257) and [#100](https://github.com/seedds/nxnative/issues/100) identify a real storage-duplication mechanism. An instrumented Mac run at frame 3,300 retained 101 live descriptions at one depth-image address, consuming 1,013.5 MiB across private Metal textures although its largest description needed 10.3 MiB. Several colour-image addresses held 91–99 live descriptions each, using 724–788.7 MiB per address for images whose largest allocation was 8.1 MiB. These are live allocation-table entries, not cumulative allocation events. The descriptions vary gradually from 1769×995 to 1920×1080 (half/quarter-size families too), use `COMPRESSIBLE|IMAGE`, and share their NVN pool and offset. Almost none of this memory was an unreferenced cache entry.
 - **Resolved for these families:** [physical image sharing](../../../docs/reference/rendering.md#live-resolution-variants-share-physical-image-storage) preserves each descriptor and its dimensions while backing compatible variants with one allocation. It is general host behavior; the game profile and shader chain are unchanged.
@@ -59,10 +59,10 @@ A deferred renderer: the scene draws into a G-buffer of two integer targets (R32
 
 ### Android validation
 
-<!-- PEANUTS: Turnip lobby and PC pack validation -->
+<!-- KIWI: Turnip lobby and PC pack validation -->
 - The Turnip v26.2.0 R5 seed contains 314 pipelines. A fresh cache prepared all 314 in 4.1 seconds before gameplay. The warm relaunch loaded the saved cache and prepared 317 keys in the background.
 - The PC targeted build for update 1.4.0 and both Multiplayer Packs took 69.45 seconds, compared with 165.32 seconds for a full build and 0.69 seconds for an incremental build. The resulting runtime pack payloads matched byte for byte.
-- **Resolved: coloured dashed lines along triangle edges in the flashlight's light on Turnip** <!-- PEANUTS: DM_VK_QUAD_SHFL --> (#283; every Turnip build, gone with the flashlight off). 28 pixel shaders take their own derivatives with warp shuffles inside a quad, and Turnip may end helper lanes before a plain shuffle reads them. **Current:** the replay makes those shuffles quad operations (`DM_VK_QUAD_SHFL`, on by default on Turnip): [Warp shuffles inside a quad read ended helper lanes on Turnip](../../../docs/reference/shaders.md#warp-shuffles-inside-a-quad-read-ended-helper-lanes-on-turnip). Checked on the AYN Thor with Turnip v26.2.0 R5 from the reporter's save; Qualcomm's driver not tried.
+- **Resolved: coloured dashed lines along triangle edges in the flashlight's light on Turnip** <!-- KIWI: DM_VK_QUAD_SHFL --> (#283; every Turnip build, gone with the flashlight off). 28 pixel shaders take their own derivatives with warp shuffles inside a quad, and Turnip may end helper lanes before a plain shuffle reads them. **Current:** the replay makes those shuffles quad operations (`DM_VK_QUAD_SHFL`, on by default on Turnip): [Warp shuffles inside a quad read ended helper lanes on Turnip](../../../docs/reference/shaders.md#warp-shuffles-inside-a-quad-read-ended-helper-lanes-on-turnip). Checked on the AYN Thor with Turnip v26.2.0 R5 from the reporter's save; Qualcomm's driver not tried.
 - **Open:** reflections on lamp-lit lobby floors can flicker while Luigi is stationary or moving. An attachment-copy experiment changed no pixels in matched-driver replay. The same captured frame rendered different lighting on two Turnip versions.
 
 ## Files and shaders
@@ -72,12 +72,12 @@ A deferred renderer: the scene draws into a G-buffer of two integer targets (R32
 - Update 1.4.0 leaves `.dict` and `.data` as they were and adds `<name>.patch`: u64 a bitmask of the records it patches, u32 offset, stored and inflated length of its body (one zlib stream: 16 u32 section offsets, 16 u16 alignments, then each section's new data), then 0xd0 bytes per patched record {u32 offset, stored length and entry count of its new resource table (one zlib stream), u16 its top-level entry count, u16, u32 the new length of each of 16 sections, 16 u32 end and 16 u32 start of the old data that is overwritten before it is read}. After loading a section the game walks the new table and packs that section's entries from its start at their alignment, each from the old section (an offset below its length) or from the body (the rest, counted from the old length), and writes the new offset into the entry (`main+0x1c8d0`, `main+0x1cbd0`); it does this in place, keeping a copy of the old data in [start, end). `shader_split.py` `nlg_patch_section` does the same ([01, Compressed RomFS content](../../../docs/agents/01-extract.md#compressed-romfs-content)).
 - Shaders: 5,317 (5,149 in the base game), all in `init` (`shader_split.py` `nlg_shaders`): control sections back to back in one section, their code areas in the same order in another, one NVN program per stage (paired as single-stage programs). 46 of the 103 the title draws exist only in the patched sections.
 
-<!-- PEANUTS begin: picture shapes -->
+<!-- KIWI begin: picture shapes -->
 ## Picture shapes (Android)
 
 **Untested.** Game settings › Display offers **Fill the screen** on 1.4.0 through 1 `aspect_plan` row that nobody has seen on a device (`aspect_plan_untested 1`, and the Fill choice says so). They are every place this build's main has the packed 1920x1080 sizes in code and the 16/9 float words, from a scan of the code on 2026-11-21 with each expected word read on the pack; no community patch stands behind them. With Fill the 3D view may follow the screen, the HUD and menus may not, or the game may draw wrongly or not start. Fit and Stretch are unchanged. Open: every screen, at any shape.
 
-<!-- PEANUTS end -->
+<!-- KIWI end -->
 
 ## Mac routes
 

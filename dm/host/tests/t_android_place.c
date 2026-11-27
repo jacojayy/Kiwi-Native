@@ -133,7 +133,7 @@ int main(void) {
       CHECK(cov == want, "placed %llu MiB, the granules touched %llu MiB", (unsigned long long)(cov / MIB), (unsigned long long)(want / MIB));
       printf("t_android_place: model: %d asks, %d across parts, all joined; %d segments, %llu MiB placed\n", nask, nstraddle, g_n, (unsigned long long)(cov / MIB)); }
 
-    // PEANUTS(upstream-candidate): asks that place without a join (vka_mem.c mtl_pool_place: a texture's storage). Kirby and the Forgotten Land's 1.4 GiB pool in 16 MiB
+    // KIWI(upstream-candidate): asks that place without a join (vka_mem.c mtl_pool_place: a texture's storage). Kirby and the Forgotten Land's 1.4 GiB pool in 16 MiB
     // granules, textures of 172 KiB to 1.3 MiB laid out end to end: with joins, every texture across a segment's end joins the whole segments, so one segment keeps growing
     // (352 MiB on the Thor, then refused past DM_VK_PLACE_JOIN_MB); placed only, the segments stay one granule each; a command across a granule's end then joins two granules
     { const uint64_t g = 16 * MIB, pm = 0x40377ec000ull, ps = 0x5aa00000ull; uint64_t x = 0x2545f4914f6cdd1dull, a = pm + 0x1000, big = 0;
@@ -151,7 +151,7 @@ int main(void) {
             "a command over it joins just its two granules");
       printf("t_android_place: textures placed only: %d textures, %d segments, the largest %llu MiB\n", n, g_n, (unsigned long long)(big / MIB)); }
 
-    // PEANUTS(upstream-candidate): the record of an ask with nothing left to do (vka_mem.c t_neg, vkp_neg_hit). A texture across two parts is placed without a join
+    // KIWI(upstream-candidate): the record of an ask with nothing left to do (vka_mem.c t_neg, vkp_neg_hit). A texture across two parts is placed without a join
     // (mtl_pool_place) and recorded; the same range asked for with a join (the texture is linear, or the game takes its address) must not be answered from that record,
     // or its two parts are never joined. A joining ask's record answers both kinds; another generation or a range outside the record answers none
     { const uint64_t a = 0x4037fe0000ull, e = a + 0x40000;

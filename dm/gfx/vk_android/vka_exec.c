@@ -12,7 +12,7 @@
 #include "vka_t2tpath.h"
 #include "vka_qsched.h"
 #include "vka_skipwarn.h"
-#include "vka_warmnote.h"   // PEANUTS
+#include "vka_warmnote.h"   // KIWI
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -89,7 +89,7 @@ void mtl_set_depth_zero(int on) { g_depth_zero = on != 0; }
 static void oq_stats(char *b, size_t n, double frames);   // (Occlusion queries)
 // Replay statistics every 300 frames (DM_VK_STATS=0: none): what a frame costs the GPU in passes and barriers (each pass loads and stores its attachments on a tiler), and the
 // CPU per draw (recording: mtl_sub_begin to vkEndCommandBuffer)
-extern uint64_t vka_n_rp, vka_n_bar, vka_n_sbar; static uint64_t g_n_ub, g_n_sub, g_rec_ns, g_n_pclear, g_n_chunks;   // PEANUTS: vka_n_sbar
+extern uint64_t vka_n_rp, vka_n_bar, vka_n_sbar; static uint64_t g_n_ub, g_n_sub, g_rec_ns, g_n_pclear, g_n_chunks;   // KIWI: vka_n_sbar
 static _Atomic uint64_t g_fstart[64], g_fstart_f[64];   // when the replay began recording each frame's first submission (its number mod 64): the adaptive floor's spans
 static uint64_t g_job_frame; static int g_job_frame_set;   // the frame of the submission the worker replays (vka_exec_sub_frame)
 void vka_exec_sub_frame(uint64_t f) { g_job_frame = f; g_job_frame_set = 1; }
@@ -113,7 +113,7 @@ __attribute__((visibility("default"))) void nxhost_skip_status(char *buf, size_t
     int p = atomic_load_explicit(&g_skipw_pct, memory_order_acquire);
     if (n) { if (p > 0) snprintf(buf, n, "%d %s", p, g_skipw.causes); else buf[0] = 0; }
 }
-// PEANUTS begin: the "Preparing graphics" notice (vka_warmnote.h): nxhost_warm_status is the pipelines still waiting while draws are skipped for them, 0 = no notice
+// KIWI begin: the "Preparing graphics" notice (vka_warmnote.h): nxhost_warm_status is the pipelines still waiting while draws are skipped for them, 0 = no notice
 extern uint64_t vka_draw_warm_skips(void);
 static vkwarm g_warm; static _Atomic int g_warm_n;
 static void warm_frame(uint64_t f) {
@@ -121,17 +121,17 @@ static void warm_frame(uint64_t f) {
     atomic_store_explicit(&g_warm_n, on ? g_warm.waiting : 0, memory_order_release);
 }
 __attribute__((visibility("default"))) int nxhost_warm_status(void) { return atomic_load_explicit(&g_warm_n, memory_order_acquire); }
-// PEANUTS end
+// KIWI end
 void mtl_set_frame(uint64_t f) {
     g_frame = f; vka_ctl_frame(f);
     { if (atomic_load_explicit(&vka_synclog_n, memory_order_relaxed) > 0) VLOG("sync frame %llu begins at %.2f ms", (unsigned long long)f, (now_ns() % 1000000000000ull) / 1e6); }
     skipwarn_frame(f);
-    warm_frame(f);   // PEANUTS
-    static uint64_t f0, d0, rp0, b0, sb0, ub0, s0, r0, o0, pc0, ch0;   // PEANUTS: sb0
+    warm_frame(f);   // KIWI
+    static uint64_t f0, d0, rp0, b0, sb0, ub0, s0, r0, o0, pc0, ch0;   // KIWI: sb0
     int on = VKA_ENV("DM_VK_STATS", 1) != 0;
     if (on && f - f0 >= 300) {
         double n = (double)(f - f0);
-        if (f0) VLOG("replay up to frame %llu: per frame %.0f draws, %.0f render passes, %.0f clears / copies (%.0f in a pass), %.0f barriers (%.0f full, %.0f scoped), %.0f inline uniform updates, %.1f submissions (%.1f parts); recording %.2f ms a frame (%.2f us a draw)",   // PEANUTS: report both full and scoped barriers
+        if (f0) VLOG("replay up to frame %llu: per frame %.0f draws, %.0f render passes, %.0f clears / copies (%.0f in a pass), %.0f barriers (%.0f full, %.0f scoped), %.0f inline uniform updates, %.1f submissions (%.1f parts); recording %.2f ms a frame (%.2f us a draw)",   // KIWI: report both full and scoped barriers
                      (unsigned long long)f, (g_stat_draws - d0) / n, (vka_n_rp - rp0) / n, (g_stat_ops - o0) / n, (g_n_pclear - pc0) / n, (vka_n_bar + vka_n_sbar - b0 - sb0) / n, (vka_n_bar - b0) / n, (vka_n_sbar - sb0) / n, (g_n_ub - ub0) / n, (g_n_sub - s0) / n, (g_n_sub - s0 + g_n_chunks - ch0) / n, (g_rec_ns - r0) / n / 1e6,
                      g_stat_draws > d0 ? (g_rec_ns - r0) / 1e3 / (double)(g_stat_draws - d0) : 0.0);
         { char pb[600]; void vka_draw_prof(char *b, size_t n, double draws); vka_draw_prof(pb, sizeof pb, (double)(g_stat_draws - d0)); if (pb[0]) VLOG("draw path per draw (us): %s", pb);
@@ -140,15 +140,15 @@ void mtl_set_frame(uint64_t f) {
           vka_rp_bar_stats(pb, sizeof pb, n); if (pb[0]) VLOG("%s", pb);
           vka_gbar_stats(pb, sizeof pb, n); if (pb[0]) VLOG("%s", pb);
           oq_stats(pb, sizeof pb, n); if (pb[0]) VLOG("%s", pb);
-          { char rb[1400]; vka_rs_stats(rb, sizeof rb, n); if (rb[0]) VLOG("%s", rb); }   // PEANUTS: DM_RES_SCALE (vka_resscale.inc)
+          { char rb[1400]; vka_rs_stats(rb, sizeof rb, n); if (rb[0]) VLOG("%s", rb); }   // KIWI: DM_RES_SCALE (vka_resscale.inc)
           { void vka_drv_memo_stats(char *b, size_t n); vka_drv_memo_stats(pb, sizeof pb); if (pb[0]) VLOG("%s", pb); }
           vka_memu_stats(pb, sizeof pb); if (pb[0]) VLOG("%s", pb);
           { void vka_memu_stop_stats(char *b, size_t n, double frames); vka_memu_stop_stats(pb, sizeof pb, n); if (pb[0]) VLOG("%s", pb); }
-          { void vka_tbuf_stats(char *b, size_t n, double frames); vka_tbuf_stats(pb, sizeof pb, n); if (pb[0]) VLOG("%s", pb); }   // PEANUTS: texel buffer views and copies (vka_draw.c)
-          { void vka_draw_unplaced(char *b, size_t n); vka_draw_unplaced(pb, sizeof pb); if (pb[0]) VRED("%s", pb); } }   // PEANUTS: draws and buffers lost to memory that is not placed, while the counts move (vka_draw.c)
+          { void vka_tbuf_stats(char *b, size_t n, double frames); vka_tbuf_stats(pb, sizeof pb, n); if (pb[0]) VLOG("%s", pb); }   // KIWI: texel buffer views and copies (vka_draw.c)
+          { void vka_draw_unplaced(char *b, size_t n); vka_draw_unplaced(pb, sizeof pb); if (pb[0]) VRED("%s", pb); } }   // KIWI: draws and buffers lost to memory that is not placed, while the counts move (vka_draw.c)
         { static uint64_t fc; if (f - fc >= 1800) { vka_disp_census(f); fc = f; } }   // (every 1,800 frames)
         vka_dobj_census(f);   // DM_VK_DISP_OBJ (its own interval)
-        f0 = f; d0 = g_stat_draws; rp0 = vka_n_rp; b0 = vka_n_bar; sb0 = vka_n_sbar; ub0 = g_n_ub; s0 = g_n_sub; r0 = g_rec_ns; o0 = g_stat_ops; pc0 = g_n_pclear; ch0 = g_n_chunks;   // PEANUTS: sb0
+        f0 = f; d0 = g_stat_draws; rp0 = vka_n_rp; b0 = vka_n_bar; sb0 = vka_n_sbar; ub0 = g_n_ub; s0 = g_n_sub; r0 = g_rec_ns; o0 = g_stat_ops; pc0 = g_n_pclear; ch0 = g_n_chunks;   // KIWI: sb0
     }
 }
 uint64_t vka_frame(void) { return g_frame; }
@@ -206,7 +206,7 @@ static void post(pop o) {
 // Costs: a query pool of OQ_N (a few hundred KB of driver memory), 16 more bytes per posted report, one vkGetQueryPoolResults per counted report on the completion thread.
 // The replay statistics (DM_VK_STATS) print "occlusion queries per frame: ..."
 enum { OQ_N = 16384, OQ_RB = 256 };   // queries in the ring; results read at a time
-static struct { VkQueryPool pool; int precise; PFN_vkResetQueryPool hreset; PFN_vkGetQueryPoolResults get; } OQ;   // PEANUTS: begin and end through vk (the encoder's query opcodes, #263)
+static struct { VkQueryPool pool; int precise; PFN_vkResetQueryPool hreset; PFN_vkGetQueryPoolResults get; } OQ;   // KIWI: begin and end through vk (the encoder's query opcodes, #263)
 static int g_oq = -1;                           // 1 counted; 0 the constant 1 (DM_VK_OCCLUSION=0, no device, no host query reset or no pool); -1 not decided yet
 static int g_oq_count, g_oq_fresh, g_oq_open;   // a samples-passed reset came (draws count); a reset since the last report (its count starts from 0); a query is active in the open pass
 static uint32_t g_oq_lost;                      // draws of the segment that count 1 sample each (no query, or skipped by the replay)
@@ -217,25 +217,25 @@ static uint64_t g_oqs_reset, g_oqs_rep, g_oqs_const, g_oqs_q, g_oqs_full, g_oqs_
 static int oq_on(void) {
     if (g_oq >= 0) return g_oq;
     g_oq = 0;
-    // PEANUTS: DM_VK_NO_OCCLUSION=1 is DM_VK_OCCLUSION=0 for a game option (options give KEY=1 lines); DM_VK_OCCLUSION, when set, wins
+    // KIWI: DM_VK_NO_OCCLUSION=1 is DM_VK_OCCLUSION=0 for a game option (options give KEY=1 lines); DM_VK_OCCLUSION, when set, wins
     if (!VKA_ENV("DM_VK_OCCLUSION", !VKA_ENV("DM_VK_NO_OCCLUSION", 0))) { VLOG("occlusion queries: off (DM_VK_OCCLUSION=0 or DM_VK_NO_OCCLUSION=1): every samples-passed report writes 1"); return 0; }
     if (!vka_ok()) { VRED("occlusion queries: no device: every samples-passed report writes 1"); return 0; }
     VkPhysicalDeviceVulkan12Features f12 = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES};
     VkPhysicalDeviceFeatures2 f2 = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, .pNext = &f12};
     vk.vkGetPhysicalDeviceFeatures2(V.pd, &f2);   // (the device was made with every feature it has: vka_dev.c)
-    // PEANUTS: vkCmdBeginQuery and vkCmdEndQuery are the vk table's (vka_enc.c hooks them, #263)
+    // KIWI: vkCmdBeginQuery and vkCmdEndQuery are the vk table's (vka_enc.c hooks them, #263)
     OQ.hreset = (PFN_vkResetQueryPool)vk.vkGetDeviceProcAddr(V.dev, "vkResetQueryPool"); OQ.get = (PFN_vkGetQueryPoolResults)vk.vkGetDeviceProcAddr(V.dev, "vkGetQueryPoolResults");
     PFN_vkCreateQueryPool create = (PFN_vkCreateQueryPool)vk.vkGetDeviceProcAddr(V.dev, "vkCreateQueryPool");
     if (!f12.hostQueryReset || !OQ.hreset) { VRED("occlusion queries: the device has no host query reset: every samples-passed report writes 1"); return 0; }
     OQ.precise = f2.features.occlusionQueryPrecise != 0;
     VkQueryPoolCreateInfo ci = {VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO, .queryType = VK_QUERY_TYPE_OCCLUSION, .queryCount = OQ_N};
-    VkResult r = create && vk.vkCmdBeginQuery && vk.vkCmdEndQuery && OQ.get ? create(V.dev, &ci, NULL, &OQ.pool) : VK_ERROR_FEATURE_NOT_PRESENT;   // PEANUTS: (#263)
+    VkResult r = create && vk.vkCmdBeginQuery && vk.vkCmdEndQuery && OQ.get ? create(V.dev, &ci, NULL, &OQ.pool) : VK_ERROR_FEATURE_NOT_PRESENT;   // KIWI: (#263)
     if (r) { OQ.pool = VK_NULL_HANDLE; VRED("occlusion queries: no query pool (%d): every samples-passed report writes 1", r); return 0; }
     OQ.hreset(V.dev, OQ.pool, 0, OQ_N); atomic_store(&g_oq_ready, OQ_N);
     VLOG("occlusion queries: counted on the GPU (%s; a ring of %d; DM_VK_OCCLUSION=0: the constant 1)", OQ.precise ? "precise counts" : "not precise: a nonzero count for any sample", OQ_N);
     return g_oq = 1;
 }
-static void oq_rec(uint32_t q, uint32_t end) {   // PEANUTS: in order with the encoder's calls: its query opcodes (#263)
+static void oq_rec(uint32_t q, uint32_t end) {   // KIWI: in order with the encoder's calls: its query opcodes (#263)
     if (end) vk.vkCmdEndQuery(g_cb, OQ.pool, q);
     else vk.vkCmdBeginQuery(g_cb, OQ.pool, q, OQ.precise ? VK_QUERY_CONTROL_PRECISE_BIT : 0);
 }
@@ -527,7 +527,7 @@ static void sh_save(unsigned slot) {   // the slot's last use is done: its segme
 }
 static int g_sub_cont;
 void vka_rp_sub_cont(int on) { g_sub_cont = on != 0; }
-void vka_rp_sub_begin(uint64_t reserved) {   // PEANUTS: known before texture prepare, not only when replaying the first handle
+void vka_rp_sub_begin(uint64_t reserved) {   // KIWI: known before texture prepare, not only when replaying the first handle
     int cont = g_sub_cont; g_sub_cont = 0;
     uint64_t tb0 = now_ns();
     vka_perf_thread(0); vka_ctl_sub();
@@ -579,11 +579,11 @@ void vka_rp_sub_begin(uint64_t reserved) {   // PEANUTS: known before texture pr
     vka_gp_sub_begin(g_cb, g_frame);
     vka_enc_start(g_cb);
     vka_barrier(g_cb);   // the host's writes to guest memory before this submission (made available by the submit), and earlier submissions' writes
-    if (!cont) { uint64_t tp0 = now_ns(); vka_tex_prepare(g_cb, reserved ? reserved : vka_fence_last() + 1); g_t_prep += now_ns() - tp0;   // PEANUTS: inline submits are serialized; their commit takes the next fence
+    if (!cont) { uint64_t tp0 = now_ns(); vka_tex_prepare(g_cb, reserved ? reserved : vka_fence_last() + 1); g_t_prep += now_ns() - tp0;   // KIWI: inline submits are serialized; their commit takes the next fence
                  vka_barrier(g_cb); }   // the re-uploads of CPU-written textures before the submission's draws read them
     vka_draw_sub_begin(g_cb, k);
     { void vka_pso_pause(int on); vka_pso_pause(0); }   // the game submits: resumed (mtl_drain paused the pipeline threads)
-    // PEANUTS: 150 (was 600; with DM_VK_CHUNK_PASS 150): the GPU waits for the first part while the rest is recorded, and a game that submits frame N+1 only after frame
+    // KIWI: 150 (was 600; with DM_VK_CHUNK_PASS 150): the GPU waits for the first part while the rest is recorded, and a game that submits frame N+1 only after frame
     // N's GPU work (Breath of the Wild) leaves it idle that long every frame; the GPU then also ran under the clock governor's step-up (81 % busy at 550-615 MHz). Breath of
     // the Wild's field on the Thor (Turnip): 47.2 -> 52.5 fps, head 3.4 -> 1.9 ms, GPU clock 615 -> 680 MHz; 64 for the in-pass split was worse (39 fps), 100 and 250 a
     // little worse than 150 (2026-11-21)
@@ -593,7 +593,7 @@ void vka_rp_sub_begin(uint64_t reserved) {   // PEANUTS: known before texture pr
 }
 
 // A long submission goes to the queue in parts, so the GPU starts on its first passes while the rest is recorded: before the first pass after DM_VK_CHUNK draws (default
-// 150, PEANUTS: was 600; 0 = one part) of the part in progress, the part is ended and submitted without a signal, and the submission goes on in the slot's next command buffer. The parts run
+// 150, KIWI: was 600; 0 = one part) of the part in progress, the part is ended and submitted without a signal, and the submission goes on in the slot's next command buffer. The parts run
 // in order on the one queue, and the barriers recorded in a part cover what later parts do (submission order); only the last part signals the submission's fence.
 // On the Adreno 840 phone, Donkey Kong Bananza's level recorded ~45 ms a frame before its GPU work (~30 ms) began, and the game waited for that frame's fence (@sync_ms ~64)
 typedef struct { VkCommandBuffer cb; uint32_t q; uint64_t gate; } part_arg;   // q: the part's bottom (part_submit) or top (part_begin) timestamp query, UINT32_MAX = none; gate: see g_gate_next
@@ -647,9 +647,9 @@ static void chunk(void) {
     if (VKA_ENV("DM_VK_PARTLOG", 0)) { char zb[400]; vka_rp_zstats(zb, sizeof zb);
         VLOG("part %u of the submission of frame %llu ended at %.3f s: %llu draws%s", part, (unsigned long long)g_frame, now_ns() / 1e9, (unsigned long long)(g_stat_draws - g_chunk_d0), zb); }
     vka_gbar_settle(g_cb);   // a game barrier left pending (vka_gbar.c), in this part: it covers the parts after it
-    vka_ub_flush();          // PEANUTS: flush outside-pass deferred inline uniform updates before part submit
+    vka_ub_flush();          // KIWI: flush outside-pass deferred inline uniform updates before part submit
     vka_up_flush(); vka_up_throttle();   // the upload batch goes first: the part may use what it made (vka_dev.c "Upload batches")
-    vka_tex_gw_part();   // PEANUTS(upstream-candidate): the part's GPU writes are on the queue from here (vka_tex.c gw_src_overwritten)
+    vka_tex_gw_part();   // KIWI(upstream-candidate): the part's GPU writes are on the queue from here (vka_tex.c gw_src_overwritten)
     // With the encoder the part's end, its submit and the next part's reset and begin are made on its thread, in order with the calls before: the replay thread goes on
     if (vka_enc_call(part_submit, &pe, sizeof pe)) { vka_enc_call(part_begin, &pb, sizeof pb); vka_enc_switch(next); }
     else { part_submit(&pe); part_begin(&pb); }
@@ -658,9 +658,9 @@ static void chunk(void) {
     vka_draw_cb_switch(g_cb); vka_gp_part(g_cb);
     g_chunk_d0 = g_stat_draws; g_n_chunks++;
 }
-// PEANUTS: DM_VK_CHUNK_PASS's default, on its own line to change after a wider comparison: 150 since 2026-11-21 (was 600), measured only on Breath of the Wild with
+// KIWI: DM_VK_CHUNK_PASS's default, on its own line to change after a wider comparison: 150 since 2026-11-21 (was 600), measured only on Breath of the Wild with
 // Turnip (see DM_VK_CHUNK above). Each in-pass split ends the pass and opens it again with loadOp LOAD, a store and a load of its targets on a tiler, in every game
-#define VKA_CHUNK_PASS_DEFAULT 150   // PEANUTS: DM_VK_CHUNK_PASS default
+#define VKA_CHUNK_PASS_DEFAULT 150   // KIWI: DM_VK_CHUNK_PASS default
 // DM_VK_CHUNK_PASS=n (live; default VKA_CHUNK_PASS_DEFAULT, 0 = off): a pass that has had n draws in the part in progress is also ended there and the part submitted; the next draw opens it again over the
 // same targets (loadOp LOAD, after the pass end's barrier), so its contents and the draws' order are kept. A pass of 1,700 draws whose GPU work (14-18 ms) only began after
 // all of it was recorded then starts on the GPU while the rest is recorded. Donkey Kong Bananza's level (Adreno 840, DM_VK_GPUPROF): the extra splits cost no measurable GPU
@@ -677,7 +677,7 @@ static inline void chunk_check(void) {
     if (!g_cb || g_nx >= NCHUNK) return;   // no part left: chunk() would do nothing and leave the draw count, so every later draw would end its pass
     uint64_t in = g_stat_draws - g_chunk_d0;
     if (g_chunk_draws > 0 && in >= (uint64_t)g_chunk_draws && vka_rp_split_ok(&S.rt, S.has_rt)) { vka_rp_end(); chunk(); return; }
-    int cp = VKA_ENV("DM_VK_CHUNK_PASS", VKA_CHUNK_PASS_DEFAULT);   // PEANUTS: the default above
+    int cp = VKA_ENV("DM_VK_CHUNK_PASS", VKA_CHUNK_PASS_DEFAULT);   // KIWI: the default above
     if (cp > 0 && in >= (uint64_t)cp && vka_rp_open_for(&S.rt, S.has_rt)) {
         uint32_t w = 0, h = 0; int dep = vka_rp_depth(&w, &h);
         if ((uint64_t)w * h >= (16ull << 20)) return;   // a 6400x6400 ink map costs ~400 MB to store and load on a tiler: never split it mid-pass for chunking
@@ -732,11 +732,11 @@ static uint64_t sub_commit(uint64_t reserved, int has_sig, uint64_t signal) {
     ops = carry_take(fence, signal, ops, &n);
     if (!g_cb) { if (signal) vka_fence_cpu(signal, ops, n, post_run); else free(ops); return fence; }
     vka_rp_end();
-    vka_ub_flush();   // PEANUTS: flush outside-pass deferred inline uniform updates before submission end
+    vka_ub_flush();   // KIWI: flush outside-pass deferred inline uniform updates before submission end
     if (VKA_ENV("DM_VK_PARTLOG", 0) && g_nx) { char zb[400]; vka_rp_zstats(zb, sizeof zb); VLOG("last part of the submission of frame %llu: %llu draws%s", (unsigned long long)g_frame, (unsigned long long)(g_stat_draws - g_chunk_d0), zb); }
     vka_disp_settle(g_cb);   // the submission's last dispatches before the steps below and the next submission's (vka_draw.c "Dispatch order")
     vka_rw_point(g_cb, 'e', 0, 0, 0); vka_rw_commit(fence);   // DM_VK_RANGE_WATCH: the bytes at the submission's end, logged once it is done
-    vka_tex_writeback(g_cb);   // PEANUTS: GPU texture writes made visible in guest storage before the host barrier
+    vka_tex_writeback(g_cb);   // KIWI: GPU texture writes made visible in guest storage before the host barrier
     vka_tex_pfb_commit(g_cb, fence);   // the texture IDs its shaders read through the pool: copied out for the host (the barrier below) and cleared
     VkMemoryBarrier mb = {VK_STRUCTURE_TYPE_MEMORY_BARRIER, .srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT, .dstAccessMask = VK_ACCESS_HOST_READ_BIT | VK_ACCESS_HOST_WRITE_BIT};
     vk.vkCmdPipelineBarrier(g_cb, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_HOST_BIT, 0, 1, &mb, 0, NULL, 0, NULL);
@@ -874,7 +874,7 @@ static int scissored(const vka_img *im, uint32_t lv, VkRect2D *rc) {   // 1 = th
     *rc = (VkRect2D){{0, 0}, {w, h}};
     if (!S.has_sc) return 0;
     int64_t x0 = S.sc.x > 0 ? S.sc.x : 0, y0 = S.sc.y > 0 ? S.sc.y : 0, x1 = (int64_t)S.sc.x + S.sc.w, y1 = (int64_t)S.sc.y + S.sc.h;
-    if (im->rsc) { vkrs_span(&x0, &x1, vka_rs_q); vkrs_span(&y0, &y1, vka_rs_q); }   // PEANUTS: the scissor in a scaled target's pixels (DM_RES_SCALE), as the draws' is (vka_draw.c rs_sc)
+    if (im->rsc) { vkrs_span(&x0, &x1, vka_rs_q); vkrs_span(&y0, &y1, vka_rs_q); }   // KIWI: the scissor in a scaled target's pixels (DM_RES_SCALE), as the draws' is (vka_draw.c rs_sc)
     if (x1 > w) x1 = w; if (y1 > h) y1 = h;
     if (x1 <= x0 || y1 <= y0) { rc->extent = (VkExtent2D){0, 0}; return 1; }
     *rc = (VkRect2D){{(int32_t)x0, (int32_t)y0}, {(uint32_t)(x1 - x0), (uint32_t)(y1 - y0)}};
@@ -900,21 +900,21 @@ void vka_clear_outside(const vka_pclear *c) {
         if (c->whole) { VkImageSubresourceRange rg = {c->asp, c->lv, 1, c->l0, c->nl}; vk.vkCmdClearDepthStencilImage(g_cb, im->img, VK_IMAGE_LAYOUT_GENERAL, &val.depthStencil, 1, &rg); }
         else clear_rect(im, im->f.vk, c->asp, c->lv, c->l0, c->nl, c->rc, &val);
     }
-    // PEANUTS begin: scope clear-outside barrier to transfer or attachment writes
+    // KIWI begin: scope clear-outside barrier to transfer or attachment writes
     int whole = c->ci >= 0 ? (c->whole && c->fmt == im->f.vk && !(im->d.target == NVN_TEXTURE_TARGET_3D && (c->l0 || c->nl < vka_img_slices(im, c->lv)))) : c->whole;
     if (whole) vka_barrier_stages(g_cb, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
                                   VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT);
     else vka_barrier_stages(g_cb, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
                             VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
                             VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT);
-    // PEANUTS end
+    // KIWI end
 }
 static void clear_color(const p_clear_color *c) {
     vka_rp_prep_clear(&S.rt, S.has_rt);
     if (S.rc_skip) return;
     if (!S.has_rt || c->index < 0 || c->index >= S.rt.n || c->index >= 8 || !S.rt.color[c->index]) { VRED_ONCE("color clear of target %d, which is not bound", c->index); return; }
     if (!c->mask) return;
-    if (vka_rs_on() && vka_rp_rs(&S.rt, S.has_rt) < 0) { vka_rs_st.skip++; return; }   // PEANUTS: DM_RES_SCALE: the bound targets at one scale before the clear measures its rectangle (as a pass does)
+    if (vka_rs_on() && vka_rp_rs(&S.rt, S.has_rt) < 0) { vka_rs_st.skip++; return; }   // KIWI: DM_RES_SCALE: the bound targets at one scale before the clear measures its rectangle (as a pass does)
     const tex_t *t = S.rt.color[c->index]; const view_t *v = &S.rt.cview[c->index]; int hv = S.rt.has_cview[c->index];
     vka_img *im = vka_tex_get(t, g_cb); vka_fmt f;
     if (!im || !vka_fmt_of(hv && v->set_format ? v->format : t->d.format, &f)) return;
@@ -927,7 +927,7 @@ static void clear_color(const p_clear_color *c) {
     if (!rc.extent.width) return;
     vka_fmt fl = f; fl.srgb = 0;   // in a pass the attachment is the sRGB view: the clear colour stays linear there
     vka_pclear pc = {c->index, im, f.vk, VK_IMAGE_ASPECT_COLOR_BIT, lv, l0, nl, rc, !part, {.color = color_value(&f, c->rgba)}, {.color = color_value(&fl, c->rgba)}};
-    if (atomic_load_explicit(&vka_rb_track, memory_order_relaxed) && !im->is_video) vka_rb_color = (uint8_t)(1 + (f.srgb != 0));   // PEANUTS: texture readback: a colour clear counts as a use as a colour target, as a pass does (noted with the write on the next line: vka_readback.inc)
+    if (atomic_load_explicit(&vka_rb_track, memory_order_relaxed) && !im->is_video) vka_rb_color = (uint8_t)(1 + (f.srgb != 0));   // KIWI: texture readback: a colour clear counts as a use as a colour target, as a pass does (noted with the write on the next line: vka_readback.inc)
     vka_img_written(im); g_stat_ops++;
     int inpass = clear_in_pass(&pc); if (!inpass) vka_clear_outside(&pc);
     if (g_rcl > 0 && im->d.target == NVN_TEXTURE_TARGET_3D) { g_rcl--; VLOG("rc 3d clear: frame %llu serial %llu %ux%ux%u fmt %#x level %u slices %u+%u of %u, %s, %s, rgba %g %g %g %g", (unsigned long long)g_frame, (unsigned long long)im->serial,
@@ -991,7 +991,7 @@ static void stencil_masked(vka_img *im, uint32_t lv, uint32_t l0, uint32_t nl, V
 static void clear_ds(const p_clear_ds *c) {
     vka_rp_prep_clear(&S.rt, S.has_rt);
     if (S.rc_skip || !S.has_rt || !S.rt.depth) return;
-    if (vka_rs_on() && vka_rp_rs(&S.rt, S.has_rt) < 0) { vka_rs_st.skip++; return; }   // PEANUTS: DM_RES_SCALE: as clear_color
+    if (vka_rs_on() && vka_rp_rs(&S.rt, S.has_rt) < 0) { vka_rs_st.skip++; return; }   // KIWI: DM_RES_SCALE: as clear_color
     vka_img *im = vka_tex_get(S.rt.depth, g_cb);
     if (!im || im->f.kind < 3) return;
     vka_tex_own(im, g_cb);
@@ -1024,7 +1024,7 @@ static void clear_tex(const p_clear_tex *c) {
     uint32_t all = vka_img_slices(im, lv); int is3d = im->d.target == NVN_TEXTURE_TARGET_3D;
     if (l0 >= all) return; if (l0 + nl > all) nl = all - l0;
     uint32_t w, h; level_size(im, lv, &w, &h);
-    // PEANUTS: DM_RES_SCALE: the region in a scaled image's pixels (vka_resscale.inc); c is the record itself for any other image
+    // KIWI: DM_RES_SCALE: the region in a scaled image's pixels (vka_resscale.inc); c is the record itself for any other image
     p_clear_tex c_rs; if (im->rsc) { c_rs = *c; if (!vka_rs_rect(im, &c_rs.r.xoffset, &c_rs.r.yoffset, &c_rs.r.width, &c_rs.r.height)) return; c = &c_rs; }
     VkClearValue val;
     if (c->is_uint) for (int i = 0; i < 4; i++) val.color.uint32[i] = c->c.u[i]; else val.color = color_value(&f, c->c.f);
@@ -1048,17 +1048,17 @@ static VkImageAspectFlags copy_aspect(const vka_img *im, const char *what) {
 // Buffer ↔ texture: c->src is the buffer's guest address. Rows are SetCopyRowStride bytes apart (tightly packed without it), layers / slices SetCopyImageStride
 static void copy_bt(const p_copy_b2t *c, int to_tex) {
     if (!c->tex) return;
-    vka_img *im = to_tex ? vka_tex_get(c->tex, g_cb) : vka_tex_get_src(c->tex, g_cb);   // PEANUTS: a texture → buffer copy reads it (vka_tex_get_src)
+    vka_img *im = to_tex ? vka_tex_get(c->tex, g_cb) : vka_tex_get_src(c->tex, g_cb);   // KIWI: a texture → buffer copy reads it (vka_tex_get_src)
     if (!im) return;
     if (to_tex) vka_tex_own(im, g_cb);
-    // PEANUTS: DM_RES_SCALE: the buffer's texels are the texture's size, so a scaled image is made 1x first (and its shape stays 1x: vka_resscale.inc)
+    // KIWI: DM_RES_SCALE: the buffer's texels are the texture's size, so a scaled image is made 1x first (and its shape stays 1x: vka_resscale.inc)
     if (im->rsc && !vka_tex_rs_down(im, g_cb, to_tex ? RS_WHY_B2T : RS_WHY_T2B)) { vka_rs_st.skip++; VRED_ONCE("res scale: a buffer copy with scaled texture serial %llu was left out (it could not be made 1x then)", (unsigned long long)im->serial); return; }
     VkImageAspectFlags asp = copy_aspect(im, to_tex ? "buffer → texture copy" : "texture → buffer copy"); if (!asp) return;
     if (im->samples > 1) { VRED_ONCE("buffer copy of a multisampled texture"); return; }
     const vka_fmt *f = &im->f;
     unsigned lv = c->has_view && c->view.set_levels ? c->view.base_level : 0, l0 = c->has_view && c->view.set_layers ? c->view.min_layer : 0;
     vka_tex_soft_copy(im, to_tex ? (int)lv : -1, g_cb);   // (a soft texture copied from, or into at level 0: made whole first)
-    unsigned lv_game = lv;   // PEANUTS(upstream-candidate): the game's level, for the storage mirror below (vka_img_lv maps it to the image's own)
+    unsigned lv_game = lv;   // KIWI(upstream-candidate): the game's level, for the storage mirror below (vka_img_lv maps it to the image's own)
     if (!vka_img_lv(im, &lv) || c->r.width <= 0 || c->r.height <= 0) return;
     size_t row = S.copy_stride ? (size_t)S.copy_stride : (size_t)((c->r.width + f->bw - 1) / f->bw) * f->bpb, rows = (size_t)(c->r.height + f->bh - 1) / f->bh;
     size_t img = S.copy_img_stride ? (size_t)S.copy_img_stride : row * rows;
@@ -1081,7 +1081,7 @@ static void copy_bt(const p_copy_b2t *c, int to_tex) {
         rg[n++] = (VkBufferImageCopy){(bounce ? s.off : o) + (is3d ? 0 : z * img), (uint32_t)(row / f->bpb * f->bw), (uint32_t)(img / row * f->bh),
             {asp, lv, is3d ? 0 : l0 + (uint32_t)c->r.zoffset + (uint32_t)z, 1}, {c->r.xoffset, c->r.yoffset, is3d ? c->r.zoffset : 0}, {(uint32_t)c->r.width, (uint32_t)c->r.height, is3d ? (uint32_t)nz : 1}};
     if (to_tex) { vk.vkCmdCopyBufferToImage(g_cb, bounce ? s.buf : b, im->img, VK_IMAGE_LAYOUT_GENERAL, (uint32_t)n, rg); vka_img_written(im);
-        // PEANUTS(upstream-candidate): LEGO CITY UNDERCOVER moves texture storage with GPU buffer copies and the copy's result was only in the VkImage: the same bytes into the block-linear storage, in queue order
+        // KIWI(upstream-candidate): LEGO CITY UNDERCOVER moves texture storage with GPU buffer copies and the copy's result was only in the VkImage: the same bytes into the block-linear storage, in queue order
         if (!is3d) for (int z = 0; z < nz; z++) if (!vka_tex_b2t_mirror(g_cb, im, c->tex, lv_game, l0 + (unsigned)(c->r.zoffset + z), &c->r, bounce ? s.buf : b, (bounce ? s.off : o) + (VkDeviceSize)z * img, row, row * rows)) break;
     }
     else {
@@ -1096,11 +1096,11 @@ static void copy_bt(const p_copy_b2t *c, int to_tex) {
     g_stat_ops++;
     vka_barrier(g_cb);
 }
-// PEANUTS(upstream-candidate): sRGB<->linear converting copy between formats for copy_t2t (Link's Awakening); general fix, not Peanuts-specific. Covers sconv_image below,
+// KIWI(upstream-candidate): sRGB<->linear converting copy between formats for copy_t2t (Link's Awakening); general fix, not Kiwi-specific. Covers sconv_image below,
 // the format-mismatch branch in copy_t2t and the plain-copy vs blit condition it changed (s->f.srgb / s->f.vk == d->f.vk && s->f.srgb == d->f.srgb checks further down).
 // Scratch images of a real sRGB format for copy_t2t's sRGB ↔ linear conversions: one per format and size class, transfer use only, kept for the process (a 1080p one is 8 MiB;
 // at most SCONV_N, then the conversion is refused and the plain blit runs). Every transfer op is ordered after the previous one by the replay's barriers, so one image serves every copy
-enum { SCONV_N = 8 };   // PEANUTS: 8 (was 4): copy_t2t's copies through a shared image of another format use them too
+enum { SCONV_N = 8 };   // KIWI: 8 (was 4): copy_t2t's copies through a shared image of another format use them too
 static struct { VkImage img; VkDeviceMemory dm; VkFormat f; uint32_t w, h; } g_sconv[SCONV_N]; static int g_sconv_n;
 // not: an image the caller already uses in this copy (a source and a destination scratch of one format must be two images: a blit cannot read and write one)
 static VkImage sconv_image_not(VkFormat f, uint32_t w, uint32_t h, VkImage not) {
@@ -1203,10 +1203,10 @@ static int t2t_depth_draw(vka_img *s, vka_img *d, VkImageSubresourceLayers ss, V
 }
 static void copy_t2t(const p_copy_t2t *c) {
     if (!c->src || !c->dst) return;
-    vka_img *s = vka_tex_get_src(c->src, g_cb), *d = vka_tex_get(c->dst, g_cb);   // PEANUTS: the source is read (vka_tex_get_src)
+    vka_img *s = vka_tex_get_src(c->src, g_cb), *d = vka_tex_get(c->dst, g_cb);   // KIWI: the source is read (vka_tex_get_src)
     if (!s || !d) return;
     vka_tex_own(d, g_cb);
-    // PEANUTS: the copy goes by the formats of the two textures the game named, not by their images'. A texture may be a view of an image of another format (textures of
+    // KIWI: the copy goes by the formats of the two textures the game named, not by their images'. A texture may be a view of an image of another format (textures of
     // two formats over one memory share an image: vka_tex.c, Learned view formats), and judged by the images a copy between two R11G11B10 textures, the second sharing an
     // R32 float texture's image, was a "format-changing" one: the blit converted the colour into the float image (red only), and what read the texture afterwards saw those
     // bits as R11G11B10: Super Mario Odyssey's water, crystal and other refracting materials drew flat bright green with a green bloom (AYN Thor, 2026-11-15; issue #21).
@@ -1219,7 +1219,7 @@ static void copy_t2t(const p_copy_t2t *c) {
     unsigned sz0 = c->has_sv && c->sv.set_layers ? c->sv.min_layer : 0, dz0 = c->has_dv && c->dv.set_layers ? c->dv.min_layer : 0;
     vka_tex_soft_copy(s, -1, g_cb); vka_tex_soft_copy(d, (int)dl, g_cb);   // (a soft texture copied from, or into at level 0: made whole first)
     if (!vka_img_lv(s, &sl) || !vka_img_lv(d, &dl)) return;
-    // PEANUTS begin: resolution scale (vka_resscale.inc). With a scaled image in the copy, c becomes a copy of the record whose rectangles are in the images' pixels
+    // KIWI begin: resolution scale (vka_resscale.inc). With a scaled image in the copy, c becomes a copy of the record whose rectangles are in the images' pixels
     // (for any other copy it stays the record itself). same: the game named two rectangles of one size, which stays a plain copy between two scaled images (their
     // rectangles round to within a pixel of each other: the smaller extent is taken). Between a scaled and an unscaled image the unscaled one is scaled when it can be (a render target copied before its first pass, the window
     // texture a frame is copied into), else the copy converts: the blit below for float colour, and for depth, integer and resolves the scaled image goes back to 1x
@@ -1241,7 +1241,7 @@ static void copy_t2t(const p_copy_t2t *c) {
         if (same) { if (dr.width < sr.width) sr.width = dr.width; else dr.width = sr.width; if (dr.height < sr.height) sr.height = dr.height; else dr.height = sr.height; }
         c_rs = *c; c_rs.sr = sr; c_rs.dr = dr; if (lin) c_rs.flags |= NVN_COPY_FLAGS_LINEAR_FILTER_BIT; c = &c_rs;   // (a change of scale is filtered, whatever the game asked of its same-size copy)
     }
-    // PEANUTS end
+    // KIWI end
     VkImageAspectFlags sa = s->aspect & (s->f.kind >= 3 ? VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT : VK_IMAGE_ASPECT_COLOR_BIT), da = d->aspect;
     if ((sa == VK_IMAGE_ASPECT_COLOR_BIT) != (da == VK_IMAGE_ASPECT_COLOR_BIT)) { VRED_ONCE("texture copy between a color and a depth texture (formats %#x → %#x)", c->src->d.format, c->dst->d.format); return; }
     sa &= da;
@@ -1249,7 +1249,7 @@ static void copy_t2t(const p_copy_t2t *c) {
     VkImageSubresourceLayers ss = {sa, sl, s3 ? 0 : sz0 + (uint32_t)c->sr.zoffset, s3 ? 1 : (uint32_t)nz}, ds = {sa, dl, d3 ? 0 : dz0 + (uint32_t)c->dr.zoffset, d3 ? 1 : (uint32_t)nz};
     if (ss.baseArrayLayer + ss.layerCount > s->layers || ds.baseArrayLayer + ds.layerCount > d->layers) { VRED_ONCE("texture copy layers out of range"); return; }
     if (c->flags & DM_COPY_RESOLVE && s->samples > 1 && d->samples == 1) {
-        // PEANUTS(upstream-candidate): Downsample resolves the part both textures have: the extent is the smaller of the two rectangles, kept inside both images' levels. The recording names
+        // KIWI(upstream-candidate): Downsample resolves the part both textures have: the extent is the smaller of the two rectangles, kept inside both images' levels. The recording names
         // each whole texture (rec_downsample), and a game may resolve a larger multisample target into a smaller texture: Digimon Story Time Stranger keeps its 4x
         // 1920x1080 scene target in handheld mode, draws a 1280x720 viewport into it and downsamples into 1280x720 textures. Resolved with the source's 1920x1080 extent,
         // the region ran past the destination (invalid in Vulkan), and Adreno wrote the overflow into the image's own tiles: the left half of the picture in 16-pixel
@@ -1269,24 +1269,24 @@ static void copy_t2t(const p_copy_t2t *c) {
         else VRED_ONCE("depth resolve is not on Vulkan yet");
     } else if (c->sr.width == c->dr.width && c->sr.height == c->dr.height && !(c->flags & (NVN_COPY_FLAGS_MIRROR_X_BIT | NVN_COPY_FLAGS_MIRROR_Y_BIT | NVN_COPY_FLAGS_MIRROR_Z_BIT))
                && s->samples == d->samples && tsf.bpb == tdf.bpb && tsf.bw == tdf.bw && tsf.bh == tdf.bh
-               && ((tsf.vk == tdf.vk && tsf.srgb == tdf.srgb) || sa != VK_IMAGE_ASPECT_COLOR_BIT || (tsf.kind && tsf.kind < 3 && tdf.kind && tdf.kind < 3))) {   // PEANUTS: srgb (see above); tsf / tdf: the textures' formats (above)
+               && ((tsf.vk == tdf.vk && tsf.srgb == tdf.srgb) || sa != VK_IMAGE_ASPECT_COLOR_BIT || (tsf.kind && tsf.kind < 3 && tdf.kind && tdf.kind < 3))) {   // KIWI: srgb (see above); tsf / tdf: the textures' formats (above)
         // A plain copy only between equal formats (or depth / stencil, or integer to integer, which a blit cannot convert): NVN's copy converts the texels when the formats differ,
         // as nvn_mtl.m's copy_t2t draws it. The Legend of Zelda: Link's Awakening copies its B10G11R11 frame into the RGBA8 window every frame, the same size and 4 bytes a texel:
         // copied bit for bit, the packed float bits showed as rainbow bands over the whole picture (Thor, 2026-11-11); the blit below converts them
-        static _Atomic int noted_; if (tsf.vk != tdf.vk && !atomic_exchange(&noted_, 1)) VLOG("texture copy between formats of one size, %#x → %#x (Vulkan %u → %u): copied as bits, not converted", c->src->d.format, c->dst->d.format, s->f.vk, d->f.vk);   // PEANUTS: tsf / tdf (above)
+        static _Atomic int noted_; if (tsf.vk != tdf.vk && !atomic_exchange(&noted_, 1)) VLOG("texture copy between formats of one size, %#x → %#x (Vulkan %u → %u): copied as bits, not converted", c->src->d.format, c->dst->d.format, s->f.vk, d->f.vk);   // KIWI: tsf / tdf (above)
         VkImageCopy r = {ss, {c->sr.xoffset, c->sr.yoffset, s3 ? c->sr.zoffset : 0}, ds, {c->dr.xoffset, c->dr.yoffset, d3 ? c->dr.zoffset : 0}, {(uint32_t)c->sr.width, (uint32_t)c->sr.height, s3 ? (uint32_t)nz : 1}};
         vk.vkCmdCopyImage(g_cb, s->img, VK_IMAGE_LAYOUT_GENERAL, d->img, VK_IMAGE_LAYOUT_GENERAL, 1, &r);
-        // PEANUTS(upstream-candidate): a copy mirrored into storage is not a GPU-only write to the destination.
+        // KIWI(upstream-candidate): a copy mirrored into storage is not a GPU-only write to the destination.
         if (vka_tex_mirror_mip(c, s, d)) { g_stat_ops++; vka_barrier(g_cb); return; }
     } else {   // a scaled, mirrored or format-changing copy: a blit (filtered with LINEAR_FILTER), or a draw into a depth format that is no blit destination (vka_t2tpath.h)
-        // PEANUTS: the format the blit writes, which is asked for BLIT_DST: the destination's image, or the scratch image of the destination texture's format the copy
+        // KIWI: the format the blit writes, which is asked for BLIT_DST: the destination's image, or the scratch image of the destination texture's format the copy
         // goes through below (a texture whose image has another format, or an sRGB destination of a linear source: sconv_image, one layer of a 2D colour texture)
         VkFormat bdf = d->f.vk;
         if (sa == VK_IMAGE_ASPECT_COLOR_BIT && !s3 && !d3 && nz == 1 && (fd || (tsf.srgb != tdf.srgb && tdf.srgb))) bdf = tdf.srgb ? tdf.view : tdf.vk;
-        VkFormatProperties dp; vk.vkGetPhysicalDeviceFormatProperties(V.pd, bdf, &dp);   // PEANUTS: bdf (upstream: d->f.vk)
-        int path = t2t_path(0, tsf.kind, tdf.kind, tsf.bw > 1 || tdf.bw > 1, s->samples > 1 || d->samples > 1, (dp.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT) != 0);   // PEANUTS: tsf / tdf (above), the textures' formats where upstream asks the images'
+        VkFormatProperties dp; vk.vkGetPhysicalDeviceFormatProperties(V.pd, bdf, &dp);   // KIWI: bdf (upstream: d->f.vk)
+        int path = t2t_path(0, tsf.kind, tdf.kind, tsf.bw > 1 || tdf.bw > 1, s->samples > 1 || d->samples > 1, (dp.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT) != 0);   // KIWI: tsf / tdf (above), the textures' formats where upstream asks the images'
         if (path == T2T_NONE) {
-            VRED_ONCE("texture copy %#x → %#x needs a draw (integer, compressed, multisampled, stencil, or into a format that is no blit destination, VkFormat %d)", c->src->d.format, c->dst->d.format, bdf); return; }   // PEANUTS: bdf
+            VRED_ONCE("texture copy %#x → %#x needs a draw (integer, compressed, multisampled, stencil, or into a format that is no blit destination, VkFormat %d)", c->src->d.format, c->dst->d.format, bdf); return; }   // KIWI: bdf
         int x0 = c->sr.xoffset, x1 = x0 + c->sr.width, y0 = c->sr.yoffset, y1 = y0 + c->sr.height, t;
         if (c->flags & NVN_COPY_FLAGS_MIRROR_X_BIT) { t = x0; x0 = x1; x1 = t; }
         if (c->flags & NVN_COPY_FLAGS_MIRROR_Y_BIT) { t = y0; y0 = y1; y1 = t; }
@@ -1295,9 +1295,9 @@ static void copy_t2t(const p_copy_t2t *c) {
             vka_img_written(d); g_stat_ops++; vka_barrier(g_cb); return;
         }
         VkImageBlit r = {ss, {{x0, y0, 0}, {x1, y1, 1}}, ds, {{c->dr.xoffset, c->dr.yoffset, 0}, {c->dr.xoffset + c->dr.width, c->dr.yoffset + c->dr.height, 1}}};
-        VkFormatProperties fp; vk.vkGetPhysicalDeviceFormatProperties(V.pd, tsf.vk, &fp);   // PEANUTS: tsf (above)
+        VkFormatProperties fp; vk.vkGetPhysicalDeviceFormatProperties(V.pd, tsf.vk, &fp);   // KIWI: tsf (above)
         VkFilter fl = (c->flags & NVN_COPY_FLAGS_LINEAR_FILTER_BIT) && sa == VK_IMAGE_ASPECT_COLOR_BIT && (fp.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT) ? VK_FILTER_LINEAR : VK_FILTER_NEAREST;
-        // PEANUTS: a converting copy with a side whose image has another format than its texture (fs / fd, above): the blit must read and write the textures' formats, so
+        // KIWI: a converting copy with a side whose image has another format than its texture (fs / fd, above): the blit must read and write the textures' formats, so
         // that side goes through a scratch image of the texture's format (sconv_image): the source's bytes copied raw into one, the blit made into another whose bytes
         // are then copied raw into the destination. One layer of a 2D colour texture; anything else is logged and blitted as before
         if (fs || fd) {
@@ -1331,7 +1331,7 @@ static void copy_t2t(const p_copy_t2t *c) {
                 goto done;
             }
         }
-        // PEANUTS: sconv_image (see above).
+        // KIWI: sconv_image (see above).
         // One side sRGB, the other linear: 8-bit sRGB images are stored as their UNORM twin, so a blit between the VkImages neither encodes on the write nor decodes on the
         // read, as the console's copy (and nvn_mtl.m's draw into the sRGB view) does. The blit goes through a scratch image of the real sRGB format: into it (the encode) and
         // then its bytes copied raw into the destination, or the source's bytes copied raw into it and blitted out (the decode). Link's Awakening's frame copy into its sRGB
@@ -1362,7 +1362,7 @@ static void copy_t2t(const p_copy_t2t *c) {
                 }
             }
         }
-        // PEANUTS: the blit goes into the destination's image after all (no scratch image was to be had, or none was needed for these two): BLIT_DST was asked
+        // KIWI: the blit goes into the destination's image after all (no scratch image was to be had, or none was needed for these two): BLIT_DST was asked
         // of the scratch image's format above, so it is asked of the image's here, and a format that is no blit destination is left as the rule above leaves it
         if (bdf != d->f.vk) {
             VkFormatProperties ip; vk.vkGetPhysicalDeviceFormatProperties(V.pd, d->f.vk, &ip);
@@ -1390,7 +1390,7 @@ static void dlss_eval(const p_dlss *o) {
     if (!ct || !ot) { VRED_ONCE("DLSS evaluation without an input colour or an output texture: skipped"); return; }
     vka_img *s = vka_tex_get(ct, g_cb), *d = vka_tex_get(ot, g_cb);
     if (!s || !d) return;
-    // PEANUTS: DM_RES_SCALE: an upscaler stand-in works in the texels the game sized its input and output for: both at 1x (vka_resscale.inc)
+    // KIWI: DM_RES_SCALE: an upscaler stand-in works in the texels the game sized its input and output for: both at 1x (vka_resscale.inc)
     if (vka_rs_on() && ((s->rsc && !vka_tex_rs_down(s, g_cb, RS_WHY_STANDIN)) || (d->rsc && !vka_tex_rs_down(d, g_cb, RS_WHY_STANDIN)))) { vka_rs_st.skip++; return; }
     if ((s->aspect & VK_IMAGE_ASPECT_COLOR_BIT) == 0 || (d->aspect & VK_IMAGE_ASPECT_COLOR_BIT) == 0 || d->f.bw > 1 || d->samples > 1) {
         VRED_ONCE("DLSS stand-in: formats %#x → %#x: no colour input or an output a blit cannot write (compressed, depth or multisampled): the output stays unwritten", ct->d.format, ot->d.format); return; }
@@ -1427,7 +1427,7 @@ static void dlss_eval(const p_dlss *o) {
         f.c.src = ct; f.c.dst = ot; f.c.sr = (NVNcopyRegion){sx, sy, 0, iw, ih, 1}; f.c.dr = (NVNcopyRegion){dx, dy, 0, ow, oh, 1};
         f.depth = o->tex[DLSS_DEPTH]; f.motion = o->tex[DLSS_MOTION]; memcpy(f.jitter, o->jitter, sizeof f.jitter); memcpy(f.mv, o->mv, sizeof f.mv); f.reset = o->reset;
         vka_img *z = f.depth ? vka_tex_get(f.depth, g_cb) : NULL, *m = f.motion ? vka_tex_get(f.motion, g_cb) : NULL;
-        if (vka_rs_on()) { if (z && z->rsc && !vka_tex_rs_down(z, g_cb, RS_WHY_STANDIN)) z = NULL; if (m && m->rsc && !vka_tex_rs_down(m, g_cb, RS_WHY_STANDIN)) m = NULL; }   // PEANUTS: DM_RES_SCALE: its depth and motion at 1x too, or left out
+        if (vka_rs_on()) { if (z && z->rsc && !vka_tex_rs_down(z, g_cb, RS_WHY_STANDIN)) z = NULL; if (m && m->rsc && !vka_tex_rs_down(m, g_cb, RS_WHY_STANDIN)) m = NULL; }   // KIWI: DM_RES_SCALE: its depth and motion at 1x too, or left out
         if (!o->base[DLSS_DEPTH][0] && !o->base[DLSS_DEPTH][1] && !o->base[DLSS_MOTION][0] && !o->base[DLSS_MOTION][1] && vka_dlss_fsr3(g_cb, s, sfmt, d, enc, z, m, &f)) { vka_img_written(d); g_stat_ops++; return; }
         mode = 2;
     }
@@ -1637,7 +1637,7 @@ static int memu_allowed(uint32_t op) {
     case OP_BIND_VSTREAM: case OP_BIND_VBUF: case OP_BIND_VBUF1: case OP_BIND_UBO: case OP_BIND_UBO_SMALL: case OP_BIND_SSBO: case OP_BIND_TEX: case OP_BIND_TEX1: case OP_BIND_SAMP:
     case OP_BIND_IMG: case OP_STENCIL: case OP_POLY_OFFSET: case OP_SET_TEX_POOL: case OP_SET_SAMP_POOL: case OP_BLEND_COLOR: case OP_DEPTH_CLAMP: case OP_TF_BIND: case OP_TF_STATE:
     case OP_RAST_DISCARD: case OP_VP_SWIZZLE: case OP_PRIM_RESTART: case OP_ALPHA_REF: case OP_PUSH_CONST: return 1;
-    case OP_PATCH_SIZE: return 1;   // PEANUTS(upstream-candidate)
+    case OP_PATCH_SIZE: return 1;   // KIWI(upstream-candidate)
     default: return 0;
     }
 }
@@ -1693,7 +1693,7 @@ void vka_event_replayed(volatile uint32_t *w, uint32_t mode, uint32_t v);
 static qs_cont *g_pk;
 // A later record of an indirect-count multi-draw that its first record makes whole (vka_draw.c vka_mdi_gpu): nothing of its own to record
 static int mdi_rest(uint32_t op, const void *a, uint32_t size) {   // (a multi-draw's record is always whole: hle_nvn.c rec_draw; a plain draw's stops before ind)
-    if (op == OP_DRAW) { if (size - 8 < sizeof(p_draw)) return 0; const p_draw *d = a; return d->mdi_cnt && d->mdi_i > 0 && vka_mdi_gpu(0, d->prim, d->mdi_n, d->mdi_stride); }   // PEANUTS: bounded draw ranges
+    if (op == OP_DRAW) { if (size - 8 < sizeof(p_draw)) return 0; const p_draw *d = a; return d->mdi_cnt && d->mdi_i > 0 && vka_mdi_gpu(0, d->prim, d->mdi_n, d->mdi_stride); }   // KIWI: bounded draw ranges
     if (op == OP_DRAW_IDX) { if (size - 8 < sizeof(p_draw_idx)) return 0; const p_draw_idx *d = a; return d->mdi_cnt && d->mdi_i > 0 && vka_mdi_gpu(1, d->prim, d->mdi_n, d->mdi_stride); }
     return 0;
 }
@@ -1706,10 +1706,10 @@ static int exec(const uint8_t *p, int depth) {   // 1: parked at a wait (g_pk ho
         int bar_kept = 0;   // a game barrier taken inside the open pass (vka_rp_game_barrier): no pass end, no full barrier
         switch (h.op) {   // GPU work other than a dispatch: after the barrier the dispatches before it left pending (vka_draw.c "Dispatch order"), and before a part ends at a draw
         case OP_DRAW: case OP_DRAW_IDX: case OP_DRAW_TEX: case OP_CLEAR_COLOR: case OP_CLEAR_DS: case OP_CLEAR_TEX: case OP_CLEAR_BUF: case OP_COPY_B2B: case OP_COPY_B2T:
-        case OP_COPY_T2B: case OP_COPY_T2T: case OP_REPORT_COUNTER: vka_disp_settle(g_cb); break;   // PEANUTS: OP_UPDATE_UB settles only on fallback / flush
+        case OP_COPY_T2B: case OP_COPY_T2T: case OP_REPORT_COUNTER: vka_disp_settle(g_cb); break;   // KIWI: OP_UPDATE_UB settles only on fallback / flush
         default: break;
         }
-        // PEANUTS begin: flush outside-pass deferred inline uniform updates before the next GPU consumer.
+        // KIWI begin: flush outside-pass deferred inline uniform updates before the next GPU consumer.
         // OP_SIGNAL_EVENT / OP_FENCE_SYNC publish only on GPU completion (after sub_commit / submission end flush,
         // and any waiter goes through OP_WAIT_EVENT / OP_WAIT_SYNC); OP_REPORT_COUNTER only writes queries or posts
         // completion records; OP_RENDER_COND evaluates rc_known() on the CPU from completed report records.
@@ -1723,7 +1723,7 @@ static int exec(const uint8_t *p, int depth) {   // 1: parked at a wait (g_pk ho
             default: break;
             }
         }
-        // PEANUTS end
+        // KIWI end
         if (h.op == OP_DRAW || h.op == OP_DRAW_IDX) chunk_check();   // before a draw that opens a new pass
         switch (h.op) {   // a render pass a draw opened stays open across draws and state; anything else closes it first
         case OP_END: case OP_BEGIN: case OP_JUMP: case OP_CALL: case OP_SIGNAL_EVENT: case OP_REPORT_COUNTER: case OP_FENCE_SYNC: case OP_RENDER_COND: case OP_RESET_COUNTER: case OP_WAIT_EVENT: case OP_WAIT_SYNC:
@@ -1774,7 +1774,7 @@ static int exec(const uint8_t *p, int depth) {   // 1: parked at a wait (g_pk ho
         case OP_RESET_COUNTER: { uint64_t t; memcpy(&t, a, 8); if (t == NVN_COUNTER_TYPE_SAMPLES_PASSED) oq_reset(); break; }
         case OP_CLEAR_BUF: mdx_write(); if (g_cb) { const p_clear_buf *cb = a; vka_rw_pre(g_cb); buf_fill(cb->addr, cb->size, cb->value); vka_barrier(g_cb); vka_rw_point(g_cb, 'f', 0, cb->value, cb->addr); } break;
         case OP_COPY_B2B: mdx_write(); if (g_cb) { uint64_t s_, d, n; memcpy(&s_, a, 8); memcpy(&d, (const uint8_t *)a + 8, 8); memcpy(&n, (const uint8_t *)a + 16, 8); vka_rw_pre(g_cb); buf_copy(s_, d, n); vka_barrier(g_cb); vka_rw_point(g_cb, 'c', 0, s_, d); } break;
-        case OP_UPDATE_UB: mdx_write(); g_n_ub++; if (g_cb) { uint64_t d, n; memcpy(&d, a, 8); memcpy(&n, (const uint8_t *)a + 8, 8); if (!vka_rp_ub_defer(d, n, (const uint8_t *)a + 16)) { vka_rp_end(); vka_ub_flush(); vka_disp_settle(g_cb); /* PEANUTS: flush outside-pass UBs and settle dispatches before fallback */ vka_rw_pre(g_cb); buf_update((const uint8_t *)a + 16, d, n); vka_barrier(g_cb); vka_rw_point(g_cb, 'u', 0, n, d); } } break;
+        case OP_UPDATE_UB: mdx_write(); g_n_ub++; if (g_cb) { uint64_t d, n; memcpy(&d, a, 8); memcpy(&n, (const uint8_t *)a + 8, 8); if (!vka_rp_ub_defer(d, n, (const uint8_t *)a + 16)) { vka_rp_end(); vka_ub_flush(); vka_disp_settle(g_cb); /* KIWI: flush outside-pass UBs and settle dispatches before fallback */ vka_rw_pre(g_cb); buf_update((const uint8_t *)a + 16, d, n); vka_barrier(g_cb); vka_rw_point(g_cb, 'u', 0, n, d); } } break;
         case OP_SET_RT: S.rt = *(const p_set_rt *)a; S.has_rt = 1; break;
         case OP_SCISSOR: S.sc = *(const p_scissor *)a; S.has_sc = 1; break;
         case OP_COPY_STRIDE: { const p_copy_stride *cs = a; if (cs->image) S.copy_img_stride = cs->stride; else S.copy_stride = cs->stride; break; }
@@ -1793,7 +1793,7 @@ static int exec(const uint8_t *p, int depth) {   // 1: parked at a wait (g_pk ho
                           if (!S.rc_skip && g_cb) { p_draw_idx t; g_stat_draws++; mdx_before_draw(p, NULL); memu_before_draw(p, NULL); uint64_t sk = 0; if (g_oq_count) vka_draw_stats(NULL, &sk, NULL, NULL);
                           vka_draw(&S.d, &S.rt, S.has_rt, &S.sc, S.has_sc, NULL, draw_idx_rec(a, h.size, &t)); oq_lost(sk); } else if (!S.rc_skip && g_oq_count) g_oq_lost++; break;
         case OP_DISPATCH: mdx_write(); if (!S.rc_skip && g_cb) vka_dispatch(&S.d, a); break;
-        case OP_TF_STATE: vka_tf_state(a, g_cb); break;   // PEANUTS: transform feedback's byte counts, and what was captured copied out at End / Pause (vka_tf.c); the state itself: vka_state_op above
+        case OP_TF_STATE: vka_tf_state(a, g_cb); break;   // KIWI: transform feedback's byte counts, and what was captured copied out at End / Pause (vka_tf.c); the state itself: vka_state_op above
         case OP_DRAW_TEX: not_yet(h.op); if (!S.rc_skip && g_oq_count) { g_oq_lost++; g_oqs_skip++; } break;
         default: break;   // state: taken by vka_state_op above
         }

@@ -13,7 +13,7 @@
 #include "nvn_count.h"
 #include "nvn_tex.h"
 #include "nvn_dpool.h"
-#include "nvn_cmdarena.h"   // PEANUTS: rooms for empty-pool command memory grants (#807)
+#include "nvn_cmdarena.h"   // KIWI: rooms for empty-pool command memory grants (#807)
 #include "../tex/nvn_deswizzle.h"
 #include "nvn_mtl.h"
 #include "nvn_pace.h"
@@ -192,7 +192,7 @@ __attribute__((weak)) int dm_glslc_gpu_code(int *major, int *minor) { *major = *
 __attribute__((weak)) void dm_gfx_pool_fileback(const void *mem, uint64_t size, int kind) { (void)mem; (void)size; (void)kind; }   // vka_mem.c (DM_MEM_FILEBACK); none on Metal
 __attribute__((weak)) int dm_gfx_fileback_line(char *b, size_t n) { (void)b; (void)n; return 0; }   // vka_mem.c: the file-backed pools' totals (0: none moved)
 static void nvn_api(int api[2]) {
-#ifdef DM_RUNTIME_PROFILE   // PEANUTS: the generic host (-PnxGenericHost=true): device_api is a profile.bin presence flag, not a #define
+#ifdef DM_RUNTIME_PROFILE   // KIWI: the generic host (-PnxGenericHost=true): device_api is a profile.bin presence flag, not a #define
     if (g_profile.has_nvn_api) { api[0] = DM_GAME_NVN_API_MAJOR; api[1] = DM_GAME_NVN_API_MINOR; LOG("[nvn] device API %d.%d (game profile device_api)", api[0], api[1]); return; }
 #else
 #ifdef DM_GAME_NVN_API_MAJOR
@@ -206,7 +206,7 @@ static void nvn_api(int api[2]) {
     if (dm_sdk_ounce()) { api[0] = 231; if (!dm_sdk_nvn2_item(1, &api[1])) api[1] = g_devinfo2[1]; }
     else { api[0] = DM_SDK_OLD(m) ? 53 : g_devinfo[0]; api[1] = DM_SDK_OLD(m) ? 313 : g_devinfo[1]; }
     LOG("[nvn] device API %d.%d (SDK %d%s)", api[0], api[1], m, dm_sdk_ounce() ? ", Switch 2" : "");
-    // PEANUTS: its #endif moved above, so the SDK check also runs with the generic host
+    // KIWI: its #endif moved above, so the SDK check also runs with the generic host
 }
 NVN(nvnDeviceGetInteger, void, const NVNdevice *d, NVNdeviceInfo what, int *out) {
     (void)d;
@@ -370,7 +370,7 @@ NVN(nvnMemoryPoolBuilderSetDefaults, void, NVNmemoryPoolBuilder *b) { memset(b, 
 NVN(nvnMemoryPoolBuilderSetDevice, void, NVNmemoryPoolBuilder *b, NVNdevice *d) { ((pool_builder_t *)b)->dev = d; }
 NVN(nvnMemoryPoolBuilderSetStorage, void, NVNmemoryPoolBuilder *b, void *m, size_t n) { ((pool_builder_t *)b)->mem = m; ((pool_builder_t *)b)->size = n; }
 NVN(nvnMemoryPoolBuilderSetFlags, void, NVNmemoryPoolBuilder *b, int f) { ((pool_builder_t *)b)->flags = f; }
-// PEANUTS(upstream-candidate): the pool builder's getters (New Pokemon Snap reads the pool and its size back)
+// KIWI(upstream-candidate): the pool builder's getters (New Pokemon Snap reads the pool and its size back)
 NVN_NOPROTO(nvnMemoryPoolBuilderGetDevice, NVNdevice *, const NVNmemoryPoolBuilder *b) { return ((const pool_builder_t *)b)->dev; }
 NVN_NOPROTO(nvnMemoryPoolBuilderGetMemory, void *, const NVNmemoryPoolBuilder *b) { return ((const pool_builder_t *)b)->mem; }
 NVN_NOPROTO(nvnMemoryPoolBuilderGetSize, size_t, const NVNmemoryPoolBuilder *b) { return ((const pool_builder_t *)b)->size; }
@@ -732,7 +732,7 @@ static void ft_add(const tex_t *t) {
     pthread_mutex_lock(&g_ft_mu);
     if (g_nft == g_cft && !(g_ft = realloc(g_ft, (g_cft = g_cft ? 2 * g_cft : 1024) * sizeof *g_ft))) die("flush_tex allocation failed");
     uint64_t st = nvn_dirty_now();
-#ifndef __ANDROID__   // PEANUTS: Android write-protects a tex_dirty_upload texture at its first use instead (vka_tex.c storage_mode, dirty_first)
+#ifndef __ANDROID__   // KIWI: Android write-protects a tex_dirty_upload texture at its first use instead (vka_tex.c storage_mode, dirty_first)
     if (DM_GAME_TEX_DIRTY_UPLOAD) nvn_dirty_protect(t->mem, t->L.size);   // see nvn_ft_written
 #endif
     g_ft[g_nft++] = (flush_tex){t->mem, t->L.size, *t, st, nvn_dirty_span(t->mem, t->L.size)};
@@ -773,7 +773,7 @@ int nvn_ft_tracked(uint64_t serial) {   // registered and not resolved yet: its 
 // Checking every texture at every submission cost TOTK 0.4 ms of submit CPU per frame on the Mac; this way a texture is picked up a few submissions later at most
 enum { FT_POLL_BYTES = 128 << 20 };
 void nvn_ft_poll(void) {
-#ifdef __ANDROID__   // PEANUTS: nothing protected at registration on Android, so nothing to poll
+#ifdef __ANDROID__   // KIWI: nothing protected at registration on Android, so nothing to poll
     return;   // Android tracks tex_dirty_upload from first use in vka_tex.c (avoids pre-fill SIGSEGV faults and redundant re-uploads)
 #else
     if (!DM_GAME_TEX_DIRTY_UPLOAD) return;
@@ -792,7 +792,7 @@ void nvn_ft_poll(void) {
     }
     pthread_mutex_unlock(&g_ft_mu);
     for (size_t i = 0; i < nhit; i++) if (!mtl_tex_gpu_owned(hit[i].serial)) mtl_tex_cpu_written(&hit[i]);   // outside g_ft_mu: the ownership check takes the replay's serial table lock
-#endif   // PEANUTS
+#endif   // KIWI
 }
 static void ft_flush(const uint8_t *a, uint64_t n) {
     if (!DM_GAME_TEX_FLUSH_UPLOAD || !a || !n) return;
@@ -870,7 +870,7 @@ NVN(nvnTextureInitialize, NVNboolean, NVNtexture *t, const NVNtextureBuilder *b)
     }
     o->serial = nvn_new_serial(); mtl_tex_init(o);
     if (o->mem) pc_use(o->pool, 't', o->off, o->L.size);
-    if (o->mem && shp_use(SHK_TEX, (uint64_t)(uintptr_t)o->mem, o->L.size, NULL, NULL) == 2 && !g_shp_place) mtl_pool_place(o->mem, o->L.size, "a texture in a shader-code pool");   // (Shader-code pools: a texture is a data use) PEANUTS(upstream-candidate): placed, never joined (vka_mem.c mtl_pool_place)
+    if (o->mem && shp_use(SHK_TEX, (uint64_t)(uintptr_t)o->mem, o->L.size, NULL, NULL) == 2 && !g_shp_place) mtl_pool_place(o->mem, o->L.size, "a texture in a shader-code pool");   // (Shader-code pools: a texture is a data use) KIWI(upstream-candidate): placed, never joined (vka_mem.c mtl_pool_place)
     if (o->mem && o->d.flags & (NVN_TEXTURE_FLAGS_LINEAR | NVN_TEXTURE_FLAGS_LINEAR_RENDER_TARGET)) mtl_pool_need(o->mem, o->L.size, "a linear texture");   // its GPU content is copied back into the storage (vka_tex_writeback)
     static int tbuf_place = -1; if (tbuf_place < 0) { const char *e = getenv("DM_VK_TBUF"); tbuf_place = !(e && e[0] == '0'); }   // (DM_VK_TBUF=0: buffer textures unbound, as before)
     if (o->mem && o->d.target == NVN_TEXTURE_TARGET_BUFFER && tbuf_place) {   // the GPU reads and writes a buffer texture's storage itself (vka_tbuf.c: a texel buffer view over it, or rows copied from it)
@@ -997,7 +997,7 @@ NVN(nvnSamplerBuilderGetLodClamp, void, const NVNsamplerBuilder *b, float *lo, f
 NVN(nvnSamplerInitialize, NVNboolean, NVNsampler *s, const NVNsamplerBuilder *b) {
     // Older NVN headers (SDK <= 10, NVN 53) declare NVNsampler as 0x60 bytes and agl hashes bytes 0x08..0x5f to deduplicate sampler pool entries;
     // newer SDKs (NVN 55+) shrank NVNsampler to 0x30 bytes. Zero the full object for this SDK so trailing bytes never hold stack garbage.
-    int m = dm_sdk_major();   // PEANUTS: NVNsampler layout for agl, #521 (0.1.8)
+    int m = dm_sdk_major();   // KIWI: NVNsampler layout for agl, #521 (0.1.8)
     memset(s, 0, m > 0 && m <= 10 && !dm_sdk_ounce() ? 0x60 : sizeof(NVNsampler));
     samp_t *o = (samp_t *)s; o->magic = MAGIC('S', 'M', 'P', 0); o->p = ((const samp_builder_t *)b)->p; return 1;
 }
@@ -1065,16 +1065,16 @@ static int keys_hash(const NVNshaderData *sd, int mapped, uint8_t out[8]) {
     plat_sha256_final(md, &hc); memcpy(out, md, 8);
     return 1;
 }
-// PEANUTS: the Android replay notes what a shader's control section says it captures by transform feedback (vka_tf.c), where the shader's key is made: the section
+// KIWI: the Android replay notes what a shader's control section says it captures by transform feedback (vka_tf.c), where the shader's key is made: the section
 // is only guaranteed valid during SetShaders
 __attribute__((weak)) void nvn_tf_ctl_note(const uint8_t key[8], const void *control) { (void)key; (void)control; }
-// PEANUTS: whether nvnProgramSetShaders made the stage's key (prog_key would otherwise hash the stage's code now, which is not known to be readable or
+// KIWI: whether nvnProgramSetShaders made the stage's key (prog_key would otherwise hash the stage's code now, which is not known to be readable or
 // written yet at that time: the reason the key is left to the first draw). For the Android replay's program list (vka_shader.c mtl_prog_prefetch)
 int prog_key_ready(const prog_t *p, unsigned st) { if (st >= p->nstage) return 0; prog_keys_t *k = pk_get(p, 0); return k && (k->ok >> st & 1); }
 int prog_key(const prog_t *p, unsigned st, uint8_t key[8]) {
     if (st >= p->nstage) return 0;
     prog_keys_t *k = pk_get(p, 1);
-    if (!(k->ok >> st & 1)) { if (keys_hash(&p->sd[st], 0, k->key[st])) nvn_tf_ctl_note(k->key[st], p->sd[st].control); /* PEANUTS: transform feedback layout (above) */ k->ok |= (uint8_t)(1u << st); }
+    if (!(k->ok >> st & 1)) { if (keys_hash(&p->sd[st], 0, k->key[st])) nvn_tf_ctl_note(k->key[st], p->sd[st].control); /* KIWI: transform feedback layout (above) */ k->ok |= (uint8_t)(1u << st); }
     memcpy(key, k->key[st], 8);
     return 1;
 }
@@ -1091,7 +1091,7 @@ NVN(nvnProgramSetShaders, NVNboolean, NVNprogram *p, int n, const NVNshaderData 
     prog_keys_t *k = pk_get(p, 1);
     k->ok = 0;
     for (int i = 0; i < n; i++) {
-        if (keys_hash(&sd[i], 1, k->key[i])) { k->ok |= (uint8_t)(1u << i); nvn_tf_ctl_note(k->key[i], sd[i].control); /* PEANUTS: transform feedback layout (above) */ }
+        if (keys_hash(&sd[i], 1, k->key[i])) { k->ok |= (uint8_t)(1u << i); nvn_tf_ctl_note(k->key[i], sd[i].control); /* KIWI: transform feedback layout (above) */ }
         // Diagnostic: trace the loader of selected shader keys (comma-separated hex).
         if (trace && (k->ok & (1u << i))) {
             char key[17]; for (int j = 0; j < 8; j++) snprintf(key + j * 2, 3, "%02x", k->key[i][j]);
@@ -1246,7 +1246,7 @@ static void cmd_new_segment(cmd_t *o, uint8_t *mem, size_t n) {
 // (when it re-records that material in place; packing the next recording right behind by used never touches them, since used includes the JUMP). So a segment remembers that guest range and is reclaimed when the game gives out memory
 // overlapping it; segments overflowing from a host segment keep the same range.
 // The segment pool grows on demand (SMBW opening course: many small command buffers each overflow once per frame, and the old fixed 64 segments × 1 MB ran out within 8 frames); abort only beyond HOSTSEG_CAP in total.
-// PEANUTS begin: #807. A segment is HOSTSEG_SZ, except that a record larger than HOSTSEG_SZ gets a segment that holds it (hostseg_size). An empty pool with a length of at most
+// KIWI begin: #807. A segment is HOSTSEG_SZ, except that a record larger than HOSTSEG_SZ gets a segment that holds it (hostseg_size). An empty pool with a length of at most
 // HOSTSEG_SMALL outside a recording takes no segment: it gets a room of HOSTSEG_SMALL in a shared chunk (cmdarena_grant, nvn_cmdarena.h), and the room's unused tail goes back
 // when the recording ends in it (Super Mario Odyssey hands out such a 512-byte grant before each display list once its heap is full; a 256 KB segment each reached the cap
 // entering the Wooded Kingdom, and a 4 KB segment each, all kept in g_hostseg, cost 504 MB in six minutes and a scan of 130,000 entries at every lend and every AddCommandMemory:
@@ -1254,7 +1254,7 @@ static void cmd_new_segment(cmd_t *o, uint8_t *mem, size_t n) {
 // An empty-pool grant outside a recording means the game's own allocator for command memory came back empty. On hardware a null pool cannot be written to, so a game only gets here
 // when the host's records outgrew what it measured for them (Odyssey's "DisplayList" heap: docs/reference/memory.md, "Model heaps sized by the host's command record sizes").
 // Those rooms have no guest range to be reclaimed by, so they are not reclaimed; the cap's abort names the state, and the fix belongs in the record sizes
-// PEANUTS end
+// KIWI end
 #define HOSTSEG_SZ (256u << 10)
 #define HOSTSEG_SMALL (4u << 10)
 #define HOSTSEG_CAP (1u << 30)
@@ -1263,7 +1263,7 @@ typedef struct { uint8_t *mem; size_t n; uint64_t frame; int busy; uintptr_t org
 static hostseg_t *g_hostseg; static int g_nhostseg, g_caphostseg; static uint64_t g_hostseg_bytes;
 static pthread_mutex_t g_hostseg_mu = PTHREAD_MUTEX_INITIALIZER;
 static size_t hostseg_size(const cmd_t *o, int empty_pool, size_t want) {
-    (void)o; if (empty_pool) return HOSTSEG_SZ;   // PEANUTS: #807, the small grants outside a recording take a room (cmdarena_grant)
+    (void)o; if (empty_pool) return HOSTSEG_SZ;   // KIWI: #807, the small grants outside a recording take a room (cmdarena_grant)
     return want + 16 > HOSTSEG_SZ ? (want + 16 + 0xfff) & ~(size_t)0xfff : HOSTSEG_SZ;   // 16: room for the next JUMP (want holds OP_RESERVE already, this is slack for the alignment)
 }
 // Take a segment of n bytes: origin = the current recording's guest bytes [BEGIN, end of JUMP); if the write pointer is already in a host segment (overflowing again), keep that segment's origin
@@ -1286,7 +1286,7 @@ static uint8_t *hostseg_take(const cmd_t *o, size_t n) {
     if (t == 1 || t % 1024 == 0) LOG("[nvn] the game's command memory ran short, the host lends a segment of %zu KB (%u times so far, frame %llu, segment pool %d segments, %llu KB)", n >> 10, t, (unsigned long long)f, ns, (unsigned long long)(bytes >> 10));
     return m;
 }
-// PEANUTS begin: #807, rooms for empty-pool grants (see above HOSTSEG_SZ; nvn_cmdarena.h). The chunks are not in g_hostseg and count toward HOSTSEG_CAP.
+// KIWI begin: #807, rooms for empty-pool grants (see above HOSTSEG_SZ; nvn_cmdarena.h). The chunks are not in g_hostseg and count toward HOSTSEG_CAP.
 // One arena per thread, of NVN_CMDARENA_LANES lanes: a room goes back only while it is the last one handed out in its lane. With one arena for all and no lanes, a third of
 // Odyssey's rooms in the Wooded Kingdom were kept whole (240 MB in six minutes): its thread grants for a second display list before the first one ends. A room is
 // reserved whole at its grant, so a recording ended on another thread than its grant's only keeps its whole room. The counts in the log line: grants whose command buffer was initialized again since its last recording (no write
@@ -1326,7 +1326,7 @@ static int cmdarena_reopen(cmd_t *o) {
     if (p) cmd_new_segment(o, p, HOSTSEG_SMALL);
     return p != NULL;
 }
-// PEANUTS end
+// KIWI end
 // The game gives out [lo, hi): segments whose recording's guest bytes overlap it are dead, reclaim them
 static void hostseg_release(uintptr_t lo, uintptr_t hi) {
     pthread_mutex_lock(&g_hostseg_mu);
@@ -1335,7 +1335,7 @@ static void hostseg_release(uintptr_t lo, uintptr_t hi) {
 }
 NVN(nvnCommandBufferAddCommandMemory, void, NVNcommandBuffer *c, const NVNmemoryPool *p, ptrdiff_t off, size_t n) {
     const pool_t *pl = (const pool_t *)p;
-    if (!pl && n && n <= HOSTSEG_SMALL && !CB(c)->recording) { if (cs_on()) { pthread_mutex_lock(&g_cs_mu); g_cs.hostseg++; pthread_mutex_unlock(&g_cs_mu); } cmdarena_grant(CB(c)); return; }   // PEANUTS: #807
+    if (!pl && n && n <= HOSTSEG_SMALL && !CB(c)->recording) { if (cs_on()) { pthread_mutex_lock(&g_cs_mu); g_cs.hostseg++; pthread_mutex_unlock(&g_cs_mu); } cmdarena_grant(CB(c)); return; }   // KIWI: #807
     if (!pl || n < 64) { if (cs_on()) { pthread_mutex_lock(&g_cs_mu); g_cs.hostseg++; pthread_mutex_unlock(&g_cs_mu); } size_t sz = hostseg_size(CB(c), !pl, n); cmd_new_segment(CB(c), hostseg_take(CB(c), sz), sz); return; }
     if (!pl->mem) { LOG("[RED] AddCommandMemory: pool has no CPU storage"); return; }
     hostseg_release((uintptr_t)(pl->mem + off), (uintptr_t)(pl->mem + off + n));
@@ -1354,7 +1354,7 @@ static uint8_t *cmd_alloc_keep(cmd_t *o, uint32_t size, uint32_t keep) {
     size = (size + 7) & ~7u;
     for (int tries = 0; !o->cur || o->cur + size + keep > o->end; tries++) {
         // The game's callback cannot supply enough (newer-SDK games hand out small chunks sized for real-device commands, or disable the callback and manage memory themselves): continue recording in a host segment instead of aborting
-        if ((!o->cb || tries == 2) && size + keep <= HOSTSEG_SMALL && cmdarena_reopen(o)) break;   // PEANUTS: #807
+        if ((!o->cb || tries == 2) && size + keep <= HOSTSEG_SMALL && cmdarena_reopen(o)) break;   // KIWI: #807
         if (!o->cb || tries == 2) {
             static int once; if (!once++) LOG("[nvn] command memory: the game's callback did not add enough (cb=%p, need %u bytes), using a host-lent segment", (void *)o->cb, size + keep);
             size_t sz = hostseg_size(o, 0, size + keep); cmd_new_segment(o, hostseg_take(o, sz), sz); break;
@@ -1382,11 +1382,11 @@ NVN(nvnCommandBufferEndRecording, NVNcommandHandle, NVNcommandBuffer *c) {
     cmd_t *o = CB(c);
     uint8_t *p = cmd_alloc_keep(o, 8, 0); put_hdr(p, OP_END, 8);   // nothing follows: the END may take the segment's last bytes
     o->recording = 0;
-    cmdarena_end(o);   // PEANUTS: #807, a room's tail after the END goes back
+    cmdarena_end(o);   // KIWI: #807, a room's tail after the END goes back
     return (NVNcommandHandle)o->begin;
 }
 NVN(nvnCommandBufferIsRecording, NVNboolean, const NVNcommandBuffer *c) { return ((const cmd_t *)c)->recording != 0; }
-// PEANUTS begin: CopyCommands copies, as in NVN. The game may record over the source's command memory as soon as the copy is made; a CALL into it, read a frame
+// KIWI begin: CopyCommands copies, as in NVN. The game may record over the source's command memory as soon as the copy is made; a CALL into it, read a frame
 // later by the Android replay worker, found other records there (Unicorn Overlord: a record size of pixel data, then a jump into unmapped memory). Inline replay
 // read the CALL at submit time, before the game reused the memory. The source's records are copied into this buffer up to its END, across its JUMPs.
 // The largest record the host records: an uniform update of the NVN limit (64 KiB) and its header. A larger size is stale memory, never a record
@@ -1414,7 +1414,7 @@ NVN(nvnCommandBufferCopyCommands, void, NVNcommandBuffer *c, int n, const NVNcom
 static void cmd_call_lists(NVNcommandBuffer *c, int n, const NVNcommandHandle *h) {   // CallCommands: the source stays the game's until the GPU is done with it
     for (int i = 0; i < n; i++) { uint8_t *p = cmd_alloc(CB(c), 16); put_hdr(p, OP_CALL, 16); memcpy(p + 8, &h[i], 8); }
 }
-// PEANUTS end
+// KIWI end
 NVN(nvnCommandBufferSignalEvent, void, NVNcommandBuffer *c, const NVNevent *e, NVNeventSignalMode m, NVNeventSignalLocation loc, int flags, uint32_t v) {
     (void)loc; (void)flags;
     uint8_t *p = cmd_alloc(CB(c), 24); put_hdr(p, OP_SIGNAL_EVENT, 24);
@@ -1517,7 +1517,7 @@ NVN(nvnCommandBufferSetViewports, void, NVNcommandBuffer *c, int first, int n, c
     p_viewports *r = REC(c, OP_VIEWPORTS, p_viewports); r->first = first; r->n = n;
     for (int i = 0; i < n; i++) memcpy(r->v[i], v + 4 * i, 16);
 }
-NVN(nvnCommandBufferSetScissor, void, NVNcommandBuffer *c, int x, int y, int w, int h) {   // PEANUTS: these two setters over two lines each, in the texture storage round (540d0cd6, 0.1.8)
+NVN(nvnCommandBufferSetScissor, void, NVNcommandBuffer *c, int x, int y, int w, int h) {   // KIWI: these two setters over two lines each, in the texture storage round (540d0cd6, 0.1.8)
     *REC(c, OP_SCISSOR, p_scissor) = (p_scissor){x, y, w, h}; }
 NVN(nvnCommandBufferSetDepthRange, void, NVNcommandBuffer *c, float n, float f) {
     *REC(c, OP_DEPTH_RANGE, p_depth_range) = (p_depth_range){n, f}; }
@@ -1575,7 +1575,7 @@ static p_bind_handles *bind_handles(NVNcommandBuffer *c, int op, int st, int fir
     // The driver writes each handle into the c2 table as a 32-bit word (texture ID in bits 0-19, sampler ID in bits 20-31), so the GPU never sees the upper half of the 64-bit handle.
     // EA SPORTS FC 27 binds separate textures with bit 32 set (0x1000001d1): read whole, its sampler ID was 4096, beyond any pool, where the GPU reads sampler 0
     for (int i = 0; i < n; i++) r->h[i] = (uint32_t)h[i];
-#ifndef __ANDROID__   // PEANUTS(upstream-candidate)
+#ifndef __ANDROID__   // KIWI(upstream-candidate)
     {   // this command buffer may have bound a pool other than the first: move its IDs to that pool's part of the table (handle: texture ID in bits 0-19, sampler ID from bit 20)
         int tb = CB(c)->tex_base, sb = CB(c)->samp_base;
         for (int i = 0; i < n && (tb || sb); i++) {
@@ -1584,7 +1584,7 @@ static p_bind_handles *bind_handles(NVNcommandBuffer *c, int op, int st, int fir
             else { if (tid) tid += (uint64_t)tb; if (sid && op == OP_BIND_TEX) sid += (uint64_t)sb; r->h[i] = tid | sid << 20; }
         }
     }
-#endif   // PEANUTS(upstream-candidate): Vulkan resolves the original handles against the queue's pools at replay.
+#endif   // KIWI(upstream-candidate): Vulkan resolves the original handles against the queue's pools at replay.
     return r;
 }
 // Image (writable texture): handle = texture pool index (GetImageHandle returns it as-is; RegisterImage writes the same table as RegisterTexture)
@@ -1629,7 +1629,7 @@ NVN(nvnCommandBufferBarrier, void, NVNcommandBuffer *c, int bits) { *(int32_t *)
 NVN(nvnCommandBufferSetTexturePool, void, NVNcommandBuffer *c, const NVNtexturePool *p) { REC(c, OP_SET_TEX_POOL, p_set_pool)->pool = (const dpool_t *)p; CB(c)->tex_base = dpool_base(&g_tpt, p); }
 NVN(nvnCommandBufferSetSamplerPool, void, NVNcommandBuffer *c, const NVNsamplerPool *p) { REC(c, OP_SET_SAMP_POOL, p_set_pool)->pool = (const dpool_t *)p; CB(c)->samp_base = dpool_base(&g_spt, p); }
 
-// PEANUTS begin: the bytes a buffer ↔ texture copy reads or writes in its buffer, as the replay computes them (vka_exec.c copy_bt): rows SetCopyRowStride apart (tightly packed
+// KIWI begin: the bytes a buffer ↔ texture copy reads or writes in its buffer, as the replay computes them (vka_exec.c copy_bt): rows SetCopyRowStride apart (tightly packed
 // without it), layers or slices SetCopyImageStride apart. The copy used to name its address with no length, which a shader-code pool reads as the rest of the pool:
 // LEGO CITY UNDERCOVER's 1 MiB texture uploads from its 2 GiB pool asked for 272 MiB across 13 parts, more than one join takes (DM_VK_PLACE_JOIN_MB), so every copy that
 // crossed two parts failed ("buffer → texture copy source … is not in placed guest RAM") and the game drew black. 0 when the format is not known (the rest of the pool, as before)
@@ -1640,8 +1640,8 @@ static uint64_t copy_span(const NVNcommandBuffer *c, const NVNtexture *t, const 
     uint64_t row = CB(c)->copy_row > 0 ? (uint64_t)CB(c)->copy_row : wb, img = CB(c)->copy_img > 0 ? (uint64_t)CB(c)->copy_img : row * rows;
     return img * (nz - 1) + row * (rows - 1) + wb;
 }
-// PEANUTS end
-// PEANUTS(upstream-candidate): LEGO CITY UNDERCOVER moves texture storage with GPU buffer copies, so a buffer -> texture copy is mirrored into the texture's storage on the GPU (vka_tex.c
+// KIWI end
+// KIWI(upstream-candidate): LEGO CITY UNDERCOVER moves texture storage with GPU buffer copies, so a buffer -> texture copy is mirrored into the texture's storage on the GPU (vka_tex.c
 // vka_tex_b2t_mirror, DM_VK_B2T_MIRROR). A lazily placed pool (vka_mem.c) places only what a command names, and the copy names its source buffer alone: the destination's storage is asked for
 // here, in one piece (mtl_pool_need joins parts), so the replay finds it placed. Only for what the mirror takes (block-linear, 2D-like, CPU-accessible pool); a no-op on the Metal host
 static void b2t_need(const tex_t *o) {
@@ -1654,13 +1654,13 @@ static void b2t_need(const tex_t *o) {
 }
 NVN(nvnCommandBufferCopyBufferToTexture, void, NVNcommandBuffer *c, NVNbufferAddress src, const NVNtexture *t, const NVNtextureView *v,
     const NVNcopyRegion *r, int flags) {
-    shp_bind(SHK_COPY, src, copy_span(c, t, r));   // PEANUTS: the bytes it reads (copy_span)
-    b2t_need(CTX(t));   // PEANUTS(upstream-candidate): the destination's storage placed for the mirror (b2t_need)
+    shp_bind(SHK_COPY, src, copy_span(c, t, r));   // KIWI: the bytes it reads (copy_span)
+    b2t_need(CTX(t));   // KIWI(upstream-candidate): the destination's storage placed for the mirror (b2t_need)
     p_copy_b2t *o = REC_SNAP(c, OP_COPY_B2T, p_copy_b2t, 1); o->src = src; o->tex = tex_snap(o, SNAP_OFF(p_copy_b2t), 0, t, (uint64_t)__builtin_return_address(0)); copy_view(&o->view, &o->has_view, v); o->r = *r; o->flags = flags;
 }
 NVN(nvnCommandBufferCopyTextureToBuffer, void, NVNcommandBuffer *c, const NVNtexture *t, const NVNtextureView *v, const NVNcopyRegion *r,
     NVNbufferAddress dst, int flags) {
-    shp_bind(SHK_COPY, dst, copy_span(c, t, r));   // PEANUTS: the bytes it writes (copy_span)
+    shp_bind(SHK_COPY, dst, copy_span(c, t, r));   // KIWI: the bytes it writes (copy_span)
     p_copy_b2t *o = REC_SNAP(c, OP_COPY_T2B, p_copy_b2t, 1); o->src = dst; o->tex = tex_snap(o, SNAP_OFF(p_copy_b2t), 0, t, (uint64_t)__builtin_return_address(0)); copy_view(&o->view, &o->has_view, v); o->r = *r; o->flags = flags;
 }
 // Clear a texture region with the given value (float / unsigned integer versions; mask = channel write mask)
@@ -1683,8 +1683,8 @@ NVN(nvnCommandBufferDrawTexture, void, NVNcommandBuffer *c, NVNtextureHandle h, 
     if (sid) sid += (uint64_t)CB(c)->samp_base;
     *REC(c, OP_DRAW_TEX, p_draw_tex) = (p_draw_tex){tid | sid << 20, *d, *s};
 }
-NVN(nvnCommandBufferSetCopyRowStride, void, NVNcommandBuffer *c, ptrdiff_t st) { p_copy_stride *o = REC(c, OP_COPY_STRIDE, p_copy_stride); o->stride = st; o->image = 0; CB(c)->copy_row = st; }   // PEANUTS: copy_row
-NVN(nvnCommandBufferSetCopyImageStride, void, NVNcommandBuffer *c, ptrdiff_t st) { p_copy_stride *o = REC(c, OP_COPY_STRIDE, p_copy_stride); o->stride = st; o->image = 1; CB(c)->copy_img = st; }   // Link's Awakening; PEANUTS: copy_img   // Link's Awakening
+NVN(nvnCommandBufferSetCopyRowStride, void, NVNcommandBuffer *c, ptrdiff_t st) { p_copy_stride *o = REC(c, OP_COPY_STRIDE, p_copy_stride); o->stride = st; o->image = 0; CB(c)->copy_row = st; }   // KIWI: copy_row
+NVN(nvnCommandBufferSetCopyImageStride, void, NVNcommandBuffer *c, ptrdiff_t st) { p_copy_stride *o = REC(c, OP_COPY_STRIDE, p_copy_stride); o->stride = st; o->image = 1; CB(c)->copy_img = st; }   // Link's Awakening; KIWI: copy_img   // Link's Awakening
 NVN(nvnCommandBufferSetBlendColor, void, NVNcommandBuffer *c, const float *v) { memcpy(REC(c, OP_BLEND_COLOR, p_blend_color)->rgba, v, 16); }
 
 // ---------- State objects: packed in place (nvn_obj.h) ----------
@@ -1827,7 +1827,7 @@ NVN(nvnQueueSubmitCommands, void, NVNqueue *q, int n, const NVNcommandHandle *h)
 // Commands that only affect GPU state / only execute on the GPU: the null device only counts them (the thunk has already counted)
 static void nvn_nop(void) {}
 static const char *const g_nops[] = {
-    "nvnCommandBufferSetDepthBounds",   // PEANUTS(upstream-candidate): SetPatchSize is recorded (OP_PATCH_SIZE, beside SetPrimitiveRestart)
+    "nvnCommandBufferSetDepthBounds",   // KIWI(upstream-candidate): SetPatchSize is recorded (OP_PATCH_SIZE, beside SetPrimitiveRestart)
     "nvnCommandBufferSetShaderScratchMemory",
     "nvnCommandBufferPushDebugGroupDynamic",
     "nvnCommandBufferPopDebugGroup",
@@ -1878,7 +1878,7 @@ NVN(nvnWindowBuilderSetTextures, void, NVNwindowBuilder *b, int n, NVNtexture *c
     if (n < 0 || n > 4) { LOG("[RED] WindowBuilderSetTextures count %d", n); n = n < 0 ? 0 : 4; }
     WB(b)->ntex = n; for (int i = 0; i < n; i++) WB(b)->tex[i] = t[i];
 }
-// PEANUTS: FPSLocker's interval mode changes the window state as well as presentation pacing.
+// KIWI: FPSLocker's interval mode changes the window state as well as presentation pacing.
 static int fpslocker_window_interval(void) { const char *e=getenv("DM_FPSLOCKER_INTERVAL"); return e && !strcmp(e,"1"); }
 NVN(nvnWindowBuilderSetPresentInterval, void, NVNwindowBuilder *b, int v) { WB(b)->interval = fpslocker_window_interval()?1:v; }
 NVN(nvnWindowInitialize, NVNboolean, NVNwindow *w, const NVNwindowBuilder *b) {
@@ -1913,7 +1913,7 @@ static void rt_comp_tick(uint64_t period_ns);
 static double g_rt_comp_ms;   // Currently declared real-time computation amount (ms; 0 = not declared)
 static double g_rt_period_ms;
 static void sleep_until_ns(uint64_t dl);
-__attribute__((weak)) void dm_thread_native_wait(int entering);   // PEANUTS: hle_thread.c; absent in the graphics unit tests, which have no game threads
+__attribute__((weak)) void dm_thread_native_wait(int entering);   // KIWI: hle_thread.c; absent in the graphics unit tests, which have no game threads
 static uint64_t present_period(const win_t *o);
 static uint64_t rt_period_ns(const win_t *o, uint64_t period);
 static int present_itv(const win_t *o);
@@ -1955,13 +1955,13 @@ NVN(nvnWindowAcquireTexture, NVNwindowAcquireTextureResult, NVNwindow *w, NVNsyn
         if (pace < 0) { const char *e = getenv("DM_DETCLOCK_PACE"), *d = getenv("DM_DETCLOCK"); step = d ? strtoull(d, 0, 0) : 0; pace = e && atoi(e) && step; }
         if (pace) { if (last && now_ns() < last + step) sleep_until_ns(last + step); last = now_ns(); }
     }
-    if (dm_thread_native_wait) dm_thread_native_wait(1);   // PEANUTS: the two waits below (a ring slot, the present queue's return of this texture) are native waits too, see sleep_until_ns
+    if (dm_thread_native_wait) dm_thread_native_wait(1);   // KIWI: the two waits below (a ring slot, the present queue's return of this texture) are native waits too, see sleep_until_ns
     pace_ns += mtl_snap_acquire_wait();   // ring capacity is waited for at acquire, where the game does not hold its present lock
     g_acq_wait_ns += wait; trow(g_frame, "@late_ms", wait ? (now_ns() - at) / 1e6 : 0);
     // The previous present of this texture has not yet been processed by the present thread (display cannot keep up, a whole swapchain round behind): wait for it to be returned, then hand it to the game to draw
     uint64_t tk = *idx < 4 ? o->ticket[*idx] : 0;
     if (tk) { uint64_t w0 = now_ns(); mtl_present_wait(tk); g_pq_wait_ns += now_ns() - w0; }
-    if (dm_thread_native_wait) dm_thread_native_wait(0);   // PEANUTS
+    if (dm_thread_native_wait) dm_thread_native_wait(0);   // KIWI
     if (s) { ((sync_t *)s)->fenced = 2; ((sync_t *)s)->fence = mtl_acquire_fence(*idx < 4 ? o->pfence[*idx] : 0); }   // The swapchain texture becomes available once the graphics layer says (mtl_acquire_fence) (fenced 2: an acquire sync, for the wait ledger)
     if (!g_fs_start) { g_fs_start = now_ns(); g_fs_wait = pace_ns; }   // the frame starts when the first acquire after a present returns: on a display-link tick when on time
     return NVN_WINDOW_ACQUIRE_TEXTURE_RESULT_SUCCESS;
@@ -2016,7 +2016,7 @@ static double g_pres_exp[TWIN], g_pres_exp_last;   // how long that frame should
 // The hold (60 Hz vsyncs) each present was given, by present number. On-screen intervals are read 8 presents late, so each is judged against the holds of its own presents:
 // with the frame step at 2 vsyncs every frame stays 33.3 ms, which is not a dropped frame
 static uint8_t g_hold_ring[16];
-static uint64_t g_pres_tk[16];   // PEANUTS: the ticket (mtl_present) of each of the last 16 presents, by the window's count of presents; 0 = that present showed nothing
+static uint64_t g_pres_tk[16];   // KIWI: the ticket (mtl_present) of each of the last 16 presents, by the window's count of presents; 0 = that present showed nothing
 static double pres_expect_ms(uint64_t n) {   // the interval between presents n - 1 and n shows frame n - 1: the display link holds it for its own present's hold, the Mac pacer spaces present n by n's, so the larger of the two
     int k = g_hold_ring[n % 16] > g_hold_ring[(n - 1) % 16] ? g_hold_ring[n % 16] : g_hold_ring[(n - 1) % 16];
     double held = (k ? k : 1) * 1000.0 / 60, tgt = 1000.0 / mtl_fps_target();   // at least one frame period of the target (33.3 ms when the game itself asks for 30)
@@ -2103,7 +2103,7 @@ static void power_line(uint64_t frame) {
 #endif
 }
 int nxhost_fps_limit_get(void) __attribute__((weak));   // the host's frame limit (hle_fpslock.c), 0 without one
-// PEANUTS: the Android layer's panel-locked pacing (vka_present.c, vka_panel.h; these defaults elsewhere): a pacing period in whole refreshes of the panel as
+// KIWI: the Android layer's panel-locked pacing (vka_present.c, vka_panel.h; these defaults elsewhere): a pacing period in whole refreshes of the panel as
 // measured, and its line after the on-screen line. g_pace_nominal / g_pace_tick: the acquire pacer's period on the host's clock and the one it used at the last present
 __attribute__((weak)) uint64_t vka_panel_tick(uint64_t period_ns) { return period_ns; }
 __attribute__((weak)) void vka_panel_line(unsigned long long frame, const double *iv_ms, unsigned n, uint64_t nominal_ns, uint64_t tick_ns) { (void)frame; (void)iv_ms; (void)n; (void)nominal_ns; (void)tick_ns; }
@@ -2132,7 +2132,7 @@ static void tsummary(uint64_t frame) {
       int64_t foot = plat_footprint_bytes(); double fp = foot >= 0 ? foot / 1048576.0 : -1;
       double br = dm_brightness_now();   // footprint / brightness are carried on the on-screen present row: does not depend on the tick-entry observation gate (camp runs have it too)
       if (k) { qsort(v, k, sizeof *v, dcmp); LOG("[nvn] on-screen up to frame %llu: %u frames, dropped %u (discarded %u), p99 %.2f ms; footprint %.0f MiB; brightness %.2f; thermal %d", frame, k + discard, drop, discard, v[(k * 99) / 100 < k ? (k * 99) / 100 : k - 1], fp, br, dm_thermal_now()); }
-      vka_panel_line(frame, g_pres_iv, n, g_pace_nominal, g_pace_tick);   // PEANUTS: the panel's period, the pacer's source, on-screen intervals in refreshes
+      vka_panel_line(frame, g_pres_iv, n, g_pace_nominal, g_pace_tick);   // KIWI: the panel's period, the pacer's source, on-screen intervals in refreshes
       g_presn = 0; }
     power_line(frame);
     { static uint64_t prev[6], pf; uint64_t v[6]; mtl_vbuf_stats(&v[0], &v[1], &v[2], &v[3], &v[4], &v[5]);
@@ -2239,12 +2239,12 @@ static void rt_comp_tick(uint64_t period_ns) {
 static void sleep_until_ns(uint64_t dl) {   // absolute time on the monotonic clock
     static plat_timebase_t tb; if (!tb.denom) plat_timebase(&tb);
     uint64_t now = now_ns(); if (dl <= now) return;
-    // PEANUTS: a pacing sleep is a native wait of the game's thread (hle_thread.c dm_thread_native_wait), as an HLE's condition wait is: the thread cannot come back to
+    // KIWI: a pacing sleep is a native wait of the game's thread (hle_thread.c dm_thread_native_wait), as an HLE's condition wait is: the thread cannot come back to
     // game code from it while a stop of all threads holds (dm_guest_stop_all), so the stop need not wait the sleep out. Unbracketed, a 30 fps game's 33 ms pacing sleep
     // outlasted the stop's 25 ms bound every time the companion wrote with the game stopped
     if (dm_thread_native_wait) dm_thread_native_wait(1);
     plat_wait_until(plat_abs_time() + (dl - now) * tb.denom / tb.numer);
-    if (dm_thread_native_wait) dm_thread_native_wait(0);   // PEANUTS
+    if (dm_thread_native_wait) dm_thread_native_wait(0);   // KIWI
 }
 // Present is fixed at 60 Hz: the adaptive mechanism stepped down at frame 60 in 24/24 real-device logs and never came back up, so for this phase 60 fps is the hard floor.
 // DM_PRESENT_HZ=0 (uncapped frame rate) serves only as an explicit performance profiling switch: some of the game's UI logic counts frames (with the same save, uncapped gives
@@ -2267,7 +2267,7 @@ __attribute__((weak)) int dm_movie_playing(void) { return 0; }   // hle_movie.c:
 // Thermal cap (iOS): while the device is thermally serious or worse (NSProcessInfo thermalState >= 2) the frame step holds 30 fps, and it goes back to the cap after the device
 // has been fair or better for THERMAL_CALM_NS, so it does not flap. At "serious" iOS caps the GPU clock to about a third: Breath of the Wild's vistas (about 3,000 G-buffer draws)
 // then took 17-26 ms a frame and dropped a frame in most windows; a steady 30 instead also lets the device cool. DM_THERMAL_CAP=0 turns it off; the Mac reports no thermal state
-// PEANUTS: on Android it is opt-in (DM_THERMAL_CAP=1, which the launcher sets for a profile with thermal_cap 1) and holds a frame limit above 30 as well (hle_fpslock.c limit_raw)
+// KIWI: on Android it is opt-in (DM_THERMAL_CAP=1, which the launcher sets for a profile with thermal_cap 1) and holds a frame limit above 30 as well (hle_fpslock.c limit_raw)
 #define THERMAL_CALM_NS 30000000000ull
 static int thermal_capped(void) {
     // Acquire, present and the display-link configuration can ask on different
@@ -2277,7 +2277,7 @@ static int thermal_capped(void) {
     static int on = -1, capped; static uint64_t last, calm_since;
     pthread_mutex_lock(&mu);
 #ifdef __ANDROID__
-    if (on < 0) { const char *e = getenv("DM_THERMAL_CAP"); on = e && *e && strcmp(e, "0") != 0; }   // PEANUTS: opt-in on Android (a profile's thermal_cap 1 sets DM_THERMAL_CAP=1; vka_perf.c dm_thermal_now)
+    if (on < 0) { const char *e = getenv("DM_THERMAL_CAP"); on = e && *e && strcmp(e, "0") != 0; }   // KIWI: opt-in on Android (a profile's thermal_cap 1 sets DM_THERMAL_CAP=1; vka_perf.c dm_thermal_now)
 #else
     if (on < 0) { const char *e = getenv("DM_THERMAL_CAP"); on = !(e && !strcmp(e, "0")); }
 #endif
@@ -2286,7 +2286,7 @@ static int thermal_capped(void) {
         if (now - last >= 1000000000ull) {   // the thermal state is read once a second
             last = now;
             int th = dm_thermal_now();
-            if (th >= 2) { calm_since = 0; if (!capped) { capped = 1; LOG("[nvn] thermal state %d: frame rates above 30 (the frame step, a frame limit) hold 30 fps until the device is fair again for %llu s (DM_THERMAL_CAP=0 turns this off)", th, THERMAL_CALM_NS / 1000000000ull); } }   // PEANUTS: not only the frame step (hle_fpslock.c limit_raw)
+            if (th >= 2) { calm_since = 0; if (!capped) { capped = 1; LOG("[nvn] thermal state %d: frame rates above 30 (the frame step, a frame limit) hold 30 fps until the device is fair again for %llu s (DM_THERMAL_CAP=0 turns this off)", th, THERMAL_CALM_NS / 1000000000ull); } }   // KIWI: not only the frame step (hle_fpslock.c limit_raw)
             else if (capped) { if (!calm_since) calm_since = now; else if (now - calm_since >= THERMAL_CALM_NS) { capped = 0; LOG("[nvn] thermal state %d for %llu s: back to the frame rate cap", th, THERMAL_CALM_NS / 1000000000ull); } }
         }
     }
@@ -2294,10 +2294,10 @@ static int thermal_capped(void) {
     pthread_mutex_unlock(&mu);
     return result;
 }
-int dm_thermal_capped(void) { return thermal_capped(); }   // PEANUTS: hle_fpslock.c limit_raw (a frame limit above 30 holds 30 while capped), the cap status (input_android.c nxhost_fps_cap_status: held for heat)
+int dm_thermal_capped(void) { return thermal_capped(); }   // KIWI: hle_fpslock.c limit_raw (a frame limit above 30 holds 30 while capped), the cap status (input_android.c nxhost_fps_cap_status: held for heat)
 __attribute__((weak)) int dm_fps_limit_step(void) { return 0; }   // hle_fpslock.c; graphics unit tests have no host
 static int fps_step_cap(void) {
-    // PEANUTS: Elapsed-time hooks pace independently of whole steps.
+    // KIWI: Elapsed-time hooks pace independently of whole steps.
     if (!dm_fps_state || dm_fps_elapsed_step()) return 0;
     uint32_t b = __atomic_load_n((uint32_t *)dm_fps_state, __ATOMIC_RELAXED); float t; memcpy(&t, &b, sizeof t);
     if (t <= 0) return 0;
@@ -2533,8 +2533,8 @@ NVN(nvnQueuePresentTexture, void, NVNqueue *q, NVNwindow *w, int idx) {
         nvn_cap_present(t, crop);   // DM_NVN_CAPTURE (nvn_capture.inc)
         o->ticket[idx] = mtl_present(t, present_period(o) / 1e9, crop);
         o->pfence[idx] = mtl_last_fence();
-        g_pres_tk[o->presents % 16] = o->ticket[idx];   // PEANUTS: this present's ticket, for the on-screen statistics (below)
-    } else g_pres_tk[o->presents % 16] = 0;   // PEANUTS
+        g_pres_tk[o->presents % 16] = o->ticket[idx];   // KIWI: this present's ticket, for the on-screen statistics (below)
+    } else g_pres_tk[o->presents % 16] = 0;   // KIWI
     gfx_leave();
     atomic_fetch_add(&g_nvn_ns, now_ns() - t0);
     uint64_t f = g_frame, ps, dr; mtl_stats(&ps, &dr);
@@ -2657,7 +2657,7 @@ NVN(nvnQueuePresentTexture, void, NVNqueue *q, NVNwindow *w, int idx) {
     // Real-device semantics: present only enqueues and returns immediately; this frame's display time is scheduled by the pacer, and the texture can be acquired again only at "display time + one period" (blocking in AcquireTexture)
     uint64_t period = present_period(o), now = dm_detclock_enabled() ? guest_ns() : now_ns();
     g_hold_ring[o->presents % 16] = (uint8_t)present_itv(o);
-    // PEANUTS: DM_VK_PACE_PANEL: the slots are whole refreshes of the panel as measured, not sixtieths of a second on the host's clock (an AYN Thor's panel runs at
+    // KIWI: DM_VK_PACE_PANEL: the slots are whole refreshes of the panel as measured, not sixtieths of a second on the host's clock (an AYN Thor's panel runs at
     // 59.83 Hz: the game outran it and waited about 24 ms in an acquire every few seconds). Only when the game may go on changes: the period it is told stays
     g_pace_nominal = period; if (!dm_detclock_enabled()) period = vka_panel_tick(period); g_pace_tick = period;
     nvn_pacer pc = {o->pace};
@@ -2666,7 +2666,7 @@ NVN(nvnQueuePresentTexture, void, NVNqueue *q, NVNwindow *w, int idx) {
     if (idx >= 0 && idx < 4) o->avail[idx] = period ? slot + period : 0;
     static uint64_t prev_slot; if (prev_slot && period) trow(f, "@display_ms", (slot - prev_slot) / 1e6); prev_slot = slot;   // display interval between two adjacent frames on screen (this is the one to look at for dropped frames)
     // Actual presentation interval (windowed mode): taken 8 presents late (the presented callback has arrived by then), as the difference between the n-th and the (n−1)-th; −1 = discarded
-    // PEANUTS: the two times are asked for by the presents' tickets (g_pres_tk), not by the window's count of presents. The graphics layer keeps a present's time under
+    // KIWI: the two times are asked for by the presents' tickets (g_pres_tk), not by the window's count of presents. The graphics layer keeps a present's time under
     // its ticket, which counts for the whole run, and the count starts again at 1 when the game makes its window again (Final Fantasy Resonance when the operation
     // mode changes, AYN Thor 2026-11-15): from then on every frame read as "no reading", the on-screen line stopped and the panel line said "no timing 300"
     if (o->presents > 9) { uint64_t n = o->presents - 8; double a_ = mtl_presented_time(g_pres_tk[n % 16]), b_ = mtl_presented_time(g_pres_tk[(n - 1) % 16]);
@@ -2896,7 +2896,7 @@ NVN(nvnSamplerGetCompare, void, const NVNsampler *s, NVNcompareMode *m, NVNcompa
 NVN(nvnSamplerGetBorderColor, void, const NVNsampler *s, float *c) { memcpy(c, SP(s)->border, 16); }
 NVN(nvnSamplerGetMaxAnisotropy, float, const NVNsampler *s) { return SP(s)->aniso; }
 NVN(nvnSamplerGetReductionFilter, NVNsamplerReduction, const NVNsampler *s) { return (NVNsamplerReduction)SP(s)->reduction; }
-// PEANUTS begin(upstream-candidate): the builder's getters for the rest of its parameters. Digimon Story Time Stranger reads the whole builder back (about 6,100 calls before its
+// KIWI begin(upstream-candidate): the builder's getters for the rest of its parameters. Digimon Story Time Stranger reads the whole builder back (about 6,100 calls before its
 // first scene) and used the unset outputs: CRASH addr=0 at main+0xbc13f0. The integer border colours return what SetBorderColori / ui stored (as numbers, see there)
 NVN(nvnSamplerBuilderGetLodBias, float, const NVNsamplerBuilder *b) { return ((const samp_builder_t *)b)->p.lod_bias; }
 NVN(nvnSamplerBuilderGetCompare, void, const NVNsamplerBuilder *b, NVNcompareMode *m, NVNcompareFunc *f) {
@@ -2908,7 +2908,7 @@ NVN(nvnSamplerBuilderGetBorderColorui, void, const NVNsamplerBuilder *b, uint32_
 NVN(nvnSamplerBuilderGetMaxAnisotropy, float, const NVNsamplerBuilder *b) { return ((const samp_builder_t *)b)->p.aniso; }
 NVN(nvnSamplerBuilderGetReductionFilter, NVNsamplerReduction, const NVNsamplerBuilder *b) { return (NVNsamplerReduction)((const samp_builder_t *)b)->p.reduction; }
 NVN(nvnSamplerBuilderGetLodSnap, float, const NVNsamplerBuilder *b) { (void)b; return 0.f; }   // SetLodSnap is ignored (no Metal or Vulkan equivalent), so the default, 0
-// PEANUTS end
+// KIWI end
 // whether two samplers have the same state (games use it to deduplicate sampler pool entries)
 NVN(nvnSamplerCompare, NVNboolean, const NVNsampler *a, const NVNsampler *b) {
     const samp_par *x = SP(a), *y = SP(b);
@@ -3015,7 +3015,7 @@ NVN(nvnTextureBuilderGetHeight, int, const NVNtextureBuilder *b) { return (int)(
 NVN(nvnTextureBuilderGetDepth, int, const NVNtextureBuilder *b) { return (int)((const tex_builder_t *)b)->d.depth; }
 NVN(nvnTextureBuilderGetLevels, int, const NVNtextureBuilder *b) { return (int)((const tex_builder_t *)b)->d.levels; }
 NVN(nvnTextureBuilderGetFormat, NVNformat, const NVNtextureBuilder *b) { return (NVNformat)((const tex_builder_t *)b)->d.format; }
-NVN(nvnTextureBuilderGetDepthStencilMode, NVNtextureDepthStencilMode, const NVNtextureBuilder *b) { return ((const tex_builder_t *)b)->stencil ? NVN_TEXTURE_DEPTH_STENCIL_MODE_STENCIL : NVN_TEXTURE_DEPTH_STENCIL_MODE_DEPTH; }   // PEANUTS: tapionallanaire, PR #164
+NVN(nvnTextureBuilderGetDepthStencilMode, NVNtextureDepthStencilMode, const NVNtextureBuilder *b) { return ((const tex_builder_t *)b)->stencil ? NVN_TEXTURE_DEPTH_STENCIL_MODE_STENCIL : NVN_TEXTURE_DEPTH_STENCIL_MODE_DEPTH; }   // KIWI: tapionallanaire, PR #164
 NVN(nvnTextureBuilderGetSamples, int, const NVNtextureBuilder *b) { return ((const tex_builder_t *)b)->d.samples; }
 NVN(nvnTextureBuilderGetStride, ptrdiff_t, const NVNtextureBuilder *b) { return (ptrdiff_t)((const tex_builder_t *)b)->d.stride; }
 NVN(nvnTextureViewGetFormat, NVNboolean, const NVNtextureView *v, NVNformat *f) { const view_t *w = (const view_t *)v; if (f) *f = (NVNformat)w->format; return w->set_format; }
@@ -3251,11 +3251,11 @@ NVN_NOPROTO(nvnProgramSetSampleShading, NVNboolean, NVNprogram *p, int mode) { (
 // Singular / combined forms → plural / separate forms; state the replay layer does not have yet (conditional render, depth bounds, ...) is logged once and drawing continues (better to over-draw than to drop).
 #include "../tex/nvn_deswizzle.h"
 
-NVN(nvnCommandBufferCallCommands, void, NVNcommandBuffer *c, int n, const NVNcommandHandle *h) { cmd_call_lists(c, n, h); }   // PEANUTS: a CALL; CopyCommands copies (cmd_copy_list)
+NVN(nvnCommandBufferCallCommands, void, NVNcommandBuffer *c, int n, const NVNcommandHandle *h) { cmd_call_lists(c, n, h); }   // KIWI: a CALL; CopyCommands copies (cmd_copy_list)
 // Combined texture handle (texture id | sampler id << 20) is recorded into the texture slot as is: the replay layer takes the texture from the low 20 bits and the sampler from the high bits (nvn_mtl.m NVN_RB_SAMPT)
 // One combined handle: recorded as the hardware lays the command out, the handle 16 bytes in, where Luigi's Mansion 3 patches it after recording (nvn_obj.h p_bind_tex1)
 NVN(nvnCommandBufferBindTexture, void, NVNcommandBuffer *c, NVNshaderStage st, int i, NVNtextureHandle h) {
-#ifndef __ANDROID__   // PEANUTS(upstream-candidate)
+#ifndef __ANDROID__   // KIWI(upstream-candidate)
     int32_t tb = CB(c)->tex_base, sb = CB(c)->samp_base;
     if (tb || sb) { *REC(c, OP_BIND_TEX1, p_bind_tex1) = (p_bind_tex1){st, i, (uint64_t)h, tb, sb}; return; }
 #endif
@@ -3269,7 +3269,7 @@ NVN(nvnCommandBufferBindTextures, void, NVNcommandBuffer *c, NVNshaderStage st, 
 NVN_NOPROTO(nvnCommandBufferBindTexturesDeferred, void, NVNcommandBuffer *c, NVNshaderStage st, int first, int n, const NVNtextureHandle *h) {
     p_bind_handles *r = bind_handles(c, OP_BIND_TEX, st, first, n, (const uint64_t *)h);
     if (r && h) { r->defer = 1; r->src = (uint64_t)(uintptr_t)h; }
-#ifndef __ANDROID__   // PEANUTS(upstream-candidate)
+#ifndef __ANDROID__   // KIWI(upstream-candidate)
     if (CB(c)->tex_base || CB(c)->samp_base) ONCE_LOG("[RED] deferred-bound handles are read only at replay: the numbering base of this command buffer's bound descriptor pools is not added (pools %d / %d)", CB(c)->tex_base, CB(c)->samp_base);
 #endif
 }
@@ -3335,7 +3335,7 @@ static struct vpool *vpool_at(const void *pool, uint64_t a) {   // caller holds 
 }
 int nvn_sparse_pool(const void *pool) { return pool && ((const pool_t *)pool)->vp; }   // no lock: set at Initialize, cleared at the first mapping (an aliased pool) or Finalize; called per texture lookup
 uint64_t nvn_sparse_gen(void) { return atomic_load(&g_vp_gen); }
-// PEANUTS: Resolve one contiguous physical range for a Vulkan buffer binding. A hole or a different
+// KIWI: Resolve one contiguous physical range for a Vulkan buffer binding. A hole or a different
 // physical run ends the binding, since one VkBuffer cannot span both.
 uint64_t nvn_sparse_run(uint64_t a, uint64_t n, uint64_t *physical) {
     pthread_mutex_lock(&g_vp_mu);
@@ -3456,7 +3456,7 @@ NVN(nvnCommandBufferSetViewportSwizzles, void, NVNcommandBuffer *c, int first, i
 NVN(nvnCommandBufferSetAlphaRef, void, NVNcommandBuffer *c, float r) { REC(c, OP_ALPHA_REF, p_alpha_ref)->ref = r; }
 NVN(nvnCommandBufferSetLineWidth, void, NVNcommandBuffer *c, float w) { (void)c; if (w != 1.0f) ONCE_LOG("SetLineWidth %.2f: Metal has only 1-pixel lines", w); }
 NVN(nvnCommandBufferSetPointSize, void, NVNcommandBuffer *c, float s) { (void)c; (void)s; ONCE_LOG("SetPointSize: the point size comes from the shader"); }
-NVN(nvnCommandBufferSetPatchSize, void, NVNcommandBuffer *c, int n) { REC(c, OP_PATCH_SIZE, p_patch_size)->size = n; }   // PEANUTS(upstream-candidate): Vulkan's tessellated draws (vka_draw.c)
+NVN(nvnCommandBufferSetPatchSize, void, NVNcommandBuffer *c, int n) { REC(c, OP_PATCH_SIZE, p_patch_size)->size = n; }   // KIWI(upstream-candidate): Vulkan's tessellated draws (vka_draw.c)
 NVN(nvnCommandBufferSetPrimitiveRestart, void, NVNcommandBuffer *c, uint32_t en, int idx) { *REC(c, OP_PRIM_RESTART, p_prim_restart) = (p_prim_restart){(en & 0xff) != 0, (uint32_t)idx}; }
 // Rasterizer discard: draws run their vertex stage only (with transform feedback, the capture); recorded, and at replay such a draw rasterizes nothing (nvn_mtl.m)
 NVN(nvnCommandBufferSetRasterizerDiscard, void, NVNcommandBuffer *c, uint32_t en) { REC(c, OP_RAST_DISCARD, p_rast_discard)->on = (en & 0xff) != 0; }
@@ -3489,7 +3489,7 @@ NVN(nvnCommandBufferDownsampleTextureView, void, NVNcommandBuffer *c, const NVNt
 // previously every call decoded, patched and re-encoded the whole level, and after a few minutes the main thread spent whole frames there (frames stopped from 175 s). Returns −1 when the region is out of range or the format unsupported, falling back to the whole-level path
 static int write_region_bl(const tex_t *t, unsigned level, unsigned layer, const NVNcopyRegion *r, const uint8_t *src, size_t row, int bw, int bh, int bpb) {
     uint32_t row_bytes, rows, slices, gbpb; uint64_t base; unsigned th, td;
-    if (nvn_deswizzle_geom(&t->d, level, layer, &row_bytes, &rows, &slices, &base, &th, &td, &gbpb) || (int)gbpb != bpb || r->xoffset < 0 || r->yoffset < 0 || r->width < 0 || r->height < 0) return -1;   // PEANUTS: bounded WriteTexels dirty prep, #403 (0.1.8)
+    if (nvn_deswizzle_geom(&t->d, level, layer, &row_bytes, &rows, &slices, &base, &th, &td, &gbpb) || (int)gbpb != bpb || r->xoffset < 0 || r->yoffset < 0 || r->width < 0 || r->height < 0) return -1;   // KIWI: bounded WriteTexels dirty prep, #403 (0.1.8)
     uint32_t x0 = (uint32_t)(r->xoffset / bw) * (uint32_t)bpb, y0 = (uint32_t)(r->yoffset / bh);
     size_t wb = (size_t)((r->width + bw - 1) / bw) * (size_t)bpb, hb = (size_t)((r->height + bh - 1) / bh);
     if (x0 + wb > row_bytes || y0 + hb > rows) return -1;
@@ -3497,7 +3497,7 @@ static int write_region_bl(const tex_t *t, unsigned level, unsigned layer, const
     uint32_t lb = nvn_tex_level_gobs(&t->d, level) * 64; if (lb < row_bytes) lb = row_bytes;   // the row as laid out (padded in a sparse texture's tiled levels)
     uint64_t off_lo = nvn_bl_offset(x0, y0, 0, lb, rows, th, td);
     if (hb == 1 && (x0 >> 4) == ((x0 + (uint32_t)wb - 1) >> 4)) {
-        // PEANUTS: single 16-byte GOB segment (all 1x1 texel writes): prepare and copy just those bytes
+        // KIWI: single 16-byte GOB segment (all 1x1 texel writes): prepare and copy just those bytes
         if (base + off_lo + wb > t->L.size) return -1;
         dm_guest_write_prepare(t->mem + base + off_lo, wb);
         memcpy(t->mem + base + off_lo, src, wb);
@@ -3521,7 +3521,7 @@ static void write_texels(const tex_t *t, const view_t *v, const NVNcopyRegion *r
     int is3d = t->d.target == NVN_TEXTURE_TARGET_3D, nz = r->depth ? r->depth : 1;
     if (!is3d) {
         size_t wb0 = (size_t)((r->width + bw - 1) / bw) * bpb, row0 = row ? row : wb0, img0 = img ? img : row0 * (size_t)((r->height + bh - 1) / bh);
-        // PEANUTS(upstream-candidate): write_region_bl prepares only the touched block-linear byte span per layer
+        // KIWI(upstream-candidate): write_region_bl prepares only the touched block-linear byte span per layer
         int ok = 1;
         for (int z = 0; z < nz && ok; z++) {
             if (r->zoffset + z < 0) { ok = 0; break; }
@@ -3559,21 +3559,21 @@ NVN(nvnTextureWriteTexelsStrided, void, const NVNtexture *t, const NVNtextureVie
 // RHIAsyncReallocateTexture2D: nvnCommandBufferCopyTextureToTexture, a level at a time) and writes the new, finer levels from the CPU; uploaded from the storage, the copied levels held
 // what the pool had there before (another texture's data, zeros), and the Yoshis' felt sampled speckles from the moment a level streamed in. −1 when the copy cannot be mirrored (3D,
 // a format mismatch, a region out of range): the GPU copy alone then stands until the next upload
-// PEANUTS(upstream-candidate): write_region_bl prepares the touched block-linear byte span directly, replacing mirror_prepare
+// KIWI(upstream-candidate): write_region_bl prepares the touched block-linear byte span directly, replacing mirror_prepare
 int nvn_tex_mirror_b2t(const tex_t *t, unsigned level, unsigned layer0, const NVNcopyRegion *r, const uint8_t *src, size_t row, size_t img) {
     int bw, bh, bpb = nvn_fmt_bpb(t->d.format, &bw, &bh);
     if (!t->mem || !bpb || t->d.target == NVN_TEXTURE_TARGET_3D || level >= t->d.levels || r->zoffset < 0) return -1;
     int nz = r->depth ? r->depth : 1;
     for (int z = 0; z < nz; z++) {
         unsigned layer = layer0 + (unsigned)(r->zoffset + z);
-        if (write_region_bl(t, level, layer, r, src + (size_t)z * img, row, bw, bh, bpb)) return -1;   // PEANUTS: bounded WriteTexels dirty prep, #403 (0.1.8)
+        if (write_region_bl(t, level, layer, r, src + (size_t)z * img, row, bw, bh, bpb)) return -1;   // KIWI: bounded WriteTexels dirty prep, #403 (0.1.8)
     }
     return 0;
 }
 int nvn_tex_mirror_t2t(const tex_t *s, unsigned sl, unsigned ss, const NVNcopyRegion *sr, const tex_t *d, unsigned dl, unsigned ds, const NVNcopyRegion *dr) {
     int bw, bh, bpb = nvn_fmt_bpb(s->d.format, &bw, &bh), dbw, dbh, dbpb = nvn_fmt_bpb(d->d.format, &dbw, &dbh);
     if (!s->mem || !d->mem || !bpb || bpb != dbpb || bw != dbw || bh != dbh || s->d.target == NVN_TEXTURE_TARGET_3D || d->d.target == NVN_TEXTURE_TARGET_3D) return -1;
-    if (sl >= s->d.levels || dl >= d->d.levels || sr->width != dr->width || sr->height != dr->height || sr->xoffset < 0 || sr->yoffset < 0 || sr->zoffset < 0 || dr->zoffset < 0 || sr->width < 0 || sr->height < 0) return -1;   // PEANUTS: bounded WriteTexels dirty prep, #403 (0.1.8)
+    if (sl >= s->d.levels || dl >= d->d.levels || sr->width != dr->width || sr->height != dr->height || sr->xoffset < 0 || sr->yoffset < 0 || sr->zoffset < 0 || dr->zoffset < 0 || sr->width < 0 || sr->height < 0) return -1;   // KIWI: bounded WriteTexels dirty prep, #403 (0.1.8)
     uint32_t lw = s->d.width >> sl ? s->d.width >> sl : 1, lh = s->d.height >> sl ? s->d.height >> sl : 1;
     size_t lp = (size_t)((lw + bw - 1) / bw) * bpb, lr = (lh + bh - 1) / bh, x0 = (size_t)(sr->xoffset / bw) * bpb, y0 = (size_t)(sr->yoffset / bh);
     if (x0 + (size_t)((sr->width + bw - 1) / bw) * bpb > lp || y0 + (size_t)((sr->height + bh - 1) / bh) > lr) return -1;
@@ -3581,7 +3581,7 @@ int nvn_tex_mirror_t2t(const tex_t *s, unsigned sl, unsigned ss, const NVNcopyRe
     int nz = sr->depth ? sr->depth : 1, ok = 1;
     for (int z = 0; z < nz && ok; z++) {
         unsigned layer = ds + (unsigned)(dr->zoffset + z);
-        ok = !nvn_deswizzle(&s->d, sl, ss + (unsigned)(sr->zoffset + z), s->mem, lin, lp) && !write_region_bl(d, dl, layer, dr, lin + y0 * lp + x0, lp, bw, bh, bpb);   // PEANUTS(upstream-candidate)
+        ok = !nvn_deswizzle(&s->d, sl, ss + (unsigned)(sr->zoffset + z), s->mem, lin, lp) && !write_region_bl(d, dl, layer, dr, lin + y0 * lp + x0, lp, bw, bh, bpb);   // KIWI(upstream-candidate)
     }
     free(lin);
     return ok ? 0 : -1;

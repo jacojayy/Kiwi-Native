@@ -34,8 +34,8 @@ run: $(B)/t_language $(B)/t_motion $(B)/t_heap_size $(B)/t_touch $(B)/t_gesture 
 	$(B)/t_audio_spsc
 	$(B)/t_audio_stats
 	$(B)/t_fpslock
-	$(B)/t_uecvar # PEANUTS: t_oot_wide, t_dkb_wide, t_mkw_wide, t_mtf_size and t_pkp_aspect (Switch 2 games' gates) removed: Switch 1 only
-	$(B)/t_ue_heap_alignment # PEANUTS: #236
+	$(B)/t_uecvar # KIWI: t_oot_wide, t_dkb_wide, t_mkw_wide, t_mtf_size and t_pkp_aspect (Switch 2 games' gates) removed: Switch 1 only
+	$(B)/t_ue_heap_alignment # KIWI: #236
 	$(B)/t_audren_work
 	$(B)/t_audren_layout
 	$(B)/t_swkbd
@@ -62,7 +62,7 @@ run: $(B)/t_language $(B)/t_motion $(B)/t_heap_size $(B)/t_touch $(B)/t_gesture 
 	$(B)/t_pad_motion
 	$(B)/t_motion_apple
 	$(B)/t_pad_apple
-	$(B)/t_account # PEANUTS(upstream-candidate): nxnative 84e63860
+	$(B)/t_account # KIWI(upstream-candidate): nxnative 84e63860
 	$(B)/t_motion_pro
 	$(B)/t_motion_pro_mac
 	TMPDIR="$(abspath $(B))" $(B)/t_hid
@@ -84,13 +84,13 @@ run: $(B)/t_language $(B)/t_motion $(B)/t_heap_size $(B)/t_touch $(B)/t_gesture 
 	$(B)/t_android_livemap
 	$(B)/t_android_smap
 	$(B)/t_android_texown
-# PEANUTS(upstream-candidate): the NVN1 first-sample storage test joins the run
+# KIWI(upstream-candidate): the NVN1 first-sample storage test joins the run
 	$(B)/t_android_texcontent
 	$(B)/t_android_mapbudget
 	$(B)/t_android_psogate
 	$(B)/t_android_auto
 	$(B)/t_nvn_dpool
-# PEANUTS: #807, empty-pool command memory grants
+# KIWI: #807, empty-pool command memory grants
 	$(B)/t_nvn_cmdarena
 	$(B)/t_android_t2tpath
 	$(B)/t_android_wbfollow
@@ -98,9 +98,9 @@ run: $(B)/t_language $(B)/t_motion $(B)/t_heap_size $(B)/t_touch $(B)/t_gesture 
 	$(B)/t_android_pckeep
 	$(B)/t_android_pwlist
 	$(B)/t_android_fmtlist
-# PEANUTS: sampler chosen by the view format
+# KIWI: sampler chosen by the view format
 	$(B)/t_android_sampfilter
-# PEANUTS: bounded draw ranges
+# KIWI: bounded draw ranges
 	$(B)/t_android_draw_range
 	$(B)/t_android_place
 	$(B)/t_android_ovl
@@ -134,7 +134,7 @@ audren-work: $(B)/t_audren_work
 run: $(B)/t_audren_layout
 $(B)/t_audren_layout: t_audren_layout.c ../hle_audren.c ../hle.h ../dm.h $(GAME_H) | $(B)
 	$(CLANG) -O1 -g -Wall -Werror -Wno-unused-function -I.. $(GINC) -o $@ t_audren_layout.c
-# PEANUTS: the Android output path of hle_audio.c built for Linux: the NDK and arm64 headers are stand-ins in stub_aaudio/, GAME only picks a profile header
+# KIWI: the Android output path of hle_audio.c built for Linux: the NDK and arm64 headers are stand-ins in stub_aaudio/, GAME only picks a profile header
 run: $(B)/t_audio_feed
 $(B)/t_audio_feed: t_audio_feed.c ../hle_audio.c ../hle.h ../dm.h stub_aaudio/aaudio/AAudio.h $(GAME_H) | $(B)
 	$(CLANG) -O1 -g -Wall -Wno-unused-function -D__ANDROID__ -D__aarch64__ -Istub_aaudio -I.. $(GINC) -o $@ t_audio_feed.c -lpthread
@@ -236,7 +236,7 @@ $(B)/t_fpslock: t_fpslock.c ../hle_fpslock.c ../hle.h ../dm.h $(GAME_H) | $(B)
 run: $(B)/t_uecvar
 $(B)/t_uecvar: t_uecvar.c ../hle_uecvar.c ../hle.h ../dm.h $(GAME_H) | $(B)
 	$(CLANG) -O1 -g -Wno-unused-function $(GINC) -o $@ t_uecvar.c
-# PEANUTS: the Unreal 4.27 page alignment (#236)
+# KIWI: the Unreal 4.27 page alignment (#236)
 run: $(B)/t_ue_heap_alignment
 $(B)/t_ue_heap_alignment: t_ue_heap_alignment.c ../hle_uemalloc.c ../hle.h ../dm.h $(GAME_H) | $(B)
 	$(CLANG) -O1 -g -Wno-unused-function -Wl,-dead_strip $(GINC) -o $@ t_ue_heap_alignment.c
@@ -279,11 +279,11 @@ $(B)/t_motion_apple: t_motion_apple.m ../motion_apple.h ../dm_input.h | $(B)
 run: $(B)/t_pad_apple
 $(B)/t_pad_apple: t_pad_apple.m ../pad_apple.h ../dm_input.h | $(B)
 	$(CLANG) -O1 -g -fobjc-arc -Wall -Werror -I.. -o $@ t_pad_apple.m -framework Foundation -framework GameController
-# PEANUTS begin(upstream-candidate): nxnative 84e63860, account::GetUserId takes any handle
+# KIWI begin(upstream-candidate): nxnative 84e63860, account::GetUserId takes any handle
 run: $(B)/t_account
 $(B)/t_account: t_account.c ../hle_account.c ../hle.h ../dm.h $(GAME_H) | $(B)
 	$(CLANG) -O1 -g -Wall -Werror -Wno-unused-function $(GINC) -o $@ t_account.c
-# PEANUTS end
+# KIWI end
 run: $(B)/t_motion_pro $(B)/t_motion_pro_mac
 $(B)/t_motion_pro: t_motion_pro.c ../motion_pro.h | $(B)
 	$(CLANG) -O1 -g -Wall -Werror -fsanitize=address,undefined -o $@ t_motion_pro.c
@@ -436,7 +436,7 @@ coverage:
 	rm -rf $(B)/cov/prof
 	LLVM_PROFILE_FILE="$(call cov_profile,$(B)/cov)" $(MAKE) -i B=$(B)/cov SAN="$(COV_FLAGS)" run
 	@$(call cov_export,$(B)/cov)
-# PEANUTS(upstream-candidate): t_android_texcontent joins the list below
+# KIWI(upstream-candidate): t_android_texcontent joins the list below
 # The Android host's pure parts (dm/host/android): resampler, channel map, SPS size, MediaCodec picture layouts; gamepad / touch / sensor mapping
 run: $(B)/t_android_av $(B)/t_android_input $(B)/t_android_shlib $(B)/t_android_spvpatch $(B)/t_android_imgmem $(B)/t_android_zshare $(B)/t_android_texlimit $(B)/t_android_lowram $(B)/t_android_livemap $(B)/t_android_smap $(B)/t_android_mapbudget $(B)/t_android_psogate $(B)/t_android_wbfollow $(B)/t_android_pckeep $(B)/t_android_pwlist $(B)/t_android_fmtlist $(B)/t_android_place $(B)/t_android_ovl $(B)/t_android_pace $(B)/t_android_skipwarn $(B)/t_android_gmem $(B)/t_android_fpenv $(B)/t_android_soft $(B)/t_android_qsched $(B)/t_android_poolslot $(B)/t_android_prepass $(B)/t_android_tlsig $(B)/t_android_texown $(B)/t_android_texcontent $(B)/t_android_gbar $(B)/t_android_memu $(B)/t_android_auto
 $(B)/t_android_av: t_android_av.c ../android/av_android.h | $(B)
@@ -447,7 +447,7 @@ $(B)/t_android_input: t_android_input.c ../android/input_map.c ../android/input_
 VKA = ../../gfx/vk_android
 $(B)/zstddeclib.o: ../../third_party/zstd/zstddeclib.c | $(B)
 	$(CLANG) -O2 -w -c -o $@ $<
-$(B)/t_android_shlib: $(VKA)/vka_treg.h ../../gfx/nvn/nvn_dpool.h   # PEANUTS(upstream-candidate): sparse descriptor pages.
+$(B)/t_android_shlib: $(VKA)/vka_treg.h ../../gfx/nvn/nvn_dpool.h   # KIWI(upstream-candidate): sparse descriptor pages.
 $(B)/t_android_shlib: t_android_shlib.c $(VKA)/vka_shlib.c $(VKA)/vka_shlib.h $(VKA)/vka_bind.c $(VKA)/vka_bind.h $(VKA)/vka_abi_compat.h $(VKA)/vka_gml.h ../../gfx/nvn/dmsh_abi_vk.h ../../gfx/nvn/dmsh_abi.h ../../gfx/nvn/dmsh_chain_vk.h $(B)/zstddeclib.o | $(B)
 	$(CLANG) -O1 -g -Wall -Werror -Wno-unused-function -fsanitize=address,undefined -I.. -o $@ t_android_shlib.c $(VKA)/vka_shlib.c $(VKA)/vka_bind.c $(B)/zstddeclib.o
 # The image memory blocks' extent allocator (vka_extents.h, vka_imgmem.c)
@@ -470,7 +470,7 @@ $(B)/t_android_smap: t_android_smap.c $(VKA)/vka_smap.h | $(B)
 	$(CLANG) -O1 -g -Wall -Werror -Wno-unused-function -fsanitize=address,undefined -I.. -o $@ t_android_smap.c
 $(B)/t_android_texown: t_android_texown.c $(VKA)/vka_texown.h ../../gfx/nvn/nvn_hmap.h | $(B)
 	$(CLANG) -O1 -g -Wall -Werror -Wno-unused-function -fsanitize=address,undefined -I.. -o $@ t_android_texown.c
-# PEANUTS(upstream-candidate): which texture first used as a sample takes its content from its storage (vka_texcontent.h; vka_tex.c storage_sampled_content)
+# KIWI(upstream-candidate): which texture first used as a sample takes its content from its storage (vka_texcontent.h; vka_tex.c storage_sampled_content)
 $(B)/t_android_texcontent: t_android_texcontent.c $(VKA)/vka_texcontent.h | $(B)
 	$(CLANG) -O1 -g -Wall -Werror -Wno-unused-function -fsanitize=address,undefined -I.. -o $@ t_android_texcontent.c
 # The memory maps budget: the dirty tracker's block size by share of vm.max_map_count, compaction's picks, the lines of /proc/self/maps (vka_mapbudget.h; vka_mem.c maps_tick)
@@ -480,7 +480,7 @@ $(B)/t_android_mapbudget: t_android_mapbudget.c $(VKA)/vka_mapbudget.h | $(B)
 $(B)/t_nvn_dpool: t_nvn_dpool.c ../../gfx/nvn/nvn_dpool.h | $(B)
 	$(CLANG) -O1 -g -Wall -Werror -fsanitize=address,undefined -I.. -o $@ t_nvn_dpool.c
 run: $(B)/t_nvn_dpool
-# PEANUTS: empty-pool command memory grants share a chunk per command buffer, each after the last recording (nvn_cmdarena.h; hle_nvn.c cmdarena_grant, #807)
+# KIWI: empty-pool command memory grants share a chunk per command buffer, each after the last recording (nvn_cmdarena.h; hle_nvn.c cmdarena_grant, #807)
 $(B)/t_nvn_cmdarena: t_nvn_cmdarena.c ../../gfx/nvn/nvn_cmdarena.h | $(B)
 	$(CLANG) -O1 -g -Wall -Werror -fsanitize=address,undefined -I.. -o $@ t_nvn_cmdarena.c
 run: $(B)/t_nvn_cmdarena
@@ -511,18 +511,18 @@ $(B)/t_android_pwlist: t_android_pwlist.c $(VKA)/vka_pwlist.h $(VKA)/vka_gkey.h 
 # An image's format list (vka_fmtlist.h; vka_tex.c img_create, img_lists, img_storage_upgrade)
 $(B)/t_android_fmtlist: t_android_fmtlist.c $(VKA)/vka_fmtlist.h | $(B)
 	$(CLANG) -O1 -g -Wall -Werror -Wno-unused-function -fsanitize=address,undefined -I.. -o $@ t_android_fmtlist.c
-# PEANUTS: a direct sampler must fit the sampled image view's filter features
+# KIWI: a direct sampler must fit the sampled image view's filter features
 run: $(B)/t_android_sampfilter
 $(B)/t_android_sampfilter: t_android_sampfilter.c $(VKA)/vka_sampfilter.h ../../gfx/nvn/nvn_obj.h ../../gfx/nvn/include/nvn.h | $(B)
 	$(CLANG) -O1 -g -Wall -Werror -Wno-unused-function -fsanitize=address,undefined -I../../gfx/nvn/include -o $@ $<
-# PEANUTS: bounded draw ranges
+# KIWI: bounded draw ranges
 run: $(B)/t_android_draw_range
 $(B)/t_android_draw_range: t_android_draw_range.c $(VKA)/vka_draw_range.h | $(B)
 	$(CLANG) -O1 -g -Wall -Werror -fsanitize=address,undefined -o $@ $<
 # Large memory pools placed by parts: the range arithmetic (vka_place.h; vka_mem.c mtl_pool_need)
 $(B)/t_android_place: t_android_place.c $(VKA)/vka_place.h | $(B)
 	$(CLANG) -O1 -g -Wall -Werror -Wno-unused-function -fsanitize=address,undefined -I.. -o $@ t_android_place.c
-# PEANUTS begin: guest memory given back inside a placed segment: the table of holes and the parts of a segment that stay placed (vka_holes.h; vka_mem.c
+# KIWI begin: guest memory given back inside a placed segment: the table of holes and the parts of a segment that stay placed (vka_holes.h; vka_mem.c
 # vka_mem_release). Built with run; android-holes builds and runs it
 run: $(B)/t_android_holes
 $(B)/t_android_holes: t_android_holes.c $(VKA)/vka_holes.h | $(B)
@@ -530,8 +530,8 @@ $(B)/t_android_holes: t_android_holes.c $(VKA)/vka_holes.h | $(B)
 .PHONY: android-holes
 android-holes: $(B)/t_android_holes
 	$(B)/t_android_holes
-# PEANUTS end
-# PEANUTS begin: the resolution scale's arithmetic (vka_resscale.h; vka_tex.c vka_resscale.inc, DM_RES_SCALE): the factor, image sizes, rectangles, the table of
+# KIWI end
+# KIWI begin: the resolution scale's arithmetic (vka_resscale.h; vka_tex.c vka_resscale.inc, DM_RES_SCALE): the factor, image sizes, rectangles, the table of
 # shapes kept at 1x and the scan of a module for the translator's scale code. Built with run; android-resscale builds and runs it
 run: $(B)/t_android_resscale
 $(B)/t_android_resscale: t_android_resscale.c $(VKA)/vka_resscale.h | $(B)
@@ -539,7 +539,7 @@ $(B)/t_android_resscale: t_android_resscale.c $(VKA)/vka_resscale.h | $(B)
 .PHONY: android-resscale
 android-resscale: $(B)/t_android_resscale
 	$(B)/t_android_resscale
-# PEANUTS begin: transform feedback on the Vulkan replay, the part with no Vulkan (vka_tf_spv.c): the capture layout of a control section and the module rewrite,
+# KIWI begin: transform feedback on the Vulkan replay, the part with no Vulkan (vka_tf_spv.c): the capture layout of a control section and the module rewrite,
 # validated by spirv-val when it is on the PATH; DM_VK_SPV_DIR=<.spv folder> adds those modules. Built with run; android-tf builds and runs it
 run: $(B)/t_android_tf
 $(B)/t_android_tf: t_android_tf.c $(VKA)/vka_tf_spv.c $(VKA)/vka_tf.h $(VKA)/vka_selftest_spv.h | $(B)
@@ -547,8 +547,8 @@ $(B)/t_android_tf: t_android_tf.c $(VKA)/vka_tf_spv.c $(VKA)/vka_tf.h $(VKA)/vka
 .PHONY: android-tf
 android-tf: $(B)/t_android_tf
 	$(B)/t_android_tf
-# PEANUTS end
-# PEANUTS begin: frame-generation pacing loop (vka_fg_pace.h + lsfg/lsfg_pacer.c): closed-loop FIFO + display-timing recovery from temporary slowdowns.
+# KIWI end
+# KIWI begin: frame-generation pacing loop (vka_fg_pace.h + lsfg/lsfg_pacer.c): closed-loop FIFO + display-timing recovery from temporary slowdowns.
 # Built with run; android-fgpace builds and runs it
 run: $(B)/t_android_fgpace
 $(B)/t_android_fgpace: t_android_fgpace.c $(VKA)/vka_fg_pace.h $(VKA)/lsfg/lsfg_pacer.c $(VKA)/lsfg/lsfg.h | $(B)
@@ -556,8 +556,8 @@ $(B)/t_android_fgpace: t_android_fgpace.c $(VKA)/vka_fg_pace.h $(VKA)/lsfg/lsfg_
 .PHONY: android-fgpace
 android-fgpace: $(B)/t_android_fgpace
 	$(B)/t_android_fgpace
-# PEANUTS end
-# PEANUTS begin: the panel's refresh grid (vka_panel.h): the period estimate from actual present times, a pacing period as whole refreshes, the chain of desired
+# KIWI end
+# KIWI begin: the panel's refresh grid (vka_panel.h): the period estimate from actual present times, a pacing period as whole refreshes, the chain of desired
 # present times (DM_VK_PACE_PANEL, DM_VK_PRESENT_GRID). Built with run; android-panel builds and runs it
 run: $(B)/t_android_panel
 $(B)/t_android_panel: t_android_panel.c $(VKA)/vka_panel.h | $(B)
@@ -565,8 +565,8 @@ $(B)/t_android_panel: t_android_panel.c $(VKA)/vka_panel.h | $(B)
 .PHONY: android-panel
 android-panel: $(B)/t_android_panel
 	$(B)/t_android_panel
-# PEANUTS end
-# PEANUTS begin: how a texel buffer is read (vka_tbuf.h; vka_draw.c tbuf_view, DM_VK_TBUF_GW): in place, the CPU's copy or a copy the GPU makes, for every combination
+# KIWI end
+# KIWI begin: how a texel buffer is read (vka_tbuf.h; vka_draw.c tbuf_view, DM_VK_TBUF_GW): in place, the CPU's copy or a copy the GPU makes, for every combination
 # of its inputs, and which GPU writes count as pending. Built with run; android-tbuf builds and runs it
 run: $(B)/t_android_tbuf
 $(B)/t_android_tbuf: t_android_tbuf.c $(VKA)/vka_tbuf.h | $(B)
@@ -574,8 +574,8 @@ $(B)/t_android_tbuf: t_android_tbuf.c $(VKA)/vka_tbuf.h | $(B)
 .PHONY: android-tbuf
 android-tbuf: $(B)/t_android_tbuf
 	$(B)/t_android_tbuf
-# PEANUTS end
-# PEANUTS begin: which draws are not skipped while their pipeline is made in the background (vka_psosync.h vkps_why; vka_draw.c draw_body): small
+# KIWI end
+# KIWI begin: which draws are not skipped while their pipeline is made in the background (vka_psosync.h vkps_why; vka_draw.c draw_body): small
 # targets and draws that write memory, the size limit's edges, other draws left skipped. Built with run; android-psosync builds and runs it
 run: $(B)/t_android_psosync
 $(B)/t_android_psosync: t_android_psosync.c $(VKA)/vka_psosync.h | $(B)
@@ -583,18 +583,18 @@ $(B)/t_android_psosync: t_android_psosync.c $(VKA)/vka_psosync.h | $(B)
 .PHONY: android-psosync
 android-psosync: $(B)/t_android_psosync
 	$(B)/t_android_psosync
-# PEANUTS end
+# KIWI end
 # A model of the texture cache's image lifetimes under random operations (references, holds, the old image of an in-place swap, lingering, eviction, pool drops,
 # queued region writes; vka_tex.c): the sanitizer stops at the first image used or freed after it was freed. `build/t_android_imglife old` shows the fault of the
 # first device run of the resolution scale. Built with run; android-imglife builds and runs it
 run: $(B)/t_android_imglife
-# PEANUTS: image retirement covers the recording submission
+# KIWI: image retirement covers the recording submission
 $(B)/t_android_imglife: t_android_imglife.c $(VKA)/vka_texown.h ../../gfx/nvn/nvn_hmap.h | $(B)
 	$(CLANG) -O1 -g -Wall -Werror -Wno-unused-function -fsanitize=address,undefined -o $@ t_android_imglife.c
 .PHONY: android-imglife
 android-imglife: $(B)/t_android_imglife
 	$(B)/t_android_imglife
-# PEANUTS end
+# KIWI end
 # File-backed pools (vka_fileback.h; vka_mem.c "File-backed pools", DM_MEM_FILEBACK). Linux only (mremap, O_TMPFILE, SEEK_DATA, fallocate; the file in TMPDIR, made and
 # removed by the test): make fileback, in `run` on a Linux host. From Anka Native (MIT, EddizEge; NOTICE.md)
 .PHONY: fileback
@@ -630,14 +630,14 @@ $(B)/t_android_pace: t_android_pace.c $(VKA)/vka_pace.h | $(B)
 # The skipped-work warning's window logic (vka_skipwarn.h)
 $(B)/t_android_skipwarn: t_android_skipwarn.c $(VKA)/vka_skipwarn.h | $(B)
 	$(CLANG) -O1 -g -Wall -Werror -Wno-unused-function -fsanitize=address,undefined -I.. -o $@ t_android_skipwarn.c
-# PEANUTS begin: the "Preparing graphics" notice's counters (vka_warmnote.h)
+# KIWI begin: the "Preparing graphics" notice's counters (vka_warmnote.h)
 run: $(B)/t_android_warmnote
 $(B)/t_android_warmnote: t_android_warmnote.c $(VKA)/vka_warmnote.h | $(B)
 	$(CLANG) -O1 -g -Wall -Werror -Wno-unused-function -fsanitize=address,undefined -I.. -o $@ t_android_warmnote.c
 .PHONY: android-warmnote
 android-warmnote: $(B)/t_android_warmnote
 	$(B)/t_android_warmnote
-# PEANUTS end
+# KIWI end
 $(B)/t_android_fpenv: t_android_fpenv.c $(VKA)/vka_fpenv.h | $(B)
 	$(CLANG) -O1 -g -Wall -Werror -Wno-unused-function -fsanitize=address,undefined -I.. -o $@ t_android_fpenv.c
 # GPU waits across NVN queues on the Android replay (dm/gfx/vk_android/vka_qsched.h): parks, producers, the SDK's predicates, syncs, timeline signals, safety valves
@@ -690,103 +690,103 @@ ifneq ($(wildcard $(COOP_DIR)/coop.h),)
 run: net-coop
 endif
 
-# PEANUTS: the Switch 2 games' gate tests (t_mkw_wide, t_mtf_size, t_oot_wide, t_dkb_wide, t_pkp_aspect) are gone with their host files (peanuts/upstream-dropped.txt)
+# KIWI: the Switch 2 games' gate tests (t_mkw_wide, t_mtf_size, t_oot_wide, t_dkb_wide, t_pkp_aspect) are gone with their host files (kiwi/upstream-dropped.txt)
 
-# PEANUTS begin: the host side of the companion runtime, on a Linux PC: make GAME=<id> peanuts-host (in `run` on a Linux host). The host's files are compiled as they
-# are, as if for Android (their declarations; what differs on a PC is replaced in each test). t_peanuts_stopworld: every game thread stopped (hle_thread.c
-# dm_guest_stop_all / dm_guest_resume_all / dm_guest_stopped_in) with real threads. t_peanuts_padgate: the pad before the gate and the gate over what the game reads
-# (hle_hid.c dm_pad_raw / dm_pad_gate), over t_hid.c's stand-ins. t_peanuts_host: dm/peanuts/peanuts.c's tick thread, presence, pad reads and guarded reads
+# KIWI begin: the host side of the companion runtime, on a Linux PC: make GAME=<id> kiwi-host (in `run` on a Linux host). The host's files are compiled as they
+# are, as if for Android (their declarations; what differs on a PC is replaced in each test). t_kiwi_stopworld: every game thread stopped (hle_thread.c
+# dm_guest_stop_all / dm_guest_resume_all / dm_guest_stopped_in) with real threads. t_kiwi_padgate: the pad before the gate and the gate over what the game reads
+# (hle_hid.c dm_pad_raw / dm_pad_gate), over t_hid.c's stand-ins. t_kiwi_host: dm/kiwi/kiwi.c's tick thread, presence, pad reads and guarded reads
 PN_ASIF = -D__ANDROID__=1 -D__aarch64__=1 -D_ASM_X86_SIGCONTEXT_H -include stdbool.h
-.PHONY: peanuts-host
-peanuts-host: $(B)/t_peanuts_stopworld $(B)/t_peanuts_padgate $(B)/t_peanuts_host $(B)/t_peanuts_frametime $(B)/t_peanuts_graph $(B)/t_peanuts_audiosync
-	$(B)/t_peanuts_stopworld
-	TMPDIR="$(abspath $(B))" $(B)/t_peanuts_padgate
-	$(B)/t_peanuts_host "$(abspath $(B))"
-	$(B)/t_peanuts_frametime
-	$(B)/t_peanuts_graph
-	TMPDIR="$(abspath $(B))" $(B)/t_peanuts_audiosync
+.PHONY: kiwi-host
+kiwi-host: $(B)/t_kiwi_stopworld $(B)/t_kiwi_padgate $(B)/t_kiwi_host $(B)/t_kiwi_frametime $(B)/t_kiwi_graph $(B)/t_kiwi_audiosync
+	$(B)/t_kiwi_stopworld
+	TMPDIR="$(abspath $(B))" $(B)/t_kiwi_padgate
+	$(B)/t_kiwi_host "$(abspath $(B))"
+	$(B)/t_kiwi_frametime
+	$(B)/t_kiwi_graph
+	TMPDIR="$(abspath $(B))" $(B)/t_kiwi_audiosync
 ifeq ($(shell uname -s),Linux)
-run: peanuts-host
+run: kiwi-host
 endif
-$(B)/t_peanuts_stopworld: t_peanuts_stopworld.c ../hle_thread.c ../dm.h $(GAME_H) | $(B)
-	$(CLANG) -O1 -g -Wall -Wno-format -Wno-unused-function -Wno-unused-variable $(PN_ASIF) -DDM_TEST_THREAD_ENTER -I.. $(GINC) -o $@ t_peanuts_stopworld.c -lpthread -lm
-$(B)/t_peanuts_padgate: t_peanuts_padgate.c t_hid.c t_peanuts_hid_stubs.c ../hle_hid.c ../hle_haptics.c ../dm_input.h ../dm.h $(GAME_H) | $(B)
-	$(CLANG) -O1 -g -Wall -Wno-unused-function -Wno-unused-variable $(PN_ASIF) -I.. $(GINC) -o $@ t_peanuts_padgate.c t_peanuts_hid_stubs.c ../hle_haptics.c -lpthread -lm
-$(B)/t_peanuts_host: t_peanuts_host.c stub_android/android/log.h ../../peanuts/peanuts.c ../../peanuts/peanuts.h ../../peanuts/peanuts_frametime.h ../../peanuts/peanuts_graph.h ../../peanuts/rt/peanuts_rt.h ../dm.h $(GAME_H) | $(B)
-	$(CLANG) -O1 -g -Wall -Wno-unused-function -Wno-unused-variable $(PN_ASIF) -Istub_android -I.. $(GINC) -o $@ t_peanuts_host.c -lpthread -lm
-# t_peanuts_frametime: the ring of presented-frame intervals (peanuts_frametime.c, included as the other peanuts tests include their sources): the first push, the gap rule,
+$(B)/t_kiwi_stopworld: t_kiwi_stopworld.c ../hle_thread.c ../dm.h $(GAME_H) | $(B)
+	$(CLANG) -O1 -g -Wall -Wno-format -Wno-unused-function -Wno-unused-variable $(PN_ASIF) -DDM_TEST_THREAD_ENTER -I.. $(GINC) -o $@ t_kiwi_stopworld.c -lpthread -lm
+$(B)/t_kiwi_padgate: t_kiwi_padgate.c t_hid.c t_kiwi_hid_stubs.c ../hle_hid.c ../hle_haptics.c ../dm_input.h ../dm.h $(GAME_H) | $(B)
+	$(CLANG) -O1 -g -Wall -Wno-unused-function -Wno-unused-variable $(PN_ASIF) -I.. $(GINC) -o $@ t_kiwi_padgate.c t_kiwi_hid_stubs.c ../hle_haptics.c -lpthread -lm
+$(B)/t_kiwi_host: t_kiwi_host.c stub_android/android/log.h ../../kiwi/kiwi.c ../../kiwi/kiwi.h ../../kiwi/kiwi_frametime.h ../../kiwi/kiwi_graph.h ../../kiwi/rt/kiwi_rt.h ../dm.h $(GAME_H) | $(B)
+	$(CLANG) -O1 -g -Wall -Wno-unused-function -Wno-unused-variable $(PN_ASIF) -Istub_android -I.. $(GINC) -o $@ t_kiwi_host.c -lpthread -lm
+# t_kiwi_frametime: the ring of presented-frame intervals (kiwi_frametime.c, included as the other kiwi tests include their sources): the first push, the gap rule,
 # the ring's wrap and the reads. Built without __ANDROID__, so the JNI function is left out.
-$(B)/t_peanuts_frametime: t_peanuts_frametime.c ../../peanuts/peanuts_frametime.c ../../peanuts/peanuts_frametime.h | $(B)
-	$(CLANG) -O1 -g -Wall -Wno-unused-function -o $@ t_peanuts_frametime.c -lpthread -lm
-# t_peanuts_graph: the host's drawing of the overlay's frame-time bars (peanuts_graph.c, included): background, columns, colours, premultiplied bytes, the block path.
-$(B)/t_peanuts_graph: t_peanuts_graph.c ../../peanuts/peanuts_graph.c ../../peanuts/peanuts_graph.h ../../peanuts/peanuts_frametime.c ../../peanuts/peanuts_frametime.h | $(B)
-	$(CLANG) -O1 -g -Wall -Wno-unused-function -o $@ t_peanuts_graph.c -lpthread -lm
-# t_peanuts_audiosync: the sound following the game's pace (peanuts_audiosync.c, included): the stretch's length, pitch and continuity at fixed tempos, its exact
-# output at a tempo of 1, and the automatic mode (within 1 % only, also after two resyncs while the game runs slow and with an audio_follow file from 0.1.8: #600)   # PEANUTS: #600
-$(B)/t_peanuts_audiosync: t_peanuts_audiosync.c ../../peanuts/peanuts_audiosync.c ../../peanuts/peanuts_audiosync.h | $(B)
-	$(CLANG) -O2 -g -Wall -Wno-unused-function -o $@ t_peanuts_audiosync.c -lpthread -lm
-# t_peanuts_syncstress: a hunt for lost wake-ups in hle_thread.c's waits and signals with real threads (single cases, then a storm of SYNC_SECS seconds; with --stops the
-# game is stopped and resumed throughout): make GAME=<id> peanuts-sync [SYNC_SECS=300] [SYNC_ARGS=--stops]. peanuts-sync-control builds the host's old condition
+$(B)/t_kiwi_frametime: t_kiwi_frametime.c ../../kiwi/kiwi_frametime.c ../../kiwi/kiwi_frametime.h | $(B)
+	$(CLANG) -O1 -g -Wall -Wno-unused-function -o $@ t_kiwi_frametime.c -lpthread -lm
+# t_kiwi_graph: the host's drawing of the overlay's frame-time bars (kiwi_graph.c, included): background, columns, colours, premultiplied bytes, the block path.
+$(B)/t_kiwi_graph: t_kiwi_graph.c ../../kiwi/kiwi_graph.c ../../kiwi/kiwi_graph.h ../../kiwi/kiwi_frametime.c ../../kiwi/kiwi_frametime.h | $(B)
+	$(CLANG) -O1 -g -Wall -Wno-unused-function -o $@ t_kiwi_graph.c -lpthread -lm
+# t_kiwi_audiosync: the sound following the game's pace (kiwi_audiosync.c, included): the stretch's length, pitch and continuity at fixed tempos, its exact
+# output at a tempo of 1, and the automatic mode (within 1 % only, also after two resyncs while the game runs slow and with an audio_follow file from 0.1.8: #600)   # KIWI: #600
+$(B)/t_kiwi_audiosync: t_kiwi_audiosync.c ../../kiwi/kiwi_audiosync.c ../../kiwi/kiwi_audiosync.h | $(B)
+	$(CLANG) -O2 -g -Wall -Wno-unused-function -o $@ t_kiwi_audiosync.c -lpthread -lm
+# t_kiwi_syncstress: a hunt for lost wake-ups in hle_thread.c's waits and signals with real threads (single cases, then a storm of SYNC_SECS seconds; with --stops the
+# game is stopped and resumed throughout): make GAME=<id> kiwi-sync [SYNC_SECS=300] [SYNC_ARGS=--stops]. kiwi-sync-control builds the host's old condition
 # variable order (-DDM_TEST_CV_OLD_ORDER, a lost wake-up that is known) and passes when the test catches it
 SYNC_SECS ?= 3
-.PHONY: peanuts-sync peanuts-sync-control
-peanuts-sync: $(B)/t_peanuts_syncstress
-	$(B)/t_peanuts_syncstress $(SYNC_SECS) $(SYNC_ARGS)
-peanuts-sync-control: $(B)/t_peanuts_syncstress_old
-	! SYNC_STALL_S=3 $(B)/t_peanuts_syncstress_old 60 > $(B)/t_peanuts_syncstress_old.log 2>&1
-	grep -a "was pushed and never taken\|stalled at" $(B)/t_peanuts_syncstress_old.log
-peanuts-host: peanuts-sync
-# t_peanuts_nroarena: loader.c's load_modules as the Android host runs it (the module arena) over a pack with NROs (nro.tsv): the game's modules back to back in
+.PHONY: kiwi-sync kiwi-sync-control
+kiwi-sync: $(B)/t_kiwi_syncstress
+	$(B)/t_kiwi_syncstress $(SYNC_SECS) $(SYNC_ARGS)
+kiwi-sync-control: $(B)/t_kiwi_syncstress_old
+	! SYNC_STALL_S=3 $(B)/t_kiwi_syncstress_old 60 > $(B)/t_kiwi_syncstress_old.log 2>&1
+	grep -a "was pushed and never taken\|stalled at" $(B)/t_kiwi_syncstress_old.log
+kiwi-host: kiwi-sync
+# t_kiwi_nroarena: loader.c's load_modules as the Android host runs it (the module arena) over a pack with NROs (nro.tsv): the game's modules back to back in
 # the arena, each NRO in a mapping of its own
-.PHONY: peanuts-nro
-peanuts-nro: $(B)/t_peanuts_nroarena
-	$(B)/t_peanuts_nroarena "$(abspath $(B))" 2> $(B)/t_peanuts_nroarena.log
-peanuts-host: peanuts-nro
-# PEANUTS: t_peanuts_time: hle_time.c's steady and user clocks on a phone that sleeps and restarts (GitHub issue #329): no user clock change from sleep or a restart, spans of
+.PHONY: kiwi-nro
+kiwi-nro: $(B)/t_kiwi_nroarena
+	$(B)/t_kiwi_nroarena "$(abspath $(B))" 2> $(B)/t_kiwi_nroarena.log
+kiwi-host: kiwi-nro
+# KIWI: t_kiwi_time: hle_time.c's steady and user clocks on a phone that sleeps and restarts (GitHub issue #329): no user clock change from sleep or a restart, spans of
 # the real time that passed, a custom time as the one user change, the old monotonic steady clock's time points as another clock
-.PHONY: peanuts-time
-peanuts-time: $(B)/t_peanuts_time
-	$(B)/t_peanuts_time 2> $(B)/t_peanuts_time.log
-peanuts-host: peanuts-time
-$(B)/t_peanuts_time: t_peanuts_time.c ../hle_time.c ../hle.h ../dm.h $(GAME_H) | $(B)
-	$(CLANG) -O1 -g -Wall -Wno-unused-function $(PN_ASIF) -I.. $(GINC) -o $@ t_peanuts_time.c -lpthread
-$(B)/t_peanuts_nroarena: t_peanuts_nroarena.c ../loader.c ../hle.h ../dm.h $(GAME_H) | $(B)
-	$(CLANG) -O1 -g -Wall -Wno-format -Wno-unused-function -Wno-unused-variable $(PN_ASIF) -Istub_android -I.. $(GINC) -o $@ t_peanuts_nroarena.c -lpthread -lm
-$(B)/t_peanuts_syncstress: t_peanuts_syncstress.c ../hle_thread.c ../dm.h $(GAME_H) | $(B)
-	$(CLANG) -O1 -g -Wall -Wno-format -Wno-unused-function -Wno-unused-variable $(PN_ASIF) -DDM_TEST_THREAD_ENTER -I.. $(GINC) -o $@ t_peanuts_syncstress.c -lpthread -lm
-$(B)/t_peanuts_syncstress_old: t_peanuts_syncstress.c ../hle_thread.c ../dm.h $(GAME_H) | $(B)
-	$(CLANG) -O1 -g -Wall -Wno-format -Wno-unused-function -Wno-unused-variable $(PN_ASIF) -DDM_TEST_THREAD_ENTER -DDM_TEST_CV_OLD_ORDER -I.. $(GINC) -o $@ t_peanuts_syncstress.c -lpthread -lm
-# t_peanuts_fontll: hle_fontll.c's font engines used by one thread at a time, as a Horizon core keeps them, with real threads and a fake engine: the race straight into
+.PHONY: kiwi-time
+kiwi-time: $(B)/t_kiwi_time
+	$(B)/t_kiwi_time 2> $(B)/t_kiwi_time.log
+kiwi-host: kiwi-time
+$(B)/t_kiwi_time: t_kiwi_time.c ../hle_time.c ../hle.h ../dm.h $(GAME_H) | $(B)
+	$(CLANG) -O1 -g -Wall -Wno-unused-function $(PN_ASIF) -I.. $(GINC) -o $@ t_kiwi_time.c -lpthread
+$(B)/t_kiwi_nroarena: t_kiwi_nroarena.c ../loader.c ../hle.h ../dm.h $(GAME_H) | $(B)
+	$(CLANG) -O1 -g -Wall -Wno-format -Wno-unused-function -Wno-unused-variable $(PN_ASIF) -Istub_android -I.. $(GINC) -o $@ t_kiwi_nroarena.c -lpthread -lm
+$(B)/t_kiwi_syncstress: t_kiwi_syncstress.c ../hle_thread.c ../dm.h $(GAME_H) | $(B)
+	$(CLANG) -O1 -g -Wall -Wno-format -Wno-unused-function -Wno-unused-variable $(PN_ASIF) -DDM_TEST_THREAD_ENTER -I.. $(GINC) -o $@ t_kiwi_syncstress.c -lpthread -lm
+$(B)/t_kiwi_syncstress_old: t_kiwi_syncstress.c ../hle_thread.c ../dm.h $(GAME_H) | $(B)
+	$(CLANG) -O1 -g -Wall -Wno-format -Wno-unused-function -Wno-unused-variable $(PN_ASIF) -DDM_TEST_THREAD_ENTER -DDM_TEST_CV_OLD_ORDER -I.. $(GINC) -o $@ t_kiwi_syncstress.c -lpthread -lm
+# t_kiwi_fontll: hle_fontll.c's font engines used by one thread at a time, as a Horizon core keeps them, with real threads and a fake engine: the race straight into
 # the engine first (the check that the test sees it), then the take-overs (no call beside another, a higher-priority thread's sequences on its own font, who waits for
 # whom by core and priority, a native wait and an exit giving the engine back, Finalize freeing its slot)
-.PHONY: peanuts-fontll
-peanuts-fontll: $(B)/t_peanuts_fontll
-	$(B)/t_peanuts_fontll
-peanuts-host: peanuts-fontll
-$(B)/t_peanuts_fontll: t_peanuts_fontll.c ../hle_thread.c ../hle_fontll.c ../hle.h ../dm.h $(GAME_H) | $(B)
-	$(CLANG) -O1 -g -Wall -Wno-format -Wno-unused-function -Wno-unused-variable $(PN_ASIF) -DDM_TEST_THREAD_ENTER -I.. $(GINC) -o $@ t_peanuts_fontll.c -lpthread -lm
-# t_cheats_android: t_cheats.c built as if for Android (its case "code cheats on Android": dm/peanuts/peanuts_cheats.inc, main's code written with the game's threads
-# stopped: compare before write, put back on off, a rewritten site refused, a key flip, threads that do not stop, a thread inside, reload), over t_peanuts_cheats_plat.c
-.PHONY: peanuts-cheats
-peanuts-cheats: $(B)/t_cheats_android
+.PHONY: kiwi-fontll
+kiwi-fontll: $(B)/t_kiwi_fontll
+	$(B)/t_kiwi_fontll
+kiwi-host: kiwi-fontll
+$(B)/t_kiwi_fontll: t_kiwi_fontll.c ../hle_thread.c ../hle_fontll.c ../hle.h ../dm.h $(GAME_H) | $(B)
+	$(CLANG) -O1 -g -Wall -Wno-format -Wno-unused-function -Wno-unused-variable $(PN_ASIF) -DDM_TEST_THREAD_ENTER -I.. $(GINC) -o $@ t_kiwi_fontll.c -lpthread -lm
+# t_cheats_android: t_cheats.c built as if for Android (its case "code cheats on Android": dm/kiwi/kiwi_cheats.inc, main's code written with the game's threads
+# stopped: compare before write, put back on off, a rewritten site refused, a key flip, threads that do not stop, a thread inside, reload), over t_kiwi_cheats_plat.c
+.PHONY: kiwi-cheats
+kiwi-cheats: $(B)/t_cheats_android
 	TMPDIR="$(abspath $(B))" $(B)/t_cheats_android 2> $(B)/t_cheats_android.log
-peanuts-host: peanuts-cheats
-$(B)/t_cheats_android: t_cheats.c t_peanuts_cheats_plat.c ../hle_cheats.c ../../peanuts/peanuts_cheats.h ../../peanuts/peanuts_cheats.inc ../dm.h ../dm_input.h $(GAME_H) | $(B)
-	$(CLANG) -O1 -g -Wall -Wno-unused-function $(PN_ASIF) -I.. $(GINC) -o $@ t_cheats.c t_peanuts_cheats_plat.c -lpthread
+kiwi-host: kiwi-cheats
+$(B)/t_cheats_android: t_cheats.c t_kiwi_cheats_plat.c ../hle_cheats.c ../../kiwi/kiwi_cheats.h ../../kiwi/kiwi_cheats.inc ../dm.h ../dm_input.h $(GAME_H) | $(B)
+	$(CLANG) -O1 -g -Wall -Wno-unused-function $(PN_ASIF) -I.. $(GINC) -o $@ t_cheats.c t_kiwi_cheats_plat.c -lpthread
 # t_cheats_alias: the same file with PN_CODE 0, the path of every platform but Android (the Mac's): code written through a writable alias of main, here a memfd mapped
-# twice (t_peanuts_cheats_plat.c PN_TEST_ALIAS); upstream's cases of t_cheats.c, the Android case left out
-.PHONY: peanuts-cheats-alias
-peanuts-cheats-alias: $(B)/t_cheats_alias
+# twice (t_kiwi_cheats_plat.c PN_TEST_ALIAS); upstream's cases of t_cheats.c, the Android case left out
+.PHONY: kiwi-cheats-alias
+kiwi-cheats-alias: $(B)/t_cheats_alias
 	TMPDIR="$(abspath $(B))" $(B)/t_cheats_alias 2> $(B)/t_cheats_alias.log
-peanuts-host: peanuts-cheats-alias
-$(B)/t_cheats_alias: t_cheats.c t_peanuts_cheats_plat.c ../hle_cheats.c ../../peanuts/peanuts_cheats.h ../../peanuts/peanuts_cheats.inc ../dm.h ../dm_input.h $(GAME_H) | $(B)
-	$(CLANG) -O1 -g -Wall -Wno-unused-function $(PN_ASIF) -DPN_CODE=0 -DPN_TEST_ALIAS=1 -I.. $(GINC) -o $@ t_cheats.c t_peanuts_cheats_plat.c -lpthread
-# t_peanuts_audren_svc: the audio renderer service of an SDK with no renderer of its own (hle_audren_svc.c with hle_sf.c, included): the mixer through two submixes,
+kiwi-host: kiwi-cheats-alias
+$(B)/t_cheats_alias: t_cheats.c t_kiwi_cheats_plat.c ../hle_cheats.c ../../kiwi/kiwi_cheats.h ../../kiwi/kiwi_cheats.inc ../dm.h ../dm_input.h $(GAME_H) | $(B)
+	$(CLANG) -O1 -g -Wall -Wno-unused-function $(PN_ASIF) -DPN_CODE=0 -DPN_TEST_ALIAS=1 -I.. $(GINC) -o $@ t_cheats.c t_kiwi_cheats_plat.c -lpthread
+# t_kiwi_audren_svc: the audio renderer service of an SDK with no renderer of its own (hle_audren_svc.c with hle_sf.c, included): the mixer through two submixes,
 # an absurd channel count, a renderer on the session it moves to the client and its close
-.PHONY: peanuts-audren-svc
-peanuts-audren-svc: $(B)/t_peanuts_audren_svc
-	$(B)/t_peanuts_audren_svc
-peanuts-host: peanuts-audren-svc
-$(B)/t_peanuts_audren_svc: t_peanuts_audren_svc.c ../hle_audren_svc.c ../hle_sf.c ../hle.h ../dm.h $(GAME_H) | $(B)
-	$(CLANG) -O1 -g -Wall -Wno-unused-function -fsanitize=address,undefined $(PN_ASIF) -D_GNU_SOURCE -I.. $(GINC) -o $@ t_peanuts_audren_svc.c -lpthread -lm
-# PEANUTS end
+.PHONY: kiwi-audren-svc
+kiwi-audren-svc: $(B)/t_kiwi_audren_svc
+	$(B)/t_kiwi_audren_svc
+kiwi-host: kiwi-audren-svc
+$(B)/t_kiwi_audren_svc: t_kiwi_audren_svc.c ../hle_audren_svc.c ../hle_sf.c ../hle.h ../dm.h $(GAME_H) | $(B)
+	$(CLANG) -O1 -g -Wall -Wno-unused-function -fsanitize=address,undefined $(PN_ASIF) -D_GNU_SOURCE -I.. $(GINC) -o $@ t_kiwi_audren_svc.c -lpthread -lm
+# KIWI end

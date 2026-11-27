@@ -1,4 +1,4 @@
-"""PEANUTS: scripts/pack_android.py takes a cached shader library only when it was built from the split package it would be built from now (#670). The library's
+"""KIWI: scripts/pack_android.py takes a cached shader library only when it was built from the split package it would be built from now (#670). The library's
 own stamp names the profile's inputs only, so a package that changed under the same profile (shaders captured from a run added to it) left a library that was
 called current and packed without the new shaders. No game files needed."""
 import argparse
@@ -75,7 +75,7 @@ class PackageStamp(unittest.TestCase):
             started.append(cmd); return argparse.Namespace(returncode=1)
         with patch.multiple(pack_android, require_shaders=lambda g: None, vk_chain=lambda: 'test', library_current=lambda *a: True,
                             lib_stamp=lambda l: {'game': 'test', 'inputs': 'x'}, shader_python=lambda p: 'python', child_env=lambda **kw: kw,
-                            peanuts_env=lambda s: {}, selected_keys=lambda p: None, absent_optional=lambda *a: set()), \
+                            kiwi_env=lambda s: {}, selected_keys=lambda p: None, absent_optional=lambda *a: set()), \
              patch.object(pack_android.dmsh_chain, 'inputs', lambda g: 'x'), patch.object(pack_android.subprocess, 'run', side_effect=run):
             if built:
                 with self.assertRaisesRegex(pack_android.Error, 'exit code 1'): pack_android.pack_shaders(args, g, root / 'game', root / 'out', root / 'v')

@@ -14,7 +14,7 @@
 # Usage: nsp.py <file.nsp>...   (prints each package; exit 1 on a bad one)
 import hashlib, os, re, struct, sys
 from pathlib import Path
-from typing import cast   # PEANUTS(upstream-candidate): reads borrow the open descriptor; close marks it None
+from typing import cast   # KIWI(upstream-candidate): reads borrow the open descriptor; close marks it None
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import cnmt
@@ -66,19 +66,19 @@ class Nsp:
         need(0 <= off and 0 <= n and off + n <= self.size, f'{self.path.name}: a read outside the file')
         out = []
         while n > 0:
-            b = os.pread(cast(int, self.fd), min(n, 1 << 30), off) if hasattr(os, 'pread') else self._seek_read(off, min(n, 1 << 30))   # PEANUTS: open descriptor
+            b = os.pread(cast(int, self.fd), min(n, 1 << 30), off) if hasattr(os, 'pread') else self._seek_read(off, min(n, 1 << 30))   # KIWI: open descriptor
             need(b, f'{self.path.name}: the file is shorter than its headers say')
             out.append(b); off += len(b); n -= len(b)
         return b''.join(out)
 
     def _seek_read(self, off, n):   # no os.pread (Windows): one reader at a time
-        os.lseek(cast(int, self.fd), off, os.SEEK_SET)   # PEANUTS: open descriptor
-        return os.read(cast(int, self.fd), n)   # PEANUTS: open descriptor
+        os.lseek(cast(int, self.fd), off, os.SEEK_SET)   # KIWI: open descriptor
+        return os.read(cast(int, self.fd), n)   # KIWI: open descriptor
 
     def copy_to(self, off, n, out):
         for at in range(off, off + n, CHUNK): out.write(self.read(at, min(CHUNK, off + n - at)))
 
-    def _pfs(self, base, size, what) -> dict[str, tuple[int, int]]:   # PEANUTS(upstream-candidate): offsets and sizes are pairs, including _nca calls
+    def _pfs(self, base, size, what) -> dict[str, tuple[int, int]]:   # KIWI(upstream-candidate): offsets and sizes are pairs, including _nca calls
         """{name: (absolute offset, size)} of the PFS0 at base (size bytes)"""
         need(size >= 0x10 and self.read(base, 4) == b'PFS0', f'{self.path.name}: {what} is not a plaintext PFS0')
         count, strsize = struct.unpack_from('<II', self.read(base + 4, 8))
@@ -125,7 +125,7 @@ class Nsp:
             else: raise Error(f'{name}: section {i}: filesystem {fs_type} with hash {hash_type} is not read')
         return ctype, tid, secs
 
-    def _romfs(self, off, size, name) -> dict[str, tuple[int, int]]:   # PEANUTS(upstream-candidate): the same offset/size pairs as PFS files
+    def _romfs(self, off, size, name) -> dict[str, tuple[int, int]]:   # KIWI(upstream-candidate): the same offset/size pairs as PFS files
         """{path: (absolute offset, size)} of the RomFS at off, walked with bounds and cycle checks"""
         need(size >= 0x50, f'{name}: RomFS too short')
         hdr = struct.unpack('<10Q', self.read(off, 0x50))
@@ -188,7 +188,7 @@ class Nsp:
             except cnmt.Error as e: raise Error(str(e)) from None
             need(rec.type in (APPLICATION, ADDON), f'{cname}: a {cnmt.TYPES.get(rec.type, hex(rec.type))} record; only a game snapshot or a DLC is read (a patch or delta needs the console\'s own formats)')
             need(hashlib.sha256(cbytes[:-32]).digest() == cbytes[-32:], f'{cname}: its digest does not match')
-            files: dict[str, tuple[int, int]] = {}   # PEANUTS(upstream-candidate): the per-package table add() fills
+            files: dict[str, tuple[int, int]] = {}   # KIWI(upstream-candidate): the per-package table add() fills
             exs = struct.unpack_from('<H', cbytes, 0x0E)[0]
             for i in range(struct.unpack_from('<H', cbytes, 0x10)[0]):
                 at = 0x20 + exs + 0x38 * i
@@ -202,7 +202,7 @@ class Nsp:
                     need(digest(nname) == chash and digest(nname)[:16] == cid, f'{nname}: its content does not match its name and record')
                 nctype, ntid, nsecs = self._nca(*self.entries[nname], nname)
                 need(ntid == tid, f'{nname}: program ID {ntid:016X}, the record\'s is {tid:016X}')
-                def add(prefix: str, tree: dict[str, tuple[int, int]], out: dict[str, tuple[int, int]]) -> None:   # PEANUTS(upstream-candidate): pass this package's output table explicitly
+                def add(prefix: str, tree: dict[str, tuple[int, int]], out: dict[str, tuple[int, int]]) -> None:   # KIWI(upstream-candidate): pass this package's output table explicitly
                     for p, v in tree.items():
                         key = f'{prefix}/{p}'
                         need(key not in out, f'{key} twice')
@@ -211,13 +211,13 @@ class Nsp:
                     need(nctype == 0, f'{nname}: record says Program, the NCA says type {nctype}')
                     pfs = [s for s in nsecs if s[0] == 1]; rom = [s for s in nsecs if s[0] == 0]
                     need(len(pfs) == 1 and len(rom) == 1, f'{nname}: expected one ExeFS and one RomFS section')
-                    add('exefs', self._pfs(pfs[0][1], pfs[0][2], nname), files); add('romfs', self._romfs(rom[0][1], rom[0][2], nname), files)   # PEANUTS: this package's table
+                    add('exefs', self._pfs(pfs[0][1], pfs[0][2], nname), files); add('romfs', self._romfs(rom[0][1], rom[0][2], nname), files)   # KIWI: this package's table
                 elif rec.type == APPLICATION and ctyp == 3:   # Control: RomFS
                     need(nctype == 2 and len(nsecs) == 1 and nsecs[0][0] == 0, f'{nname}: not a control NCA')
-                    add('control', self._romfs(nsecs[0][1], nsecs[0][2], nname), files)   # PEANUTS: this package's table
+                    add('control', self._romfs(nsecs[0][1], nsecs[0][2], nname), files)   # KIWI: this package's table
                 elif rec.type == ADDON and ctyp == 2:   # Data: RomFS
                     need(nctype == 4 and len(nsecs) == 1 and nsecs[0][0] == 0, f'{nname}: not a data NCA')
-                    add('romfs', self._romfs(nsecs[0][1], nsecs[0][2], nname), files)   # PEANUTS: this package's table
+                    add('romfs', self._romfs(nsecs[0][1], nsecs[0][2], nname), files)   # KIWI: this package's table
                 else: raise Error(f'{nname}: content type {cnmt.CONTENT.get(ctyp, ctyp)} of a {cnmt.TYPES[rec.type]} is not read')
             if rec.type == APPLICATION:
                 need('exefs/main' in files and 'exefs/main.npdm' in files and any(p.startswith('romfs/') for p in files), f'{cname}: not a complete game snapshot (exefs/main, main.npdm and a RomFS)')

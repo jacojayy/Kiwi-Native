@@ -192,12 +192,12 @@ def outputs(g):
     choices = {v[0] for v in g.values('graphics_scale') if v}
     out = {}
     for v in g.values('scene_output'):
-        dims = size(v[1]) if len(v) >= 3 else None   # PEANUTS(upstream-candidate): retain the validated dimensions.
+        dims = size(v[1]) if len(v) >= 3 else None   # KIWI(upstream-candidate): retain the validated dimensions.
         if dims is None or v[2] not in ('measured', 'open'):
             raise Error(f'{g.id}: scene_output takes <window choice> <WxH> <measured|open>: {v}')
         if choices and v[0] not in choices: raise Error(f'{g.id}: scene_output {v[0]}: not a graphics_scale choice ({", ".join(sorted(choices))})')
         if v[0] in out: raise Error(f'{g.id}: scene_output {v[0]} repeats')
-        out[v[0]] = (*dims, v[2] == 'measured')   # PEANUTS(upstream-candidate): the checked dimensions.
+        out[v[0]] = (*dims, v[2] == 'measured')   # KIWI(upstream-candidate): the checked dimensions.
     return out
 
 
@@ -220,11 +220,11 @@ def res_presets(g):
     outs = outputs(g) if g.values('scene_output') else {}
     out = []
     for v in g.values('res_preset'):
-        parsed = target(v[2]) if len(v) >= 3 else None   # PEANUTS(upstream-candidate): retain the validated target.
+        parsed = target(v[2]) if len(v) >= 3 else None   # KIWI(upstream-candidate): retain the validated target.
         if parsed is None: raise Error(f'{g.id}: res_preset takes <id> <window choice> <default|floor:H|fixed:H> <label>: {v}')
         pid, win = check_name(g, 'res_preset', v[0]), v[1]
         if choices and win not in choices: raise Error(f'{g.id}: res_preset {pid}: window {win} is not a graphics_scale choice ({", ".join(sorted(choices))})')
-        mode, h = parsed; scale = None   # PEANUTS(upstream-candidate): the checked target.
+        mode, h = parsed; scale = None   # KIWI(upstream-candidate): the checked target.
         if mode != 'default':
             if not g.values('scene_scale_palette'): raise Error(f'{g.id}: res_preset {pid}: a {mode} scene needs a scene_scale_palette row')
             if win not in outs: raise Error(f'{g.id}: res_preset {pid}: no scene_output row for window {win}')
@@ -288,7 +288,7 @@ class Palette:
             w = f32(scale) if mode == 'fixed' or v < f32(scale) else v
             struct.pack_into('<f', new, self.start + at, w); out.append(w)
         z = self.z; P = z.CompressionParameter
-        # PEANUTS(upstream-candidate): the compressor accepts integer parameter IDs (CompressionParameter is an IntEnum).
+        # KIWI(upstream-candidate): the compressor accepts integer parameter IDs (CompressionParameter is an IntEnum).
         opts = {int(P.compression_level): LEVEL, int(P.content_size_flag): int(self.head['content_size'] is not None), int(P.checksum_flag): self.head['checksum'],
                 int(P.dict_id_flag): int(bool(self.head['dict_id']))}
         packed = z.compress(bytes(new), options=opts, zstd_dict=self.zdict) if self.zdict else z.compress(bytes(new), options=opts)
@@ -372,7 +372,7 @@ def main():
             outs = outputs(g)
             for pid, win, mode, h, scale, label in res_presets(g):
                 o = outs.get(win)
-                # PEANUTS(upstream-candidate): res_presets validates the output for every scaled preset.
+                # KIWI(upstream-candidate): res_presets validates the output for every scaled preset.
                 if scale is None: scene = 'the game\'s own palette'
                 else:
                     assert o is not None

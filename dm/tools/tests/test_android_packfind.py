@@ -9,9 +9,9 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/PackFindJvmTest.java'
-STUB = '''package dev.nxnative.android;
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/PackFindJvmTest.java'
+STUB = '''package hernandez.kiwinative;
 public final class BuildConfig {
     public static final String NX_PROFILES = "040074A01BF12000\\tDonkey Kong Bananza\\t22852\\tabcdef012345\\t458752 main=aa\\t\\t\\t0ld000000001=500\\t"
             + "57a000000001:%s:%s\\t\\n0400C3F00006E000\\tMario Kart World\\t0\\tunknown\\t";
@@ -32,7 +32,7 @@ class PackFindJvm(unittest.TestCase):
                                capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             (d / 'run').mkdir()
-            r = subprocess.run(['java', '-cp', str(d / 'classes'), 'dev.nxnative.android.PackFindJvmTest', str(REPO), str(d / 'run')], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', str(d / 'classes'), 'hernandez.kiwinative.PackFindJvmTest', str(REPO), str(d / 'run')], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertTrue(r.stdout.startswith('ok '), r.stdout)
 

@@ -7,7 +7,7 @@ The chain, each link unique or nothing is cut:
 - the allocator's name, the UTF-16 string "Binned3" (TEXT("Binned3"); it starts a string), in ro;
 - its getter, GetDescriptiveName: adrp x0 + add x0 of the string, then ret;
 - the one data word holding the getter (the module's relative relocations applied), a slot of the vtable. Its primary header has a zero offset to top and either zero RTTI or relocated
-  RTTI naming FMallocBinned3 (PEANUTS). The getter's
+  RTTI naming FMallocBinned3 (KIWI). The getter's
   slot number names the slot layout: 19 for Unreal Engine 4.26 and 4.27, 22 for UE 5, 26 for UE 5.6 (hle_uemalloc.c); any other stops the chain with a [RED] line;
 - the constructor: the one function other than the vtable's two destructors that stores the vtable's address (adrp + add, then str to [xN]);
 - its one call site, a bl (no b to it): x0 there is the object, already made (GCreateMalloc mallocs it, or a bss object in nninitStartup).
@@ -65,7 +65,7 @@ def find(img, text_end, ro_off, data_off):
     vt = slots[0]
     while vt - 8 >= data_off and is_code(value(vt - 8)): vt -= 8
     slot = (slots[0] - vt) // 8
-    # PEANUTS(upstream-candidate): the primary vtable can carry Itanium RTTI when the build enables it.
+    # KIWI(upstream-candidate): the primary vtable can carry Itanium RTTI when the build enables it.
     if vt < 16 or value(vt - 16) != 0:
         return None, None, None, f'[RED] FMallocBinned3 vtable at {vt:#x}: no zero offset to top before it'
     rtti = value(vt - 8)
@@ -99,7 +99,7 @@ def find(img, text_end, ro_off, data_off):
         if start not in dtors: ctors.add(start)
     if len(ctors) != 1: return None, None, None, f'[RED] FMallocBinned3 vtable at {vt:#x}: {len(ctors)} constructors (' + ', '.join(f'{x:#x}' for x in sorted(ctors)) + ')'
     c = ctors.pop()
-    calls = tuple(bl.get(c, ()))   # PEANUTS: every call of the constructor (DRAGON BALL: Sparking! ZERO calls it more than once, #290)
+    calls = tuple(bl.get(c, ()))   # KIWI: every call of the constructor (DRAGON BALL: Sparking! ZERO calls it more than once, #290)
     if not calls or b.get(c): return None, None, None, f'[RED] FMallocBinned3 constructor at {c:#x}: {len(calls)} calls and {len(b.get(c, []))} jumps'
     called = ', '.join(f'{a:#x}' for a in calls)
     return calls, vt, slot, f'FMallocBinned3 ({LAYOUTS[slot]}): its constructor at {c:#x}, called at {called}; its vtable {vt:#x}, the name getter slot {slot}'

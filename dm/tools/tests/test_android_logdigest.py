@@ -16,8 +16,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import log_digest as L   # noqa: E402
 from test_log_digest import CRASH, TID, frames, start   # noqa: E402
 
-JAVA_DIR = REPO / 'android/app/src/main/java/dev/nxnative/android'
-SRC = [JAVA_DIR / 'LogDigest.java', JAVA_DIR / 'ExitNotice.java', REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/LogDigestJvmTest.java']
+JAVA_DIR = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+SRC = [JAVA_DIR / 'LogDigest.java', JAVA_DIR / 'ExitNotice.java', REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/LogDigestJvmTest.java']
 RULES, NOISE = REPO / 'dm/tools/log_rules.tsv', REPO / 'dm/tools/log_noise.tsv'
 GRADLE = REPO / 'android/app/build.gradle'
 DOCS = 'https://git.eden-emu.dev/moceure/BananaNative/src/branch/android/'
@@ -51,7 +51,7 @@ class LauncherDigest(unittest.TestCase):
     def tearDownClass(cls): shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def java(self, *a):
-        r = subprocess.run(['java', '-Dstdout.encoding=UTF-8', '-cp', str(self.tmp / 'classes'), 'dev.nxnative.android.LogDigestJvmTest', *map(str, a)],
+        r = subprocess.run(['java', '-Dstdout.encoding=UTF-8', '-cp', str(self.tmp / 'classes'), 'hernandez.kiwinative.LogDigestJvmTest', *map(str, a)],
                            capture_output=True, text=True, encoding='utf-8')
         self.assertEqual(r.returncode, 0, r.stderr)
         return r.stdout
@@ -113,7 +113,7 @@ class LauncherDigest(unittest.TestCase):
     def test_java_crash(self):
         _, v = self.same(start() + ['[RED] crash: uncaught exception on thread main, the game process ends',
                                     '[RED] crash: java.lang.IllegalStateException: DM_TEST_CRASH=java: a test crash on purpose',
-                                    '[RED] crash: \tat dev.nxnative.android.X.run(X.java:1)'], RUN + 'state=java\n', 4)
+                                    '[RED] crash: \tat hernandez.kiwinative.X.run(X.java:1)'], RUN + 'state=java\n', 4)
         self.assertEqual(v[:2], ['java_crash', 'java-crash'])
         self.assertEqual(v[3], '-')   # its cause is the notice's sentence: not said twice
 
@@ -130,7 +130,7 @@ class LauncherDigest(unittest.TestCase):
         lines += ['title_key = 0123456789abcdef0123456789abcdef', '[dm] [RED] ' + 'long line ' * 40, '[dm] [RED] naïve ünïcode ' + 'é' * 300]
         py, _ = self.same(lines, RUN, 1, 0)
         self.assertIn('  +7 more groups', py['-- [RED] / error lines'])
-        # PEANUTS(upstream-candidate): flatten groups without repeated list copies.
+        # KIWI(upstream-candidate): flatten groups without repeated list copies.
         self.assertNotIn('0123456789abcdef', ''.join(line for group in py.values() for line in group))
 
     def test_long_log_tail(self):
@@ -191,7 +191,7 @@ class LauncherDigest(unittest.TestCase):
         self.assertEqual([k1, k2], [L.KEY_LINE.pattern.replace("\\'", "'"), L.KEY_LINE2.pattern])
 
     def test_redact_is_the_tools(self):
-        # PEANUTS: construct the synthetic home path so the publish scan can distinguish this redaction fixture.
+        # KIWI: construct the synthetic home path so the publish scan can distinguish this redaction fixture.
         lines = ['[dm] [RED] at 0x7a8d5de3b0 in /system/lib64/libc.so', '/storage/emulated/0/Android/data/hernandez.kiwinative.test/files/logs/a.log', '/data/user/0/dev.x/cache/y',
                  '/data/app/~~a==/hernandez.kiwinative.test-b==/base.apk', '/sdcard/Switch2/x', '/storage/1234-ABCD/g', '/'.join(('', 'home', 'someone', 'x')), 'abc' * 80,
                  'f' * 40, 'é' * 250]

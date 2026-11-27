@@ -31,7 +31,7 @@ present_snap	on
 pso_mtl4	on
 
 # ---- Versions ----
-# PEANUTS: the frame-step patches are specific to 1.9.0. Android selects an FPSLocker plan by main build.
+# KIWI: the frame-step patches are specific to 1.9.0. Android selects an FPSLocker plan by main build.
 build	v1114112	1.9.0	main=cd57b23fa4bbad65803d9788c01821ee	subsdk0=f39f4c431234c72eb520cfdd1001bbcf	sdk=574284b40c06cf1821a44857939083be
 build	v786432	1.6.0	main=8e9978d50bdd20b4c8395a106c27ffde	subsdk0=93ff8252d975adf07230cb86c83301c5	sdk=fcf93a41b08c5193a1410d262602dc62
 package	v1114112
@@ -88,7 +88,7 @@ fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	d0x0	-	0000803f
 fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	d0x8	-	0000c842
 fpslocker_plan	cd57b23fa4bbad65803d9788c01821ee	d0x10	-	01000000
 
-# PEANUTS: 1.6.0 fractional timing from the Android host, with version-specific Warehouse sites.
+# KIWI: 1.6.0 fractional timing from the Android host, with version-specific Warehouse sites.
 fpslocker	8e9978d50bdd20b4c8395a106c27ffde	time_ratio_f32	%0x0	1	30:2
 fpslocker	8e9978d50bdd20b4c8395a106c27ffde	target_scaled_f32	%0x8	1	30:0.001
 fpslocker	8e9978d50bdd20b4c8395a106c27ffde	flag_cap_u8	%0x10	1	0:30
@@ -118,11 +118,11 @@ fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	c0x8	-	t0x21282a0
 fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	d0x0	-	0000803f
 fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	d0x8	-	6f12833a
 fpslocker_plan	8e9978d50bdd20b4c8395a106c27ffde	d0x10	-	01000000
-# PEANUTS begin: picture shapes without code of the game's own (aspect_plan, dm/host/aspect_plan.h): Game settings > Display > Fill, 1.6.0 only
+# KIWI begin: picture shapes without code of the game's own (aspect_plan, dm/host/aspect_plan.h): Game settings > Display > Fill, 1.6.0 only
 # The three sites of the community's any-aspect patch for 1.6.0 (BOTW-AAR by Fayaz), read on the 1.6.0 pack's main: two fdiv s0,s0,s1 that make the ratio from the
 # width and the height (main+0xe0ad68, main+0x15c2148) and the getter's ldr s0,[x0,#0xb0] (main+0x1271870) become fmov s0,#imm8, the nearest value that instruction
 # holds (within 3.2 % of the picture's shape). The 3D view follows; the 2D layer is still drawn for 16:9 and takes the picture's shape with it. 1.9.0 has no rows.
 aspect_plan	8e9978d50bdd20b4c8395a106c27ffde	ratio_fmov	m0xe0ad68	0018211e
 aspect_plan	8e9978d50bdd20b4c8395a106c27ffde	ratio_fmov	m0x1271870	00b040bd
 aspect_plan	8e9978d50bdd20b4c8395a106c27ffde	ratio_fmov	m0x15c2148	0018211e
-# PEANUTS end
+# KIWI end

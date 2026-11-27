@@ -1,4 +1,4 @@
-"""PEANUTS: shader_split.unity_compute leaves out a compute kernel variant that has no code, with one counted line, and keeps the file's other kernels.
+"""KIWI: shader_split.unity_compute leaves out a compute kernel variant that has no code, with one counted line, and keeps the file's other kernels.
 My Time at Sandrock (Unity 2021.3.26f1) keeps its shaders in one asset bundle, `shader`, whose SkyboxCompute has a kernel of 0 bytes
 (CubemapFilteringSecondPassCS); unity_program raised on it (struct.error: a 96-byte header read from nothing), the scan took the whole file as
 unreadable, and its 152 Shader objects were left out with it. A synthetic ComputeShader object is written from unityfs.py's 2021.3 layout into a serialized

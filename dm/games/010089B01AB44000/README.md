@@ -1,6 +1,6 @@
 # SPY×ANYA: Operation Memories (`010089B01AB44000`)
 
-<!-- PEANUTS: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
+<!-- KIWI: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
 
 Update 1.0.1 (v65536) over the base game, SDK 14.3.1. Unity 2020.3.43f1 IL2CPP on NVN, with CRIWARE and FMOD. Modules `main`, `subsdk0` (NintendoSDK_movie) and `sdk`. The profile is still the provisional one from `scripts/build_ipa_from_nsp.py`, except for its memory layout. On Android (AYN Thor, Adreno 740, Turnip) a new save goes through the license screens, the title menu and the classroom tutorial's first steps (moving, the camera, dashing) at 30 fps, with no red line; from the dash tutorial on, text loses letters it shows for the first time ([Text](#text)).
 

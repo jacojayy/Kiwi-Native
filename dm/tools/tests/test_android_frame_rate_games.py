@@ -1,4 +1,4 @@
-"""The frame rate caps every release game offers (peanuts/release-titles.txt), pinned: each profile's game.tsv turned into the launcher's profile columns the way
+"""The frame rate caps every release game offers (kiwi/release-titles.txt), pinned: each profile's game.tsv turned into the launcher's profile columns the way
 android/app/build.gradle does (checked against build.gradle's own closures when Gradle's Groovy is at hand), parsed by Profile.java and passed through FrameRateCaps.java,
 the policy Game settings, the in-game panel, the stats page and adb share (Prefs.offeredCaps). Before a first run: the fps_target list from the profile alone (a run can add
 an Unreal game's 40 and 45 from the host's answer). From the fps cap audit (pn-build/fps-cap-audit.md, 2026-11-24): B1 opt-in present pacing up to 60, B3 the profile's
@@ -13,12 +13,12 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-JAVA = REPO / 'android/app/src/main/java/dev/nxnative/android'
+JAVA = REPO / 'android/app/src/main/java/hernandez/kiwinative'
 GRADLE = REPO / 'android/app/build.gradle'
 GAMES = REPO / 'dm/games'
 VSYNC_KINDS = {'VSYNCS_I32', 'MIN_VSYNCS_I32', 'STEPS_I32', 'EXTRA_VSYNCS_U8', 'MODE_U32', 'TICKS_U32'}   # build.gradle vsyncKinds (TICKS_U32 presents in whole vsyncs)
-STUB = 'package dev.nxnative.android;\npublic final class BuildConfig { public static final String NX_PROFILES = ""; }\n'
-HARNESS = r'''package dev.nxnative.android;
+STUB = 'package hernandez.kiwinative;\npublic final class BuildConfig { public static final String NX_PROFILES = ""; }\n'
+HARNESS = r'''package hernandez.kiwinative;
 import java.nio.file.*;
 import java.util.*;
 public class FrameRateGames {
@@ -86,7 +86,7 @@ def columns(t, kinds):
 
 
 def release():
-    return [t for t in (REPO / 'peanuts/release-titles.txt').read_text().split() if t.strip()]
+    return [t for t in (REPO / 'kiwi/release-titles.txt').read_text().split() if t.strip()]
 
 
 def table(titles):
@@ -107,7 +107,7 @@ def run_harness(titles):
         (Path(d) / 'table.tsv').write_text(table(titles), encoding='utf-8')
         subprocess.run(['javac', '-encoding', 'UTF-8', '-d', d, str(JAVA / 'Profile.java'), str(JAVA / 'FrameRateCaps.java'), str(Path(d) / 'BuildConfig.java'), str(Path(d) / 'FrameRateGames.java')],
                        check=True, capture_output=True, text=True)
-        r = subprocess.run(['java', '-cp', d, 'dev.nxnative.android.FrameRateGames', str(Path(d) / 'table.tsv')], capture_output=True, text=True, check=True)
+        r = subprocess.run(['java', '-cp', d, 'hernandez.kiwinative.FrameRateGames', str(Path(d) / 'table.tsv')], capture_output=True, text=True, check=True)
         return {l.split('|')[0]: tuple(l.split('|')[1:]) for l in r.stdout.splitlines()}
 
 
@@ -211,7 +211,7 @@ EXPECTED = {
     '010069401ADB8000': ('Unicorn Overlord', 'limit', '-', 'own,60,45,40,30,20', 'own,90,60,45,40,30,20', 'own,120,90,60,45,40,30,20', '-', 'high'),
     '01006B601380E000': ("Kirby's Return to Dream Land Deluxe", 'target', '-', 'own,60,30,20,15', 'own,60,30,20,15', 'own,60,30,20,15', '60', '-'),
     '01006BB00C6F0000': ("The Legend of Zelda: Link's Awakening", 'limit', '-', 'own,60,30', 'own,60,30', 'own,60,30', '-', '-'),
-    '01006F8002326000': ('Animal Crossing: New Horizons', 'limit', '-', 'own,60', 'own,60', 'own,60', '-', '-'),   # PEANUTS: Game owned or the 60 fps variant (speedfix60)
+    '01006F8002326000': ('Animal Crossing: New Horizons', 'limit', '-', 'own,60', 'own,60', 'own,60', '-', '-'),   # KIWI: Game owned or the 60 fps variant (speedfix60)
     '01007300020FA000': ('Astral Chain', 'limit', '-', 'own,60,45,40,30,20', 'own,90,60,45,40,30,20', 'own,120,90,60,45,40,30,20', '-', 'high'),
     '01007EF00011E000': ('The Legend of Zelda: Breath of the Wild', 'limit', '-', 'own,60,45,40,30,20', 'own,90,60,45,40,30,20', 'own,120,90,60,45,40,30,20', '-', 'high'),
     '01008CF01BAAC000': ('The Legend of Zelda: Echoes of Wisdom', 'target', '-', 'own,60,30,20,15', 'own,60,30,20,15', 'own,60,30,20,15', 'profile 60', '-'),
@@ -267,7 +267,7 @@ EXPECTED = {
     '0100A7C01B792000': ('Minecraft Dungeons II', 'target', '-', 'own,60,30,20,15', 'own,60,30,20,15', 'own,60,30,20,15', '60', '-'),
     '01003D100E9C6000': ('The Witcher 3: Wild Hunt — Complete Edition', 'limit', '-', 'own,60,45,40,30,20', 'own,90,60,45,40,30,20', 'own,120,90,60,45,40,30,20', '-', 'high'),
     '01003D200BAA2000': ('Pokémon Mystery Dungeon: Rescue Team DX', 'target', '-', 'own,60,30,20,15', 'own,60,30,20,15', 'own,60,30,20,15', '60', '-'),
-    # PEANUTS: the eleven games on the 0.1.9 release list (2026-11-27)
+    # KIWI: the eleven games on the 0.1.9 release list (2026-11-27)
     '01008FE00E2F6000': ('One Piece: Pirate Warriors 4', 'limit', '-', 'own,60,30', 'own,60,30', 'own,60,30', '-', '-'),
     '0100EB100AB42000': ('FINAL FANTASY XII THE ZODIAC AGE', 'target', '-', 'own,60,30,20,15', 'own,60,30,20,15', 'own,60,30,20,15', '60', '-'),
     '01000EA014150000': ('FINAL FANTASY (Pixel Remaster)', 'target', '-', 'own,60,30,20,15', 'own,60,30,20,15', 'own,60,30,20,15', '60', '-'),

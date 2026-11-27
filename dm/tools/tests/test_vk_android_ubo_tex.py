@@ -1,4 +1,4 @@
-"""PEANUTS: vk_android_build.py's ubo_tex_c2_sampler: a type-1 handle whose texture word is in the game's own uniform buffer and whose separate sampler word is in the driver
+"""KIWI: vk_android_build.py's ubo_tex_c2_sampler: a type-1 handle whose texture word is in the game's own uniform buffer and whose separate sampler word is in the driver
 table c2 (Unreal Engine 4's materials in Hogwarts Legacy) gets the texture's uniform slot and offset; other handles are left to the decoders before it."""
 import ast
 import os

@@ -1,4 +1,4 @@
-# PEANUTS: new file (the Level-5 NNDXDHSC reader in shader_split.py, GitHub PR #243)
+# KIWI: new file (the Level-5 NNDXDHSC reader in shader_split.py, GitHub PR #243)
 """Level-5's single-stage shader objects. Synthetic code and control data only."""
 import struct
 import unittest

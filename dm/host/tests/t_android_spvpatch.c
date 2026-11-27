@@ -181,7 +181,7 @@ static const uint32_t SPV_REMAP_FRAG[] = {
     0x000200f8, 0x00000016, 0x000100fc, 0x000200f8, 0x00000017, 0x0004003d, 0x00000007, 0x0000001c, 0x0000001b, 0x00050041, 0x0000000c, 0x0000001e,
     0x00000009, 0x0000001d, 0x0004003d, 0x00000006, 0x0000001f, 0x0000001e, 0x0005008e, 0x00000007, 0x00000020, 0x0000001c, 0x0000001f, 0x0003003e,
     0x0000001a, 0x00000020, 0x000100fd, 0x00010038};
-// PEANUTS begin: vka_spv_table_pool: glslangValidator -V --target-env vulkan1.1 of a pixel shader that picks a cube map from a 32-element array over a table of handles
+// KIWI begin: vka_spv_table_pool: glslangValidator -V --target-env vulkan1.1 of a pixel shader that picks a cube map from a 32-element array over a table of handles
 // in a uniform buffer, with the translator's clamp of the index:
 //   layout(set = 0, binding = 1, std140) uniform U { vec4 m[4096]; } u;  layout(set = 0, binding = 2) uniform samplerCube t[32];
 //   layout(location = 0) in vec3 d;  layout(location = 1) flat in uint k;  layout(location = 0) out vec4 o;
@@ -213,9 +213,9 @@ static const uint32_t tab_frag[] = {   // glslang 16.6.0, vulkan1.1, of the GLSL
     0x00000025, 0x0004003d, 0x0000000b, 0x00000027, 0x00000026, 0x0004003d, 0x0000001b, 0x00000028, 0x0000001d, 0x00070058, 0x00000007, 0x00000029,
     0x00000027, 0x00000028, 0x00000002, 0x0000001f, 0x0009004f, 0x00000007, 0x0000002a, 0x00000029, 0x00000029, 0x00000000, 0x00000000, 0x00000000,
     0x00000000, 0x00050081, 0x00000007, 0x0000002b, 0x00000020, 0x0000002a, 0x0003003e, 0x00000009, 0x0000002b, 0x000100fd, 0x00010038};
-// PEANUTS end
+// KIWI end
 // Whether a variable is decorated Location loc (*var: the first one), and a global variable's storage class (-1: none)
-// PEANUTS begin: vka_spv_quad_shfl: spirv-as --target-env vulkan1.3 of a pixel shader with the translator's ShuffleXor and Shuffle helpers (their 64-lane form) called
+// KIWI begin: vka_spv_quad_shfl: spirv-as --target-env vulkan1.3 of a pixel shader with the translator's ShuffleXor and Shuffle helpers (their 64-lane form) called
 // with BFLY 1, BFLY 2 and IDX 0 under the mask 0x1c03 (inside a quad) and BFLY 4 under 0x1f (across quads), each call's result into one output component
 static const uint32_t QSHFL_FRAG[] = {
     0x07230203, 0x00010600, 0x00070000, 0x00000064, 0x00000000, 0x00020011, 0x00000001, 0x00020011, 0x00000041, 0x0003000e, 0x00000000, 0x00000001,
@@ -259,7 +259,7 @@ static const uint32_t QSHFL_FRAG[] = {
     0x00000007, 0x0000005d, 0x00000051, 0x00000018, 0x000500c5, 0x00000007, 0x0000005e, 0x0000005d, 0x00000058, 0x0004007c, 0x00000009, 0x0000005f,
     0x00000048, 0x0004007c, 0x00000008, 0x00000060, 0x0000005e, 0x00060159, 0x00000009, 0x00000061, 0x0000001c, 0x0000005f, 0x00000060, 0x0004007c,
     0x00000007, 0x00000062, 0x00000061, 0x000600a9, 0x00000007, 0x00000063, 0x0000005b, 0x00000062, 0x00000048, 0x000200fe, 0x00000063, 0x00010038};
-// PEANUTS end
+// KIWI end
 static int loc_of(const uint32_t *w, size_t n, uint32_t loc, uint32_t *var) {
     for (size_t i = 5; i < n && (w[i] >> 16); i += w[i] >> 16) if ((w[i] & 0xffff) == 71 && (w[i] >> 16) >= 4 && w[i + 2] == 30 && w[i + 3] == loc) { if (var) *var = w[i + 1]; return 1; }
     return 0;
@@ -271,7 +271,7 @@ static int storage_of(const uint32_t *w, size_t n, uint32_t var) {
 int main(void) {
     int val = have_val();
     size_t n = sizeof SPV_TRI_VERT / 4, on = 0; char err[200] = "";
-    {   // PEANUTS(upstream-candidate): depth = fma(product, k, product) + k, with a precise product and a separate colour add.
+    {   // KIWI(upstream-candidate): depth = fma(product, k, product) + k, with a precise product and a separate colour add.
         static const uint32_t shader[] = {
             0x07230203, 0x00010000, 0x00070000, 0x00000010, 0x00000000, 0x00020011, 0x00000001, 0x0006000b,
             0x00000001, 0x4c534c47, 0x6474732e, 0x3035342e, 0x00000000, 0x0003000e, 0x00000000, 0x00000001,
@@ -538,7 +538,7 @@ int main(void) {
             free(r); free(x);
         }
     }
-    {   // PEANUTS begin: vka_spv_table_pool: the array at binding 2 over the table at byte 16 of the block at binding 1 becomes a sampler, its two reads go through the pool
+    {   // KIWI begin: vka_spv_table_pool: the array at binding 2 over the table at byte 16 of the block at binding 1 becomes a sampler, its two reads go through the pool
         const vka_tabpool t = {2, 1, 16}; size_t tn = sizeof tab_frag / 4, tout = 0; int sites = 0;
         uint32_t *x = vka_spv_table_pool(tab_frag, tn, &t, 1, 1, 0, 0xfffff, &tout, &sites, err, sizeof err);
         CHECK(x && sites == 2, "table array read through the pool: %d reads rewritten (%s)", sites, err);
@@ -556,7 +556,7 @@ int main(void) {
             CHECK(tv && samp && pointee == samp, "the array's variable is one sampler");
             CHECK(pool && rta, "a runtime array of the pool's images at set 1");
             CHECK(count_op(x, tout, 86) == 2, "an OpSampledImage per read");
-            {   // PEANUTS: NonUniform on the pool element's pointer, the loaded image and the sampled image (VUID-RuntimeSpirv-NonUniform-06274), each once
+            {   // KIWI: NonUniform on the pool element's pointer, the loaded image and the sampled image (VUID-RuntimeSpirv-NonUniform-06274), each once
                 int need = 0, have = 0, twice = 0;
                 for (size_t i = 5; i < tout && (x[i] >> 16); i += x[i] >> 16) {
                     uint32_t op = x[i] & 0xffff, id = 0;
@@ -580,8 +580,8 @@ int main(void) {
         CHECK(!vka_spv_table_pool(tab_frag, tn, &none, 1, 1, 0, 0xfffff, &tout, &sites, err, sizeof err) && !err[0], "a module without the array is left alone, with no error");
         const vka_tabpool past = {2, 1, 65536};
         CHECK(!vka_spv_table_pool(tab_frag, tn, &past, 1, 1, 0, 0xfffff, &tout, &sites, err, sizeof err) && err[0], "a table past the end of its block is refused");
-    }   // PEANUTS end
-    {   // PEANUTS begin: vka_spv_quad_shfl: the three calls inside a quad become two quad swaps (horizontal, vertical) and a quad broadcast of lane 0, the call across quads stays
+    }   // KIWI end
+    {   // KIWI begin: vka_spv_quad_shfl: the three calls inside a quad become two quad swaps (horizontal, vertical) and a quad broadcast of lane 0, the call across quads stays
         size_t qn = sizeof QSHFL_FRAG / 4, qo = 0; int sites = 0; err[0] = 0;
         uint32_t *x = vka_spv_quad_shfl(QSHFL_FRAG, qn, &qo, &sites, err, sizeof err);
         CHECK(x && sites == 3, "quad shuffles: %d calls made quad operations (%s)", sites, err);
@@ -596,7 +596,7 @@ int main(void) {
             free(x);
         }
         CHECK(!vka_spv_quad_shfl(tab_frag, sizeof tab_frag / 4, &qo, &sites, err, sizeof err) && !err[0] && !sites, "a module without shuffles is left alone, with no error");
-    }   // PEANUTS end
+    }   // KIWI end
     // DM_VK_PFB_SPV_DIR=<folder of .spv modules>: each one that reads the pool rewritten (vertex-pipeline stores allowed, early tests asked for) and validated
     const char *pd = getenv("DM_VK_PFB_SPV_DIR");
     if (pd) {

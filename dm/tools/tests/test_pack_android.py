@@ -66,7 +66,7 @@ class Progress(unittest.TestCase):
             self.assertEqual(pack_android.nso_text_size(f), 0)
 
 
-# PEANUTS begin: the in-process rerun (#177)
+# KIWI begin: the in-process rerun (#177)
 class Rerun(unittest.TestCase):
     """The phone's packer allows no exec (android/ondevice/dm_pack.c): a tool that would run itself again with a variable (patch_nso.py's DM_PATCH_FRONT, #177)
     asks run_in_process with sys.exit({'rerun_env': ...}) and is run again in process"""
@@ -105,7 +105,7 @@ class Rerun(unittest.TestCase):
         block = src[at:at + 800]
         self.assertLess(block.index("os.environ.get('DM_IN_PROCESS')"), block.index('os.execve'), 'in process it must ask for the rerun before any exec')
         self.assertIn("sys.exit({'rerun_env': {'DM_PATCH_FRONT': hex(need)}})", block)
-# PEANUTS end
+# KIWI end
 
 
 if __name__ == '__main__':

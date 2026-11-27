@@ -1,4 +1,4 @@
-<!-- PEANUTS: profile added in Kiwi Native -->
+<!-- KIWI: profile added in Kiwi Native -->
 
 # WarioWare: Get It Together! (`0100563010E0C000`)
 

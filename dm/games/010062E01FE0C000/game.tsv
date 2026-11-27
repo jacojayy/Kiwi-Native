@@ -1,4 +1,4 @@
-# Game profile of Digimon Story Time Stranger (Switch, update 1.2.2 = v262144, with its add-on content). PEANUTS: a Kiwi Native profile (Kiwi Native has none for this title).
+# Game profile of Digimon Story Time Stranger (Switch, update 1.2.2 = v262144, with its add-on content). KIWI: a Kiwi Native profile (Kiwi Native has none for this title).
 # Format: see dm/games/README.md
 # Media.Vision's engine on NVN, SDK 20.5.21, CRIWARE sound and movies; every game file is in MVGL archives (*.nx64.mvgl, the 64-bit layout: mvgl.py) and two CRI CPK archives.
 # The shaders are the archives' 'shad' entries, NXVS / NXFS containers of one NVN control section and code area each (shader_split.py mvgl_jobs). Started as a provisional profile
@@ -40,7 +40,7 @@ shader_groups	/=romfs
 shader_note	Digimon Story Time Stranger shaders
 
 # ---- Frame rate ----
-# PEANUTS: FPSLocker Warehouse's config for this build (v4, 010062E01FE0C000/135C83CDEA06AEC2.yaml), main 1.2.2 only. The host's frame limit picks the rate: 60 by default,
+# KIWI: FPSLocker Warehouse's config for this build (v4, 010062E01FE0C000/135C83CDEA06AEC2.yaml), main 1.2.2 only. The host's frame limit picks the rate: 60 by default,
 # the launcher's choices up to 120, and Game owned for the game's own rate (no row applied). The frame time (µs) and the frame rate the game keeps in main's data:
 fps_limit	60
 fps_limit_max	120

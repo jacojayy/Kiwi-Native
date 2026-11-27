@@ -1,4 +1,4 @@
-<!-- PEANUTS: Android profile and validation for Captain Tsubasa 2: World Fighters. -->
+<!-- KIWI: Android profile and validation for Captain Tsubasa 2: World Fighters. -->
 # Captain Tsubasa 2: World Fighters (`01009720213B0000`)
 
 Update 1.0.6 (`v327680`, displayed as 1.06 on the title screen), SDK 18.3.1, Unreal with Wwise on NVN. The registered main build is `63ad5f65431ae17b1bb2304fd3abc521`. It loads `main`, `subsdk0` (NintendoSDK movie) and `sdk`.
@@ -30,9 +30,9 @@ Update 1.0.6 (`v327680`, displayed as 1.06 on the title screen), SDK 18.3.1, Unr
 
 - Full matches, online modes and the individual DLC bonuses are untested.
 
-<!-- PEANUTS begin: picture shapes -->
+<!-- KIWI begin: picture shapes -->
 ## Picture shapes (Android)
 
 **Untested.** Game settings › Display offers **Fill the screen** on 1.0.6 through 1 `aspect_plan` row that nobody has seen on a device (`aspect_plan_untested 1`, and the Fill choice says so). They are every place this build's main has the packed 1920x1080 sizes in code and the 16/9 float words, from a scan of the code on 2026-11-21 with each expected word read on the pack; no community patch stands behind them. With Fill the 3D view may follow the screen, the HUD and menus may not, or the game may draw wrongly or not start. Fit and Stretch are unchanged. Open: every screen, at any shape.
 
-<!-- PEANUTS end -->
+<!-- KIWI end -->

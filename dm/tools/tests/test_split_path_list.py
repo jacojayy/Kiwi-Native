@@ -1,4 +1,4 @@
-"""PEANUTS (a test of this fork): shader_split.py's list arguments (RomFS, main, DLC) with paths that hold a comma, brackets, spaces and letters outside ASCII.
+"""KIWI (a test of this fork): shader_split.py's list arguments (RomFS, main, DLC) with paths that hold a comma, brackets, spaces and letters outside ASCII.
 The lists were parted at every ',', so one game file named with a comma ("Yoru, Tomosu [0100C2901153C000].nup", or a folder above it) became two paths that do not
 exist and the split stopped with FileNotFoundError. path_list takes an argument that names something there whole, parts at its own separator when the argument has
 one, and only otherwise at ',' (the Mac script's lists). No game files needed: a synthetic RomFS and profile, as test_split_targeted.py's."""

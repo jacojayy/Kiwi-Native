@@ -72,7 +72,7 @@ def check(title_id, log, only=None, min_addrs=1):
 
 
 def main():
-    ap = argparse.ArgumentParser(description=(__doc__ or '').split('\n')[0])   # PEANUTS(upstream-candidate): module docs can be stripped
+    ap = argparse.ArgumentParser(description=(__doc__ or '').split('\n')[0])   # KIWI(upstream-candidate): module docs can be stripped
     ap.add_argument('title_id')
     ap.add_argument('log', help='log file, or - for stdin')
     ap.add_argument('--cheats', help='comma-separated cheat names to require (default: every cheat of the profile file)')

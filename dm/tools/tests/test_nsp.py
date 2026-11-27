@@ -14,9 +14,9 @@ from unittest import mock
 REPO = Path(__file__).resolve().parents[3]
 sys.path[:0] = [str(REPO / 'dm/tools'), str(REPO / 'scripts')]
 import nsp
-import nsp_extract   # pyright: ignore[reportMissingImports]  # PEANUTS(upstream-candidate): scripts/ is added to sys.path above.
+import nsp_extract   # pyright: ignore[reportMissingImports]  # KIWI(upstream-candidate): scripts/ is added to sys.path above.
 import nup
-import pack_dump   # pyright: ignore[reportMissingImports]  # PEANUTS(upstream-candidate): scripts/ is added to sys.path above.
+import pack_dump   # pyright: ignore[reportMissingImports]  # KIWI(upstream-candidate): scripts/ is added to sys.path above.
 import romfs as romfs_tool
 
 TID = 0x0400AAAA00002000
@@ -327,7 +327,7 @@ class Host(Base):
 @unittest.skipUnless(shutil.which('javac') and shutil.which('java'), 'no JDK')
 class Launcher(Base):
     """The launcher's reader (Nup with Nsp, android/app/src/jvmtest NspJvmTest) reads each package of an NSP as nsp_extract.py unpacks it"""
-    STUB = """package dev.nxnative.android;
+    STUB = """package hernandez.kiwinative;
 public final class BuildConfig {
     public static final String NX_PROFILES = "040074A01BF12000\\tDonkey Kong Bananza\\t22852\\tabcdef012345\\t458752 main=aa";
     public static final String NX_DMSH_VK_CHAIN = "6607c8d19abc";
@@ -336,10 +336,10 @@ public final class BuildConfig {
 }
 """
     def test_packages(self):
-        src = REPO / 'android/app/src/main/java/dev/nxnative/android'
+        src = REPO / 'android/app/src/main/java/hernandez/kiwinative'
         (self.dir / 'BuildConfig.java').write_text(self.STUB)
         subprocess.run(['javac', '-d', str(self.dir / 'classes')] + [str(src / f'{c}.java') for c in ('Nup', 'Nsp', 'Zstd', 'Pack', 'DumpLayout', 'BuildCheck', 'RomfsCheck', 'Profile', 'ShaderLibs', 'PickedPath', 'CopyPlan', 'PackFind')]
-                       + [str(REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/NspJvmTest.java'), str(self.dir / 'BuildConfig.java')], check=True, capture_output=True, text=True)
+                       + [str(REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/NspJvmTest.java'), str(self.dir / 'BuildConfig.java')], check=True, capture_output=True, text=True)
         out = self.dir / 'dump'
         big = dict(GAME1, **{'big.bin': bytes(range(251)) * 9000, 'sub/more/e.bin': b'e' * 33})
         g = self.write('game.nsp', build('game', TID, 131072, big))
@@ -348,7 +348,7 @@ public final class BuildConfig {
         for f in (g, d, g0): nsp_extract.extract(f, out, say=lambda *a: None) if f != g0 else nsp_extract.extract(f, self.dir / 'dump0', say=lambda *a: None)
         for nspf, sel, folder, pid in ((g, 'update/131072', out / 'updates/131072', f'{TID:016X}'), (g0, 'base', self.dir / 'dump0/base', f'{TID:016X}'),
                                        (d, f'addon/{DLC:016x}', out / f'dlc/{DLC:016X}/0', '-')):
-            r = subprocess.run(['java', '-cp', str(self.dir / 'classes'), 'dev.nxnative.android.NspJvmTest', str(nspf), sel, str(folder), pid], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', str(self.dir / 'classes'), 'hernandez.kiwinative.NspJvmTest', str(nspf), sel, str(folder), pid], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertTrue(r.stdout.startswith('ok '), r.stdout)
         beside = self.dir / 'beside'
@@ -366,10 +366,10 @@ public final class BuildConfig {
         (bad / 'junk.nsp').write_bytes(b'not an nsp' * 40)
         (bad / 'nometa.nsp').write_bytes(pfs0([('readme.txt', b'hello' * 40)]))
         (bad / 'dlc.nsp').write_bytes(build('dlc', DLC, 0, DLCT))
-        r = subprocess.run(['java', '-cp', str(self.dir / 'classes'), 'dev.nxnative.android.NspJvmTest', 'refused'] + [str(bad / f) for f in ('encrypted.nsp', 'cut.nsp', 'junk.nsp', 'nometa.nsp', 'dlc.nsp')],
+        r = subprocess.run(['java', '-cp', str(self.dir / 'classes'), 'hernandez.kiwinative.NspJvmTest', 'refused'] + [str(bad / f) for f in ('encrypted.nsp', 'cut.nsp', 'junk.nsp', 'nometa.nsp', 'dlc.nsp')],
                            capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-        r = subprocess.run(['java', '-cp', str(self.dir / 'classes'), 'dev.nxnative.android.NspJvmTest', 'beside', str(beside), 'newer.nsp', 'older.nsp', 'any name.nsp'], capture_output=True, text=True)
+        r = subprocess.run(['java', '-cp', str(self.dir / 'classes'), 'hernandez.kiwinative.NspJvmTest', 'beside', str(beside), 'newer.nsp', 'older.nsp', 'any name.nsp'], capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
 

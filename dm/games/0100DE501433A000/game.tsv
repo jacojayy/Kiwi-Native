@@ -1,6 +1,6 @@
 # Tetris Effect: Connected: Monstars and Resonair (published by Enhance), Unreal Engine 4.26 / 4.27 with IoStore containers (.utoc / .ucas), Wwise, SDK 13.3.2,
 # NVN, nn::movie for the backgrounds' .mp4 movies; update 2.0.2.2 (v1310720).
-# PEANUTS: started from the NSP script's provisional profile (dm/games/profile_guess.py) on a Windows PC; shader_groups set by hand (below). Runs on an AYN Thor
+# KIWI: started from the NSP script's provisional profile (dm/games/profile_guess.py) on a Windows PC; shader_groups set by hand (below). Runs on an AYN Thor
 # on Turnip with patches.py's RedpointEOS cut; the memory values are the Unreal guess, not measured (README.md)
 
 # ---- Identity ----

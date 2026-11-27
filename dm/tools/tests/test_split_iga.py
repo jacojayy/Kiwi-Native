@@ -1,4 +1,4 @@
-"""PEANUTS: shader_split reads Alchemy's igArchive version 13 (Crash Team Racing Nitro-Fueled's .pak files): the files are listed with their blocks from the
+"""KIWI: shader_split reads Alchemy's igArchive version 13 (Crash Team Racing Nitro-Fueled's .pak files): the files are listed with their blocks from the
 archive's own block tables (iga_entries), each block is read at its sector and decoded when its entry says it is compressed (iga_member), and the GLSLC outputs
 of every file are taken (iga_shaders). A block that is stored as it is can begin with bytes that read as a small length, so only the table says which it is.
 Synthetic archives written from the layout in iga_entries. No game files needed."""

@@ -1,4 +1,4 @@
-# PEANUTS: new file (code mods: IPS/IPS32 before the rewrite, DESIGN-MODS.md)
+# KIWI: new file (code mods: IPS/IPS32 before the rewrite, DESIGN-MODS.md)
 """IPS and IPS32 patch application, Atmosphère's exefs_patches semantics: a patch's offsets count from the start of the
 module's NSO *file* as it would be uncompressed, that is its 0x100-byte header first and then the decompressed memory
 image (text at file offset 0x100). Atmosphère's loader subtracts the header's size from every record and leaves out

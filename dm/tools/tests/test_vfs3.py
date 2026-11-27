@@ -1,4 +1,4 @@
-# PEANUTS: new file (the Level-5 VFS3 reader in shader_split.py, GitHub PR #230)
+# KIWI: new file (the Level-5 VFS3 reader in shader_split.py, GitHub PR #230)
 """Synthetic Level-5 VFS3 zstd archive. No game files needed."""
 import io
 import os

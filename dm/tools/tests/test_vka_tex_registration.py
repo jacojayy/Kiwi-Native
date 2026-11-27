@@ -16,12 +16,12 @@ PRELUDE = r'''
 #include <string.h>
 #define NVN_TEXTURE_TARGET_BUFFER 11
 #define VLOG(...) ((void)0)
-#define VRED_ONCE(...) ((void)0)   /* PEANUTS(upstream-candidate): treg_add can fail */
+#define VRED_ONCE(...) ((void)0)   /* KIWI(upstream-candidate): treg_add can fail */
 typedef struct { uint64_t serial; void *pool; struct { int target; } d; } tex_t;
 typedef struct { int set_target, target; } view_t;
 typedef struct { tex_t t; view_t v; uint8_t has_v, img; uint64_t pgen; } treg_ent;
 static pthread_mutex_t g_tmu = PTHREAD_MUTEX_INITIALIZER;
-#include "vka_treg.h"   // PEANUTS(upstream-candidate): the sparse registry the functions below use
+#include "vka_treg.h"   // KIWI(upstream-candidate): the sparse registry the functions below use
 static int g_gpu_end, *g_tdirty, g_ntd, g_tdcap;
 static uint8_t *g_tdflag;
 static _Atomic uint64_t *g_tver;
@@ -38,28 +38,28 @@ int main(void) {
     view_t buffer_view = {.set_target = 1, .target = NVN_TEXTURE_TARGET_BUFFER};
     treg(id, &texture, NULL, 0);
     assert(vka_tex_id_is_buffer(id));
-    assert(treg_lookup(id)->t.serial == 42 && treg_lookup(id)->pgen == 7 && g_gpu_end == id + 1);   // PEANUTS(upstream-candidate)
+    assert(treg_lookup(id)->t.serial == 42 && treg_lookup(id)->pgen == 7 && g_gpu_end == id + 1);   // KIWI(upstream-candidate)
     assert(atomic_load(&g_tver[id]) == 1 && g_ntd == 1);
     treg(id, NULL, NULL, 0);
     assert(!vka_tex_id_is_buffer(id));
     treg_ent cleared = {0};
-    assert(memcmp(treg_lookup(id), &cleared, sizeof cleared) == 0);   /* PEANUTS(upstream-candidate) */
+    assert(memcmp(treg_lookup(id), &cleared, sizeof cleared) == 0);   /* KIWI(upstream-candidate) */
     assert(atomic_load(&g_tver[id]) == 2 && g_ntd == 1 && g_tdflag[id]);
     // A view overrides a live texture's target, but cannot make a NULL registration live.
     treg(id, &texture, &image_view, 1);
-    assert(!vka_tex_id_is_buffer(id) && treg_lookup(id)->img && treg_lookup(id)->has_v);   // PEANUTS(upstream-candidate)
+    assert(!vka_tex_id_is_buffer(id) && treg_lookup(id)->img && treg_lookup(id)->has_v);   // KIWI(upstream-candidate)
     texture.d.target = 2;
     treg(id, &texture, &buffer_view, 0);
     assert(vka_tex_id_is_buffer(id));
     treg(id, NULL, &buffer_view, 1);
     assert(!vka_tex_id_is_buffer(id));
-    assert(memcmp(treg_lookup(id), &cleared, sizeof cleared) == 0);   /* PEANUTS(upstream-candidate) */
+    assert(memcmp(treg_lookup(id), &cleared, sizeof cleared) == 0);   /* KIWI(upstream-candidate) */
     assert(atomic_load(&g_tver[id]) == 5);
     // Clearing a never-registered ID, and rejecting IDs outside the table.
     treg(id + 1, NULL, NULL, 1);
     assert(!vka_tex_id_is_buffer(id + 1) && g_ntd == 2);
     treg(-1, NULL, NULL, 0);
-    // PEANUTS(upstream-candidate): an ID of a later full-size pool is kept on the CPU side only: looked up, never dirtied or versioned
+    // KIWI(upstream-candidate): an ID of a later full-size pool is kept on the CPU side only: looked up, never dirtied or versioned
     treg(1 << 20, NULL, NULL, 0);
     texture.d.target = NVN_TEXTURE_TARGET_BUFFER; texture.serial = 43;
     treg((1 << 20) + 5, &texture, NULL, 0);
@@ -86,7 +86,7 @@ class TextureRegistration(unittest.TestCase):
             path = Path(tmp)
             (path / 'registration.c').write_text(PRELUDE + functions + MAIN)
             build = subprocess.run([cc, '-std=c11', '-O1', '-fsanitize=undefined', '-fno-sanitize-recover=all',
-                                    '-pthread', '-I', str(SOURCE.parent),  # PEANUTS(upstream-candidate): vka_treg.h
+                                    '-pthread', '-I', str(SOURCE.parent),  # KIWI(upstream-candidate): vka_treg.h
                                     str(path / 'registration.c'), '-o', str(path / 'registration')],
                                    capture_output=True, text=True)
             self.assertEqual(build.returncode, 0, build.stderr)

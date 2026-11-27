@@ -14,7 +14,7 @@ HLE_FORCE("_ZN2nn2oe15SetCpuBoostModeENS0_12CpuBoostModeE", "CPU boost mode; the
 // DisplayVersion = char[16] (the application's display version): the value from that version's control data (NACP), chosen by main's build ID (the game profile's build rows); unknown builds get 1.0.0
 HLE_FORCE("_ZN2nn2oe17GetDisplayVersionEPNS0_14DisplayVersionE", "display version (by the main build ID)", void, h_oe_DispVer, char *v) {
     const char *ver = "1.0.0";
-#ifdef DM_RUNTIME_PROFILE   // PEANUTS: the generic host reads the profile's own table instead of a static const initialized from the macro
+#ifdef DM_RUNTIME_PROFILE   // KIWI: the generic host reads the profile's own table instead of a static const initialized from the macro
     for (int i = 0; i < g_nmod; i++) if (!strcmp(g_mod[i].name, "main"))
         for (unsigned j = 0; j < g_profile.ndisplay_versions; j++) if (!strcmp(g_mod[i].build_id, g_profile.display_versions[j].build)) ver = g_profile.display_versions[j].ver;
 #else
@@ -156,7 +156,7 @@ static font_t font_resolve(int t) {
     if (t == 0) f = font_first("DM_SHARED_FONT", FONT_TYPE[0].file, SYSTEM_FONT);
     else if (t == 5) f = font_first("DM_SHARED_FONT_EXT", FONT_TYPE[5].file, NULL);
     else if (!getenv("DM_SHARED_FONT") || !*getenv("DM_SHARED_FONT")) f = font_first(NULL, FONT_TYPE[t].file, FONT_TYPE[t].sys);
-    // PEANUTS begin: with DM_SHARED_FONT set (the app sets it to the firmware's standard font) the Chinese and Korean types got that font, which has only the
+    // KIWI begin: with DM_SHARED_FONT set (the app sets it to the firmware's standard font) the Chinese and Korean types got that font, which has only the
     // characters Japanese shares: the rest drew as "?" (Pokemon Shield in Chinese). The firmware's own fonts for these types, when they lie beside the standard
     // one (the importer writes cjk_sc.ttf, cjk_sc_ext.ttf, cjk_tc.ttf, cjk_kr.ttf there), come first
     if (!f.p && t >= 1 && t <= 4) {
@@ -173,7 +173,7 @@ static font_t font_resolve(int t) {
             f = g;
         }
     }
-    // PEANUTS end
+    // KIWI end
     if (!f.p && t) { f = font_resolve(0); fallback = 1; }
     else if (f.p) for (int u = 0; u < t; u++) if (type_f[u].p && !strcmp(type_f[u].src, f.src)) { munmap(f.p, f.n); f = type_f[u]; break; }
     type_f[t] = f;
@@ -199,7 +199,7 @@ static const void *font_payload(const void *p) {
     pthread_mutex_unlock(&font_mu);
     return r;
 }
-// PEANUTS: hle_fontll.c sets these when it is part of the host (a test of this file alone leaves them NULL)
+// KIWI: hle_fontll.c sets these when it is part of the host (a test of this file alone leaves them NULL)
 void *(*dm_fontll_enter)(void *engine, const char *what);
 void (*dm_fontll_leave)(void *slot);
 static uint32_t (*font_load)(void *, char *, const void *, unsigned, unsigned);
@@ -211,9 +211,9 @@ static void font_load_init(void) {
 HLE_FORCE("_ZN2nn6fontll18ScalableFontEngine8LoadFontEPcPKvjj", "shared font BFTTF allocation base → TTF payload; parsing and errors stay in the SDK", uint32_t, h_font_LoadFont, void *self, char *name, const void *data, unsigned index, unsigned capacity) {
     pthread_once(&font_load_once, font_load_init);
     const void *q = font_payload(data);
-    void *fe = dm_fontll_enter ? dm_fontll_enter(self, "LoadFont") : NULL;   // PEANUTS: one thread at a time in an engine (hle_fontll.c)
+    void *fe = dm_fontll_enter ? dm_fontll_enter(self, "LoadFont") : NULL;   // KIWI: one thread at a time in an engine (hle_fontll.c)
     uint32_t r = font_load(self, name, q, index, capacity);
-    if (fe) dm_fontll_leave(fe);   // PEANUTS
+    if (fe) dm_fontll_leave(fe);   // KIWI
     if (q != data) { static int logged; if (r && !__atomic_exchange_n(&logged, 1, __ATOMIC_RELAXED)) LOG("[RED] shared font: ScalableFontEngine::LoadFont(%s) of the host's stand-in returned %u", name ? name : "?", r); }
     return r;
 }
@@ -238,9 +238,9 @@ HLE_FORCE("_ZN2nn6fontll18ScalableFontEngine10InitializeEPvj", "a work buffer th
         } else LOG("[RED] more than %d font engines with a small work buffer: this one keeps the game's", FONT_ENGINES);
         pthread_mutex_unlock(&font_mu);
     }
-    void *fe = dm_fontll_enter ? dm_fontll_enter(self, "Initialize") : NULL;   // PEANUTS: one thread at a time in an engine (hle_fontll.c)
+    void *fe = dm_fontll_enter ? dm_fontll_enter(self, "Initialize") : NULL;   // KIWI: one thread at a time in an engine (hle_fontll.c)
     init(self, buf, size);
-    if (fe) dm_fontll_leave(fe);   // PEANUTS
+    if (fe) dm_fontll_leave(fe);   // KIWI
 }
 HLE_FORCE("_ZN2nn6fontll18ScalableFontEngine22GetPointerToWorkBufferEv", "the game's own buffer, also when the engine runs on host memory", void *, h_font_WorkBuffer, void *self) {
     static void *(*get)(void *);
@@ -261,7 +261,7 @@ HLE_FORCE("_ZN2nn6fontll18ScalableFontEngine22GetPointerToWorkBufferEv", "the ga
 static size_t font_skip(void) {
     static int skip = -1;
     if (skip < 0) {
-#ifdef DM_RUNTIME_PROFILE   // PEANUTS: shared_font is a profile.bin presence flag at run time, same semantics as the #else's #ifdef
+#ifdef DM_RUNTIME_PROFILE   // KIWI: shared_font is a profile.bin presence flag at run time, same semantics as the #else's #ifdef
         if (g_profile.has_shared_font_ttf) {
             skip = DM_GAME_SHARED_FONT_TTF ? 8 : 0; LOG("shared font: %s (game profile shared_font)", skip ? "the TTF itself" : "BFTTF header + TTF");
             return (size_t)skip;
@@ -424,7 +424,7 @@ static void *vsync_thread(void *arg) {
         if (!e && mtl_link_wait_vsync(&seen, 2 * period)) { if (!vsync_tick(v)) break; next = now_ns() + period; continue; }
         uint64_t t = now_ns(); if (next > t) { struct timespec ts = {(time_t)((next - t) / 1000000000ull), (long)((next - t) % 1000000000ull)}; nanosleep(&ts, NULL); }
         if (!vsync_tick(v)) break;
-        // PEANUTS: DM_VK_PACE_PANEL: without DM_VSYNC_HZ the event ticks in the panel's measured refreshes like the acquire pacer (vka_present.c), so a game that
+        // KIWI: DM_VK_PACE_PANEL: without DM_VSYNC_HZ the event ticks in the panel's measured refreshes like the acquire pacer (vka_present.c), so a game that
         // waits for both does not see them drift against each other (0.28 % apart on a 59.83 Hz panel: one tick every six seconds)
         { uint64_t vka_panel_tick(uint64_t) __attribute__((weak)); if (!e && &vka_panel_tick) period = vka_panel_tick((uint64_t)(1e9 / hz)); }
         next += period; if (now_ns() > next + 4 * period) next = now_ns() + period;   // do not try to catch up when far behind

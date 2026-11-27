@@ -32,7 +32,7 @@ jobs:
     # Issues only (a pull request's comments come as issue_comment too), and never the job's own comment
     if: >-
       ${{ !github.event.issue.pull_request &&
-          (github.event_name != 'issue_comment' || !contains(github.event.comment.body, 'bananative-issue-digest')) }}
+          (github.event_name != 'issue_comment' || !contains(github.event.comment.body, 'kiwinative-issue-digest')) }}
     runs-on: docker
     container:
       image: node:20-bookworm   # python3 is in the image; the tools need nothing outside its standard library

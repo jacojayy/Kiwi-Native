@@ -9,10 +9,10 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android/Signer.java'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/SignerJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative/Signer.java'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/SignerJvmTest.java'
 OFFICIAL = 'ad232b1c519e8f14d1f6dbeaa2569847002714306bc93f18924dd3a7e8abe23e'   # the v0.1.0 release APK's certificate (apksigner verify --print-certs)
-TAG = 'Kiwi Native 0.1 · 6a6448d'   # PEANUTS: the fork's name (Signer.buildTag)
+TAG = 'Kiwi Native 0.1 · 6a6448d'   # KIWI: the fork's name (Signer.buildTag)
 
 
 @unittest.skipUnless(shutil.which('javac') and shutil.which('java'), 'no JDK')
@@ -26,7 +26,7 @@ class Stamp(unittest.TestCase):
     def tearDownClass(cls): shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def java(self, *a):
-        r = subprocess.run(['java', '-Dstdout.encoding=UTF-8', '-cp', str(self.tmp / 'classes'), 'dev.nxnative.android.SignerJvmTest', *map(str, a)],
+        r = subprocess.run(['java', '-Dstdout.encoding=UTF-8', '-cp', str(self.tmp / 'classes'), 'hernandez.kiwinative.SignerJvmTest', *map(str, a)],
                            capture_output=True, text=True, encoding='utf-8')
         self.assertEqual(r.returncode, 0, r.stderr)
         return r.stdout.rstrip('\n').split(' ', 1)[1]
@@ -52,8 +52,8 @@ class Stamp(unittest.TestCase):
     def test_build_id(self):
         """Home's build identifier and the overlay's build tag come from one function: the tag is the app's name and the identifier"""
         self.assertEqual(self.java('build', 0, '0.1.1-test', '4a150670aa', '-', 'android-launcher-2'),
-                         'launcher-2@4a15067|Kiwi Native test · launcher-2@4a15067')   # PEANUTS: the fork's name
-        self.assertEqual(self.java('build', 0, '0.1.1', 'unknown', '+dirty', 'int'), 'int@unknown+dirty|Kiwi Native test · int@unknown+dirty')   # PEANUTS: the fork's name
+                         'launcher-2@4a15067|Kiwi Native test · launcher-2@4a15067')   # KIWI: the fork's name
+        self.assertEqual(self.java('build', 0, '0.1.1', 'unknown', '+dirty', 'int'), 'int@unknown+dirty|Kiwi Native test · int@unknown+dirty')   # KIWI: the fork's name
         self.assertEqual(self.java('build', 1, '0.1-release', '6a6448d123', '-', 'main'), '0.1 · 6a6448d|' + TAG)
 
     def test_short_id(self):

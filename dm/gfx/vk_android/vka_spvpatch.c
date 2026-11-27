@@ -662,7 +662,7 @@ uint32_t *vka_spv_img_retype(const uint32_t *w, size_t nw, uint32_t base, uint64
             o.w[o.n - len + 1] = cls[v] & 32 ? stwin[vimg[k]][c] : twin[vimg[k]][c];
             i += len; continue;
         }
-        // PEANUTS: a copy of a loaded image is the same image under another id (the dynamic slot arrays' select chains copy the element they load, 71e82538): it takes the twin type too.
+        // KIWI: a copy of a loaded image is the same image under another id (the dynamic slot arrays' select chains copy the element they load, 71e82538): it takes the twin type too.
         // Octopath Traveler 0's 43 particle vertex shaders stopped here and read their integer textures through float views, which convert the values: the boost effect's particles
         // took garbage positions and sizes and covered the battle
         if (op == OpCopyObject && len == 4 && w[i + 3] < bound && cls[w[i + 3]] && !(cls[w[i + 3]] & 16) && limg[w[i + 3]] && w[i + 2] < bound) {
@@ -1447,7 +1447,7 @@ fail:
     return NULL;
 }
 
-// PEANUTS begin: vka_spv_table_pool: arrays of sampled images over a table of handles in a uniform buffer, read through the texture pool.
+// KIWI begin: vka_spv_table_pool: arrays of sampled images over a table of handles in a uniform buffer, read through the texture pool.
 // The translator turns a texture picked at run time from a table of 64-bit handles in a uniform buffer (Ryujinx BindlessToArray; binding kind TEX_UBO with a count) into
 // a fixed array of 32 combined image samplers and clamps the index to 31 (dmsh_xlate Program.cs QueryTextureArrayLengthFromBuffer), while the game's tables are longer:
 // Hogwarts Legacy's reflection captures have 512 entries (two per capture, handed out in load order), its light probe volumes 784, its shadow maps 640. Every entry past
@@ -1466,7 +1466,7 @@ enum { TP_Capability = 17, TP_Extension = 10, TP_ExtInstImport = 11, TP_TypeSamp
 uint32_t *vka_spv_table_pool(const uint32_t *w, size_t nw, const vka_tabpool *t, int nt, uint32_t pool_set, uint32_t pool_binding, uint32_t max_id, size_t *out_nw, int *sites, char *err, size_t errn) {
     vec_t o = {0}; *sites = 0; err[0] = 0;
 #define FAIL(...) do { snprintf(err, errn, __VA_ARGS__); goto fail; } while (0)
-    uint32_t *dset = NULL, *dbind = NULL, *a1 = NULL, *a2 = NULL, *rty = NULL, *cval = NULL; uint16_t *dop = NULL; uint8_t *role = NULL, *nu = NULL;   // nu: ids the module already decorates NonUniform (PEANUTS); role: 1 + j an array's variable, TP_MAX + 1 + j a chain into it, 2 TP_MAX + 1 + j its loaded element
+    uint32_t *dset = NULL, *dbind = NULL, *a1 = NULL, *a2 = NULL, *rty = NULL, *cval = NULL; uint16_t *dop = NULL; uint8_t *role = NULL, *nu = NULL;   // nu: ids the module already decorates NonUniform (KIWI); role: 1 + j an array's variable, TP_MAX + 1 + j a chain into it, 2 TP_MAX + 1 + j its loaded element
     if (nw < 5 || w[0] != 0x07230203) { snprintf(err, errn, "not SPIR-V"); return NULL; }
     if (nt <= 0) return NULL;
     if (nt > TP_MAX) nt = TP_MAX;
@@ -1488,7 +1488,7 @@ uint32_t *vka_spv_table_pool(const uint32_t *w, size_t nw, const vka_tabpool *t,
             if (op == TP_Capability && len >= 2) { cap_nu |= in[1] == TP_CapShaderNonUniform; cap_si |= in[1] == TP_CapSampledImageArrayNonUniform; cap_rt |= in[1] == TP_CapRuntimeDescriptorArray; }
             else if (op == TP_Extension && len >= 8 && !memcmp(in + 1, "SPV_EXT_descriptor_indexing", 28)) has_ext = 1;
             else if (op == TP_ExtInstImport && len >= 6 && !memcmp(in + 2, "GLSL.std.450", 13)) glsl = in[1];
-            else if (op == OpDecorate && len == 3 && in[1] < bound && in[2] == TP_DecNonUniform) nu[in[1]] = 1;   // PEANUTS: (not decorated twice below)
+            else if (op == OpDecorate && len == 3 && in[1] < bound && in[2] == TP_DecNonUniform) nu[in[1]] = 1;   // KIWI: (not decorated twice below)
             else if (op == OpDecorate && len >= 4 && in[1] < bound) { if (in[2] == DecDescriptorSet) dset[in[1]] = in[3]; else if (in[2] == DecBinding) dbind[in[1]] = in[3]; }
             else if (op == OpTypeInt && len >= 4 && in[1] < bound) { dop[in[1]] = OpTypeInt; if (in[2] == 32 && !in[3] && !t_u32) t_u32 = in[1]; }
             else if (op == OpTypeFloat && len >= 3 && in[1] < bound) { dop[in[1]] = OpTypeFloat; if (in[2] == 32 && !t_f32) t_f32 = in[1]; }
@@ -1547,7 +1547,7 @@ uint32_t *vka_spv_table_pool(const uint32_t *w, size_t nw, const vka_tabpool *t,
         if (i == first_annot) {
             for (int j = 0; j < nt; j++) if (rarr[j]) EMIT(TP_OP(4, OpDecorate), pool[j], DecDescriptorSet, pool_set, TP_OP(4, OpDecorate), pool[j], DecBinding, pool_binding);
             for (int q = 0; q < nload; q++) EMIT(TP_OP(3, OpDecorate), im0 + (uint32_t)q, TP_DecNonUniform);
-            // PEANUTS: and the pool element's pointer (a chain's id, kept) and the sampled image (a load's id, now the OpSampledImage), the operands that reach the
+            // KIWI: and the pool element's pointer (a chain's id, kept) and the sampled image (a load's id, now the OpSampledImage), the operands that reach the
             // pool at a non-uniform index (VUID-RuntimeSpirv-NonUniform-06274)
             for (uint32_t q = 1; q < bound; q++) if (role[q] > TP_MAX && !nu[q]) EMIT(TP_OP(3, OpDecorate), q, TP_DecNonUniform);
         }
@@ -1619,9 +1619,9 @@ none:
     return NULL;
 }
 #undef TP_OP
-// PEANUTS end
+// KIWI end
 
-// PEANUTS(upstream-candidate): a later EQUAL pass may compare this depth with a value calculated by a different shader.
+// KIWI(upstream-candidate): a later EQUAL pass may compare this depth with a value calculated by a different shader.
 // Preserve the guest's separate arithmetic instructions as well as its explicit fused multiply-add. Follow the
 // scalar SSA expression feeding a direct FragDepth store. Sampling coordinates and unrelated colour math stay fast.
 uint32_t *vka_spv_precise_depth(const uint32_t *w, size_t nw, size_t *out_count) {
@@ -1700,7 +1700,7 @@ done:
     return out;
 }
 
-// PEANUTS begin: warp shuffles of a pixel shader inside a quad as quad operations (vka_spv_quad_shfl; docs/reference/shaders.md "Warp shuffles inside a quad read ended
+// KIWI begin: warp shuffles of a pixel shader inside a quad as quad operations (vka_spv_quad_shfl; docs/reference/shaders.md "Warp shuffles inside a quad read ended
 // helper lanes on Turnip"). The translator calls a helper of its own for SHFL (HelperFunctionManager.GenerateShuffleXor / GenerateShuffle: 4 parameters, value / index /
 // mask / valid pointer, one OpGroupNonUniformShuffle of lane ^ index (BFLY) or of (index & ~segment) | (lane & segment) (IDX)). With a constant index and a constant mask
 // whose segment and clamp keep every lane's source inside its own quad (Maxwell's 0x1c03, a game's own derivatives), a BFLY of 1, 2 or 3 is exactly a quad swap
@@ -1802,4 +1802,4 @@ done:
     return o.w;
 }
 #undef QX_OP
-// PEANUTS end
+// KIWI end

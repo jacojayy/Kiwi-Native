@@ -1,4 +1,4 @@
-// PEANUTS(upstream-candidate): CPU-side NVN texture registry. The includer supplies treg_ent and holds the registry lock.
+// KIWI(upstream-candidate): CPU-side NVN texture registry. The includer supplies treg_ent and holds the registry lock.
 #ifndef VKA_TREG_H
 #define VKA_TREG_H
 #include <stdlib.h>

@@ -25,24 +25,24 @@ static uint64_t ubo_word(const vka_bstate *s, int st, int reg, unsigned off, uns
 }
 int vka_texu_elem = 1;
 // Element k's byte offset past an array's base: a uniform buffer's array of 64-bit NVN handles that the shader indexes (BindlessToArray: the host fills element k from base + 8k)
-static unsigned ubo_elem(const dmsh_vk_bind *b, unsigned k) { return b->count > 1 && vka_texu_elem ? (b->step ? b->step : 8u) * k : 0; }   // PEANUTS: step (an array read by record, dmsh_abi_vk.h)
+static unsigned ubo_elem(const dmsh_vk_bind *b, unsigned k) { return b->count > 1 && vka_texu_elem ? (b->step ? b->step : 8u) * k : 0; }   // KIWI: step (an array read by record, dmsh_abi_vk.h)
 static int ubo_tex_id(const vka_bstate *s, uint32_t h) { int t = (int)(h & 0xfffff); return t ? t + s->tex_base : 0; }
 static int ubo_samp_id(const vka_bstate *s, uint32_t h) { int x = (int)(h >> 20); return x ? x + s->samp_base : 0; }
 
-// PEANUTS(upstream-candidate): Texture and sampler fields are pool-local. Add the queue's base only after extracting a field.
+// KIWI(upstream-candidate): Texture and sampler fields are pool-local. Add the queue's base only after extracting a field.
 // The sampler half of a combined image sampler (skind, sreg, soff); element k of an array
 static int samp_of(const vka_bstate *s, int st, const dmsh_vk_bind *b, unsigned k, vka_read_fn rd, void *ctx) {
     switch (b->skind) {
-    case DMSH_VK_KIND_SAMP_TEX: return b->sreg >= 0 && b->sreg < VKA_NTEX ? ubo_samp_id(s, (uint32_t)s->tex[st][b->sreg]) : 0;   // PEANUTS(upstream-candidate)
+    case DMSH_VK_KIND_SAMP_TEX: return b->sreg >= 0 && b->sreg < VKA_NTEX ? ubo_samp_id(s, (uint32_t)s->tex[st][b->sreg]) : 0;   // KIWI(upstream-candidate)
     case DMSH_VK_KIND_SAMP: return b->sreg >= 0 && b->sreg < 128 ? ubo_samp_id(s, (uint32_t)s->samp[st][b->sreg]) : 0;
     case DMSH_VK_KIND_SAMP_ID: return b->sreg > 0 ? b->sreg : 0;   // a constant of the shader (nvn_mtl.m NVN_RB_SAMPI): taken as it is
     case DMSH_VK_KIND_SAMP_UBO: {
         uint32_t w = (uint32_t)ubo_word(s, st, b->sreg, b->soff + ubo_elem(b, k), 4, rd, ctx);
-        if (b->flags & DMSH_VK_BF_SAMP_RAW) { int x = (int)(w & 0xfff); return x ? x + s->samp_base : 0; }   // PEANUTS(upstream-candidate): handle type 2, the word is the sampler ID (nvn_mtl.m sampu_id)
+        if (b->flags & DMSH_VK_BF_SAMP_RAW) { int x = (int)(w & 0xfff); return x ? x + s->samp_base : 0; }   // KIWI(upstream-candidate): handle type 2, the word is the sampler ID (nvn_mtl.m sampu_id)
         return ubo_samp_id(s, w); }
     case DMSH_VK_KIND_SAMP_C2A: {   // the handle at c2 byte off + 8 k, ORed with the separate sampler word at soff (nvn_mtl.m NVN_RB_SAMPA)
         uint64_t sw = b->soff != 0xFFFF ? vka_c2_handle(s, st, b->soff) : 0;
-        return ubo_samp_id(s, (uint32_t)(vka_c2_handle(s, st, b->off + 8u * k) | sw)); }   // PEANUTS(upstream-candidate)
+        return ubo_samp_id(s, (uint32_t)(vka_c2_handle(s, st, b->off + 8u * k) | sw)); }   // KIWI(upstream-candidate)
     default: return 0;
     }
 }
@@ -59,7 +59,7 @@ int vka_walk(const vka_bstate *s, int st, const dmsh_vk_entry *e, const dmsh_vk_
     for (unsigned i = 0; i < e->bind_count; i++) {
         const dmsh_vk_bind *b = &bs[i];
         if (b->kind == DMSH_VK_KIND_UNKNOWN) return refuse(why, whyn, "binding %u has no placed kind", b->binding);
-        if (b->set == DMSH_VK_SET_POOL || b->kind == DMSH_VK_KIND_TEX_POOL || b->kind == DMSH_VK_KIND_SAMP_POOL) { if (uses_pool) *uses_pool |= VKA_POOL_READS; continue; }   // PEANUTS: a bit (vka_bind.h)
+        if (b->set == DMSH_VK_SET_POOL || b->kind == DMSH_VK_KIND_TEX_POOL || b->kind == DMSH_VK_KIND_SAMP_POOL) { if (uses_pool) *uses_pool |= VKA_POOL_READS; continue; }   // KIWI: a bit (vka_bind.h)
         unsigned cnt = b->count ? b->count : 1;
         for (unsigned k = 0; k < cnt; k++) {
             if (n >= max) return refuse(why, whyn, "more than %d descriptors", max);
@@ -83,29 +83,29 @@ int vka_walk(const vka_bstate *s, int st, const dmsh_vk_entry *e, const dmsh_vk_
                 break; }
             case DMSH_VK_KIND_TEX: case DMSH_VK_KIND_TEX_UBO: case DMSH_VK_KIND_TEX_C2A: {
                 int tid = b->kind == DMSH_VK_KIND_TEX_UBO ? (noslot ? 0 : ubo_tex_id(s, (uint32_t)ubo_word(s, st, reg, b->off + ubo_elem(b, k), 4, rd, ctx)))
-                        : b->kind == DMSH_VK_KIND_TEX_C2A ? ubo_tex_id(s, (uint32_t)vka_c2_handle(s, st, b->off + 8u * k))   // PEANUTS(upstream-candidate)
+                        : b->kind == DMSH_VK_KIND_TEX_C2A ? ubo_tex_id(s, (uint32_t)vka_c2_handle(s, st, b->off + 8u * k))   // KIWI(upstream-candidate)
                         : noslot ? 0 : ubo_tex_id(s, (uint32_t)vka_tex_slot(s, st, (unsigned)reg));
                 int sid = b->skind ? samp_of(s, st, b, k, rd, ctx) : 0;
                 if (tid) { r.what = VKA_R_TEX; r.tid = tid; r.sid = sid; }
                 break; }
             case DMSH_VK_KIND_TBUF: {
-                int tid = noslot ? 0 : ubo_tex_id(s, (uint32_t)vka_tex_slot(s, st, (unsigned)reg));   // PEANUTS(upstream-candidate)
+                int tid = noslot ? 0 : ubo_tex_id(s, (uint32_t)vka_tex_slot(s, st, (unsigned)reg));   // KIWI(upstream-candidate)
                 if (tid) { r.what = VKA_R_TBUF; r.tid = tid; }
                 break; }
-            // PEANUTS: a fallback array of dynamic handles (tex_dyn_slots, nvn_mtl.m NVN_RB_TEXD / SAMPD): element k is slot k, since c2 holds slot indices for the shader (vka_drv_fill, VKA_POOL_DYN)
+            // KIWI: a fallback array of dynamic handles (tex_dyn_slots, nvn_mtl.m NVN_RB_TEXD / SAMPD): element k is slot k, since c2 holds slot indices for the shader (vka_drv_fill, VKA_POOL_DYN)
             case DMSH_VK_KIND_TEX_DYN: {
                 if (uses_pool) *uses_pool |= VKA_POOL_DYN;
-                uint64_t hk = k < 128 && k < VKA_NTEX ? (s->tex[st][k] ? s->tex[st][k] : s->tex[st][DMSH_SEPTEX_SLOT0 + k]) : 0; int tid = ubo_tex_id(s, (uint32_t)hk);   // PEANUTS(upstream-candidate)
+                uint64_t hk = k < 128 && k < VKA_NTEX ? (s->tex[st][k] ? s->tex[st][k] : s->tex[st][DMSH_SEPTEX_SLOT0 + k]) : 0; int tid = ubo_tex_id(s, (uint32_t)hk);   // KIWI(upstream-candidate)
                 r.flags |= VKA_RF_DYN;
                 if (tid) { r.what = r.desc == 4 /* VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER */ ? VKA_R_TBUF : VKA_R_TEX; r.tid = tid; }
                 break; }
             case DMSH_VK_KIND_SAMP_DYN: {
                 if (uses_pool) *uses_pool |= VKA_POOL_DYN;
-                uint64_t hs = k < 128 ? s->samp[st][k] : 0, ht = k < 128 && k < VKA_NTEX ? s->tex[st][k] : 0; int sid = ubo_samp_id(s, (uint32_t)(hs ? hs : ht));   // PEANUTS(upstream-candidate)
+                uint64_t hs = k < 128 ? s->samp[st][k] : 0, ht = k < 128 && k < VKA_NTEX ? s->tex[st][k] : 0; int sid = ubo_samp_id(s, (uint32_t)(hs ? hs : ht));   // KIWI(upstream-candidate)
                 if (sid) { r.what = VKA_R_TEX; r.sid = sid; }
                 break; }
             case DMSH_VK_KIND_IMG: {
-                int tid = noslot || reg >= 32 ? 0 : ubo_tex_id(s, (uint32_t)s->img[st][reg]);   // PEANUTS(upstream-candidate)
+                int tid = noslot || reg >= 32 ? 0 : ubo_tex_id(s, (uint32_t)s->img[st][reg]);   // KIWI(upstream-candidate)
                 if (tid) { r.what = VKA_R_IMG; r.tid = tid; }
                 break; }
             case DMSH_VK_KIND_IMG_UBO: {   // the image handle the game keeps in its uniform buffer (Unreal Engine 5 on the Switch 2: c[3]), read at bind time as tex_ubo's
@@ -115,7 +115,7 @@ int vka_walk(const vka_bstate *s, int st, const dmsh_vk_entry *e, const dmsh_vk_
             case DMSH_VK_KIND_SAMP: case DMSH_VK_KIND_SAMP_TEX: case DMSH_VK_KIND_SAMP_ID: case DMSH_VK_KIND_SAMP_UBO: case DMSH_VK_KIND_SAMP_C2A: {
                 dmsh_vk_bind sb = *b; sb.skind = b->kind; sb.sreg = b->reg; sb.soff = b->kind == DMSH_VK_KIND_SAMP_C2A ? b->soff : b->off;   // a sampler on its own: its own fields name it
                 int sid = noslot && b->kind != DMSH_VK_KIND_SAMP_C2A ? 0 : samp_of(s, st, &sb, k, rd, ctx);
-                if ((b->flags & VKA_BF_TABPOOL) && uses_pool) *uses_pool |= VKA_POOL_READS;   // PEANUTS: its textures come from the pool (vka_shader.c tabpool)
+                if ((b->flags & VKA_BF_TABPOOL) && uses_pool) *uses_pool |= VKA_POOL_READS;   // KIWI: its textures come from the pool (vka_shader.c tabpool)
                 if (sid) { r.what = VKA_R_TEX; r.sid = sid; }
                 break; }
             case DMSH_VK_KIND_GMEM_MAP: r.what = VKA_R_GMEM_MAP; break;
@@ -136,7 +136,7 @@ int vka_walk(const vka_bstate *s, int st, const dmsh_vk_entry *e, const dmsh_vk_
     return n;
 }
 
-// PEANUTS begin: a table of handles read through the pool keeps its place in its sampler's record (vka_bind.h)
+// KIWI begin: a table of handles read through the pool keeps its place in its sampler's record (vka_bind.h)
 void vka_tabpool_record(dmsh_vk_bind *x) {
     x->step = (uint16_t)(x->reg + 1); x->bytes = (uint32_t)x->off | (uint32_t)x->count << 16;
     x->kind = x->skind; x->reg = x->sreg; x->off = x->soff == 0xFFFF ? 0 : x->soff; x->skind = 0; x->count = 1;
@@ -158,7 +158,7 @@ int vka_tabpool_ids(const vka_bstate *s, int st, const dmsh_vk_entry *e, const d
     }
     return n;
 }
-// PEANUTS end
+// KIWI end
 
 static int c0_ssbo_base(int st) { return st == 0 ? DMSH_C0_SSBO_VS : st == 1 ? DMSH_C0_SSBO_PS : st == 2 ? DMSH_C0_SSBO_GS : st == 5 ? DMSH_C0_SSBO_CS : st == 6 ? DMSH_C0_SSBO_TS : st == 7 ? DMSH_C0_SSBO_MS : -1; }
 
@@ -201,12 +201,12 @@ void vka_drv_fill(const vka_bstate *s, int st, int bank, int pool, uint8_t *d) {
         }
     } else if (bank == 2) {
         // A shader that reads the pools indexes them with the IDs it reads, which are the bound pool's own: its c2 holds the handles as the game bound them, without the bases
-        int dyn = (pool & VKA_POOL_DYN) != 0;   // PEANUTS(upstream-candidate)
+        int dyn = (pool & VKA_POOL_DYN) != 0;   // KIWI(upstream-candidate)
         const uint64_t *tx = s->tex[st], *im = s->img[st];
         for (int r = 0; r < DMSH_C2_IMG_SLOTS; r++) { uint32_t ih = (uint32_t)im[r]; memcpy(d + DMSH_C2_IMG + DMSH_C2_ROW * r, &ih, 4); }
         for (int r = 0; r < DMSH_C2_TEX_SLOTS; r++) {   // a combined slot past 31 is written when it is bound and the image slot it shares is not
             if (r >= 32 && (!tx[r] || (r - 32 < DMSH_C2_IMG_SLOTS && im[r - 32]))) continue;
-            uint32_t v = !dyn ? (uint32_t)tx[r] : !tx[r] ? 0 : (uint32_t)r | (tx[r] >> 20 ? (uint32_t)r << 20 : 0); memcpy(d + DMSH_C2_TEX + DMSH_C2_ROW * r, &v, 4);   // PEANUTS(upstream-candidate)
+            uint32_t v = !dyn ? (uint32_t)tx[r] : !tx[r] ? 0 : (uint32_t)r | (tx[r] >> 20 ? (uint32_t)r << 20 : 0); memcpy(d + DMSH_C2_TEX + DMSH_C2_ROW * r, &v, 4);   // KIWI(upstream-candidate)
         }
         for (int r = 0; r < DMSH_C2_SEP_SLOTS; r++) { uint64_t h = tx[DMSH_SEPTEX_SLOT0 + r]; uint32_t v = !dyn ? (uint32_t)h : h ? (uint32_t)r : 0; memcpy(d + DMSH_C2_SEPTEX + DMSH_C2_ROW * r, &v, 4); }
         for (int r = 0; r < DMSH_C2_SEP_SLOTS; r++) { uint64_t h = s->samp[st][r]; uint32_t v = !dyn ? (uint32_t)h : h ? (uint32_t)r << 20 : 0; memcpy(d + DMSH_C2_SAMP + DMSH_C2_ROW * r, &v, 4); }

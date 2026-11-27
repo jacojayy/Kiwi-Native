@@ -8,9 +8,9 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/CheatsJvmTest.java'
-OOT = REPO / 'peanuts/tests/fixtures/profiles/ocarina/cheats/E0F3CCFAF50065AE.txt'   # PEANUTS: Ocarina of Time's file, kept as a fixture (its Switch 2 profile is not carried)
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/CheatsJvmTest.java'
+OOT = REPO / 'kiwi/tests/fixtures/profiles/ocarina/cheats/E0F3CCFAF50065AE.txt'   # KIWI: Ocarina of Time's file, kept as a fixture (its Switch 2 profile is not carried)
 
 
 class Wiring(unittest.TestCase):
@@ -33,7 +33,7 @@ class Jvm(unittest.TestCase):
             subprocess.run(['javac', '-Xlint:all', '-Werror', '-encoding', 'UTF-8', '-d', str(d / 'classes'), str(SRC / 'Cheats.java'), str(SRC / 'Json.java'), str(TEST)],
                            check=True, capture_output=True, text=True)
             (d / 'work').mkdir()
-            r = subprocess.run(['java', '-cp', str(d / 'classes'), 'dev.nxnative.android.CheatsJvmTest', str(d / 'work'), str(OOT)], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', str(d / 'classes'), 'hernandez.kiwinative.CheatsJvmTest', str(d / 'work'), str(OOT)], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertEqual(r.stdout.strip(), 'ok')
 

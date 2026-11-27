@@ -15,7 +15,7 @@
 #include <stdatomic.h>
 #include "romfs_image.h"
 #include "nup_image.h"
-#include "../peanuts/peanuts_nsp.h"   // PEANUTS: DM_ROMFS=nsp:<dump>[|<dump>]: the RomFS read straight from the player's dumps (an image whose file entries have IMG_ENT_NSP)
+#include "../kiwi/kiwi_nsp.h"   // KIWI: DM_ROMFS=nsp:<dump>[|<dump>]: the RomFS read straight from the player's dumps (an image whose file entries have IMG_ENT_NSP)
 #include "save_sync.h"
 
 // Every take-over in this file runs on the big host stack (hle_bigstack.c): path buffers are sized by PATH_MAX and one file open takes 6-7 KB of stack, while a game's save thread can have as little as 8 KB (Super Mario 3D World + Bowser's Fury)
@@ -24,7 +24,7 @@
 
 #define RES_PATH_NOT_FOUND 0x202u      // fs module 2, description 1
 #define RES_PATH_EXISTS    0x402u      // fs module 2, description 2
-#define RES_MOUNT_NAME_EXISTS 0x7802u  // PEANUTS: fs module 2, description 60 (ResultMountNameAlreadyExists)
+#define RES_MOUNT_NAME_EXISTS 0x7802u  // KIWI: fs module 2, description 60 (ResultMountNameAlreadyExists)
 #define RES_TARGET_NOT_FOUND 0x7D402u   // fs module 2, description 1002
 enum { MODE_READ = 1, MODE_WRITE = 2, MODE_APPEND = 4 };
 enum { ENT_DIR = 0, ENT_FILE = 1 };
@@ -41,13 +41,13 @@ _Static_assert(sizeof(DirectoryEntry) == 0x310, "DirectoryEntry layout");
 // RomFS image (dm/tools/romfs_image.py): DM_ROMFS may name one image file instead of a folder. Its index is read at mount; a file handle is then an entry of the image
 // (IMG_HANDLE, bit 58 set, never a valid fd), read with pread at its offset in the one descriptor kept open, and a directory lists its consecutive child entries.
 // One file instead of a few hundred thousand copies to an iPhone at full speed: a folder copy of Tears of the Kingdom's 304,000 files ran the phone's file service out of open files
-// PEANUTS begin: image handles encode (image slot, 16-bit generation, entry index) so handles stay valid across Unmount and stale/double-closed handles cannot touch a reused slot
+// KIWI begin: image handles encode (image slot, 16-bit generation, entry index) so handles stay valid across Unmount and stale/double-closed handles cannot touch a reused slot
 #define IMG_HANDLE(si, gen, k) ((1ull << 58) | (((uint64_t)(gen) & 0xffffull) << 42) | (((uint64_t)(si) & 0x3ffull) << 32) | (uint64_t)(k))
 #define IMG_H(h) (((h) >> 58) == 1)
 #define IMG_M(h) ((int)(((h) >> 32) & 0x3ff))
 #define IMG_G(h) ((uint16_t)(((h) >> 42) & 0xffff))
 #define IMG_K(h) ((uint32_t)(h))
-// PEANUTS end
+// KIWI end
 // On Horizon a FileHandle is a pointer to the SDK's FileAccessor, a heap object, so its low bits are clear, and a game may use them: Metroid Prime 4's file device masks
 // them off (handle & ~7) before ReadFile, which read image entry 7 as entry 0 (another file, then a null pointer at boot). The guest sees the host's handle shifted
 // left by 4, 16-byte aligned as AArch64 heap blocks are (the image flag then lands on bit 62, as before): FH_OUT where a handle goes to the guest, FH_IN in each call that takes one
@@ -56,10 +56,10 @@ _Static_assert(sizeof(DirectoryEntry) == 0x310, "DirectoryEntry layout");
 typedef struct {
     char name[32]; char dir[1024]; char overlay[4096]; char commit[1024];
     romfs_img *img;                  // non-NULL: dir is a RomFS image file
-    // PEANUTS begin: detached image slot index and non-save mount refcount
+    // KIWI begin: detached image slot index and non-save mount refcount
     int img_slot;                    // index in g_imgs[], or -1
     int mount_refs;                  // duplicate mount count for non-save mounts
-    // PEANUTS end
+    // KIWI end
     int ro;
     int txn_root;                    // canonical mount entry for this backing transaction, or -1
     int save;                        // mounted as save data (a transaction, or its read-only fallback): Unmount frees its name (h_fs_Unmount)
@@ -68,7 +68,7 @@ typedef struct {
 } mount_t;
 static mount_t g_mnt[MAX_MOUNT];   // commit non-empty = transactional save mount
 static int g_nmnt;
-// PEANUTS begin: detached image slots with per-slot lock, atomic refcount, generation, and closing state so ReadFile/GetFileSize/CloseFile never block on g_path_lock during save copies
+// KIWI begin: detached image slots with per-slot lock, atomic refcount, generation, and closing state so ReadFile/GetFileSize/CloseFile never block on g_path_lock during save copies
 #define MAX_IMG_SLOTS 1024
 typedef struct {
     romfs_img *img;
@@ -82,7 +82,7 @@ static pthread_mutex_t g_img_lock[MAX_IMG_SLOTS];
 static pthread_once_t g_img_lock_once = PTHREAD_ONCE_INIT;
 static void img_locks_init(void) { for (int i = 0; i < MAX_IMG_SLOTS; i++) pthread_mutex_init(&g_img_lock[i], NULL); }
 static void img_locks_ensure(void) { pthread_once(&g_img_lock_once, img_locks_init); }
-// PEANUTS end
+// KIWI end
 static pthread_mutex_t g_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t g_path_lock = PTHREAD_MUTEX_INITIALIZER;
 static void path_unlock(pthread_mutex_t **m) { pthread_mutex_unlock(*m); }
@@ -131,7 +131,7 @@ static int save_txn_from_path(const char *hp) {
 __attribute__((weak)) void front_save_failed(int err) { LOG("front_save_failed(errno=%d): no front end attached (default weak implementation)", err); }
 // DM_FSLOG=<file>: each ReadFile logs one TSV line "seconds since boot\tguest path\toffset\tlength\tguest buffer address" (which bytes boot read, for offline reverse lookup against the manifest)
 static FILE *g_fslog; static char *g_fdpath[4096]; static pthread_mutex_t g_fslog_lock = PTHREAD_MUTEX_INITIALIZER;
-// PEANUTS begin: DM_FSLOG names files of an image mount (a .nup package, a RomFS image) too: their handles carry (image slot, gen, entry), not an fd, so the path
+// KIWI begin: DM_FSLOG names files of an image mount (a .nup package, a RomFS image) too: their handles carry (image slot, gen, entry), not an fd, so the path
 // each entry was opened by is kept per image slot while the log is on (it printed "?" for every read of a .nup game: a replay could not tell the files apart)
 static char **g_imgpath[MAX_IMG_SLOTS];
 static void fslog_img_open(int si, int64_t k, const char *path) {
@@ -224,7 +224,7 @@ static int img_get_handle_ref(uint64_t h, int *si_out, uint32_t *k_out) {
     *si_out = si; *k_out = k;
     return 1;
 }
-// PEANUTS end
+// KIWI end
 static void fslog_init(void) { static int done; if (done) return; done = 1; const char *e = getenv("DM_FSLOG"); if (e && !(g_fslog = fopen(e, "w"))) die("cannot open DM_FSLOG %s", e); if (g_fslog) setvbuf(g_fslog, NULL, _IOLBF, 0); }   // line-buffered: runs end at the time-limit alarm or a crash, which never flush stdio
 
 static const char *envdir(const char *var, const char *rel, char *buf, size_t n) {
@@ -250,7 +250,7 @@ static int rm_tree(const char *p);
 // Reads and checks a RomFS image's header and index; NULL (and a red line) when it is not a complete image. A NUP container package
 // ("<file>.nup[:<selector>]", nup_image.h, android/NUP.md) opens as an image too
 static romfs_img *img_open(const char *path) {
-    // PEANUTS begin: a dump spec (peanuts_nsp.h) opens as an image too. The dumps must be the running game's: its application ID and its main module's build ID
+    // KIWI begin: a dump spec (kiwi_nsp.h) opens as an image too. The dumps must be the running game's: its application ID and its main module's build ID
     // are checked there. Whatever cannot be read this way is one red line here and no mount (the callers fail as for a .nup that does not open)
     if (pn_nsp_is_spec(path)) {
         static uint64_t pid; if (!pid) { const char *e = getenv("DM_PROGRAM_ID"); pid = e ? strtoull(e, NULL, 16) : DM_GAME_PROGRAM_ID; }
@@ -259,17 +259,17 @@ static romfs_img *img_open(const char *path) {
         else LOG("[RED] fs dumps %s: %s (errno=%d)", path, why, errno);
         return m;
     }
-    // PEANUTS end
+    // KIWI end
     if (nup_is_spec(path)) {
         char why[256] = ""; romfs_img *m = nup_image_open(path, why, sizeof why);
 #ifdef DM_NSP_DIRECT
-        // PEANUTS begin: DM_AOC_DIR's <index>.nsp (aoc_dir) is upstream's plaintext NSP first (nsp_toc.h); one that is not is the add-on's own dump (NSP or XCI), read
-        // where it is through the dumps' reader (peanuts_nsp.h "nsp:<file>|aoc/<index>"; <file> may be fd:<n>/<name>, the launcher's descriptor)
+        // KIWI begin: DM_AOC_DIR's <index>.nsp (aoc_dir) is upstream's plaintext NSP first (nsp_toc.h); one that is not is the add-on's own dump (NSP or XCI), read
+        // where it is through the dumps' reader (kiwi_nsp.h "nsp:<file>|aoc/<index>"; <file> may be fd:<n>/<name>, the launcher's descriptor)
         if (!m) { const char *c = strstr(path, ".nsp:aoc/"); char alt[1100];
             if (c && !strstr(c + 1, ".nsp:") && snprintf(alt, sizeof alt, "nsp:%.*s|%s", (int)(c + 4 - path), path, c + 5) < (int)sizeof alt) {
                 LOG("fs NUP %s: upstream's reader of plaintext NSPs did not take it (%s); read as the add-on's own dump instead", path, why);
                 return img_open(alt); } }
-        // PEANUTS end
+        // KIWI end
 #endif
         if (m) LOG("fs NUP %s: %llu entries, %llu compressed files (decompressed when opened, cache %llu MiB)", path, (unsigned long long)m->n,
                    (unsigned long long)((nup_aux *)m->aux)->nz, (unsigned long long)(((nup_aux *)m->aux)->budget >> 20));
@@ -317,7 +317,7 @@ static const char *fwd_slashes(const char *p, char *buf, size_t n) {
 static int norm_rest(const char *rest, char *out, size_t n);
 static int rom_overlay_path(const mount_t *m, const char *rest, char *out, size_t n);
 // A path on an image mount: returns 1 with the mount in *mi and the entry in *k (-1 with errno set when there is none); 0 for a path on any other mount, or one an overlay folder (DM_ROMFS_OVERLAY) has, which then opens as a host file
-// PEANUTS begin: img_path_ref acquires an image slot reference and returns (si, gen) so callers can use g_imgs[si].img safely after releasing PATH_LOCK()
+// KIWI begin: img_path_ref acquires an image slot reference and returns (si, gen) so callers can use g_imgs[si].img safely after releasing PATH_LOCK()
 static int img_path_ex(const char *p, int *mi, int64_t *k, int hold_ref, int *si_out, uint16_t *gen_out) {
     PATH_LOCK(); char fwd[1024]; p = fwd_slashes(p, fwd, sizeof fwd); const char *c = p ? strchr(p, ':') : NULL; if (!c) return 0;
     size_t ln = c - p;
@@ -343,26 +343,26 @@ static int img_path_ex(const char *p, int *mi, int64_t *k, int hold_ref, int *si
 }
 static int img_path(const char *p, int *mi, int64_t *k) { return img_path_ex(p, mi, k, 0, NULL, NULL); }
 static int img_path_ref(const char *p, int *mi, int64_t *k, int *si, uint16_t *gen) { return img_path_ex(p, mi, k, 1, si, gen); }
-// PEANUTS end
+// KIWI end
 // soft: game files that cannot be opened answer "target not found" with a [RED] line instead of stopping the host (add-on content: the game runs without that DLC)
 static Result mount_ex(const char *name, const char *dir, int ro, int txn, int soft) {
     pthread_once(&g_txn_lock_once, txn_locks_init);
     PATH_LOCK(); pthread_mutex_lock(&g_lock);
     for (int i = 0; i < g_nmnt; i++)
         if (!strcmp(g_mnt[i].name, name)) {
-            // PEANUTS begin: duplicate non-save mounts of the same dir increment mount_refs so a single Unmount keeps them mounted; a different dir returns 0x7802 (MountNameAlreadyExists)
+            // KIWI begin: duplicate non-save mounts of the same dir increment mount_refs so a single Unmount keeps them mounted; a different dir returns 0x7802 (MountNameAlreadyExists)
             if (!g_mnt[i].save) {
                 if (!txn && !strcmp(g_mnt[i].dir, dir)) { g_mnt[i].mount_refs++; pthread_mutex_unlock(&g_lock); return RES_OK; }
                 LOG("[RED] fs mount %s: already mounted at %s, not %s (returning 0x7802)", name, g_mnt[i].dir, dir);
                 pthread_mutex_unlock(&g_lock); return RES_MOUNT_NAME_EXISTS;
             }
-            // PEANUTS end
+            // KIWI end
             // A save mounted under a name that already holds another user's save, with no Unmount between: on Horizon the mount fails (the name exists); here the name keeps
             // the save it has, which the game then reads as the other user's
             if (txn && g_mnt[i].save && g_mnt[i].commit[0] && strcmp(g_mnt[i].commit, dir)) LOG("[RED] fs mount %s: the name still holds the save %s, not %s (no Unmount before it)", name, g_mnt[i].commit, dir);
             pthread_mutex_unlock(&g_lock); return RES_OK;
         }
-    // PEANUTS begin: take an entry an Unmount freed, unless a mounted entry still shares its transaction (txn_root) or save fds are still open on it:
+    // KIWI begin: take an entry an Unmount freed, unless a mounted entry still shares its transaction (txn_root) or save fds are still open on it:
     // a game that mounts and unmounts its save or add-on content again and again then reuses entries instead of filling the table
     int s = g_nmnt;
     for (int f = 0; f < g_nmnt && s == g_nmnt; f++) {
@@ -374,12 +374,12 @@ static Result mount_ex(const char *name, const char *dir, int ro, int txn, int s
         }
         if (!used) s = f;
     }
-    // PEANUTS end
+    // KIWI end
     if (s == g_nmnt && g_nmnt >= MAX_MOUNT) die("mount table full");
     strlcpy(g_mnt[s].name, name, sizeof g_mnt[0].name);
     g_mnt[s].ro = ro; g_mnt[s].overlay[0] = 0; g_mnt[s].commit[0] = 0;
     g_mnt[s].txn_root = -1; g_mnt[s].save = txn;
-    g_mnt[s].img_slot = -1; g_mnt[s].mount_refs = txn ? 0 : 1;   // PEANUTS: non-save mount refcount and detached image slot
+    g_mnt[s].img_slot = -1; g_mnt[s].mount_refs = txn ? 0 : 1;   // KIWI: non-save mount refcount and detached image slot
     atomic_store(&g_mnt[s].poison, 0);
     atomic_store(&g_mnt[s].first_write_ns, 0);
     if (!strcmp(name, "rom") && getenv("DM_ROMFS_OVERLAY"))
@@ -415,19 +415,19 @@ static Result mount_ex(const char *name, const char *dir, int ro, int txn, int s
         // A path that is neither is a stale or mistyped one (an old run command still naming the RomFS folder a rebuild replaced with RomFS.img): stop here, not at the game's
         // first failed read (Echoes of Wisdom crashed 0.3 s after nnMain, GitHub issue #615). Add-on content and system data check their own paths before they mount
         const char *bad = NULL;
-        if (nup_is_spec(dir) || pn_nsp_is_spec(dir)) { if (!(g_mnt[s].img = img_open(dir))) bad = "cannot be used as a NUP package or as dumps (the log line above says why)"; }   // PEANUTS: or a dump spec (peanuts_nsp.h)
+        if (nup_is_spec(dir) || pn_nsp_is_spec(dir)) { if (!(g_mnt[s].img = img_open(dir))) bad = "cannot be used as a NUP package or as dumps (the log line above says why)"; }   // KIWI: or a dump spec (kiwi_nsp.h)
         else if (stat(dir, &ist) || !(S_ISDIR(ist.st_mode) || S_ISREG(ist.st_mode))) bad = "are missing: neither a folder nor a RomFS image";
         else if (S_ISREG(ist.st_mode) && !(g_mnt[s].img = img_open(dir))) bad = "are not a complete RomFS image";
         if (bad && soft) {
-            // PEANUTS begin: clear tentative slot fields so a failed soft mount does not leak the slot
+            // KIWI begin: clear tentative slot fields so a failed soft mount does not leak the slot
             g_mnt[s].name[0] = 0; g_mnt[s].mount_refs = 0; g_mnt[s].overlay[0] = 0;
-            // PEANUTS end
+            // KIWI end
             pthread_mutex_unlock(&g_lock);
             LOG("[RED] fs mount %s: the files %s %s: answered \"target not found\"", name, dir, bad);
             return RES_TARGET_NOT_FOUND;
         }
         if (bad) die("the game files %s (%s:) %s%s", dir, name, bad, strstr(bad, "missing") ? " (the rom mount is DM_ROMFS, or $DM_ROOT/romfs when DM_ROMFS is unset)" : "");
-        // PEANUTS begin: attach opened image to a detached image slot (g_imgs[])
+        // KIWI begin: attach opened image to a detached image slot (g_imgs[])
         if (g_mnt[s].img) {
             int si = img_slot_alloc(g_mnt[s].img);
             if (si < 0) {
@@ -439,7 +439,7 @@ static Result mount_ex(const char *name, const char *dir, int ro, int txn, int s
             }
             g_mnt[s].img_slot = si;
         }
-        // PEANUTS end
+        // KIWI end
     }
     int reused = s < g_nmnt; if (!reused) g_nmnt++;
     char shown[sizeof g_mnt[0].dir]; strlcpy(shown, txn ? g_mnt[s].dir : dir, sizeof shown); int ov = g_mnt[s].overlay[0] != 0;   // read under the lock: an Unmount and a later mount may take the entry again
@@ -646,7 +646,7 @@ static Result err_res(const char *op, const char *path) {
 HLE_FORCE("_ZN2nn2fs22QueryMountRomCacheSizeEPm", "fsp-srv; rom reads the host directory directly, the cache gets only the minimum size", Result, h_fs_QueryRomCache, size_t *out) { *out = 0x1000; return RES_OK; }
 HLE_FORCE("_ZN2nn2fs8MountRomEPKcPvm", "fsp-srv; rom → host RomFS directory", Result, h_fs_MountRom, const char *name, void *cache, size_t sz) { dm_thread_service_request();
     (void)cache; (void)sz; char b[1024];
-    // PEANUTS: DM_NSP_ROMFS=<base dump>[|<update dump>], a diagnostic, mounts rom from the dumps (peanuts_nsp.h, "nsp:" before the value) in place of what DM_ROMFS
+    // KIWI: DM_NSP_ROMFS=<base dump>[|<update dump>], a diagnostic, mounts rom from the dumps (kiwi_nsp.h, "nsp:" before the value) in place of what DM_ROMFS
     // names: the one way to run a game from its dumps, as the launcher sets no DM_ROMFS=nsp:... (and its env files do not take DM_ROMFS, a path only it sets)
     // A value too long for the spec is refused, not cut (a cut path could name another file)
     char nb[1100]; const char *nd = getenv("DM_NSP_ROMFS");
@@ -702,7 +702,7 @@ static void romfs_tables(const char *dir, size_t *ndir, size_t *dbytes, size_t *
 static size_t romfs_work_size(const char *dir) {
     size_t ndir = 1, dbytes = 0x18, nfile = 0, fbytes = 0;   // the root directory has an entry with an empty name
     struct stat st;
-    if (nup_is_spec(dir) || pn_nsp_is_spec(dir) || (!stat(dir, &st) && S_ISREG(st.st_mode))) {   // PEANUTS: or a dump spec (peanuts_nsp.h)
+    if (nup_is_spec(dir) || pn_nsp_is_spec(dir) || (!stat(dir, &st) && S_ISREG(st.st_mode))) {   // KIWI: or a dump spec (kiwi_nsp.h)
         romfs_img *m = img_open(dir);
         if (!m) return 0x1000;
         for (uint64_t k = 1; k < m->n; k++) {
@@ -726,14 +726,14 @@ static int aoc_dir(char *dir, size_t n, int index) {
         if (L > 0 && (t[L] = 0, nup_fd_spec(t, &fd) > 0)) {
             int ok = snprintf(dir, n, "%s:aoc/%d", t, index) < (int)n;
 #ifdef DM_NSP_DIRECT
-            // PEANUTS: <index>.nsp linked to the launcher's descriptor of a dump whose name does not end in ".nsp" (an XCI, "DLC.NSP"): no spec of upstream's reader
-            // (nup_is_spec), so img_open's second try never came; the dumps' reader takes the descriptor itself (peanuts_nsp.h "nsp:<file>|aoc/<index>")
+            // KIWI: <index>.nsp linked to the launcher's descriptor of a dump whose name does not end in ".nsp" (an XCI, "DLC.NSP"): no spec of upstream's reader
+            // (nup_is_spec), so img_open's second try never came; the dumps' reader takes the descriptor itself (kiwi_nsp.h "nsp:<file>|aoc/<index>")
             if (ok && x && !nup_is_spec(dir)) ok = snprintf(dir, n, "nsp:%s|aoc/%d", t, index) < (int)n;
 #endif
             return ok;
         }
     }
-    // PEANUTS: an <index>.nsp that is the add-on's own dump (encrypted, not upstream's plaintext NSP) is found by the loop above too and read through the dumps'
+    // KIWI: an <index>.nsp that is the add-on's own dump (encrypted, not upstream's plaintext NSP) is found by the loop above too and read through the dumps'
     // reader where the plaintext reader refuses it (img_open)
     if (base && *base && snprintf(dir, n, "%s/%d.img", base, index) < (int)n && !stat(dir, &st) && S_ISREG(st.st_mode)) return 1;
     return base && *base && snprintf(dir, n, "%s/%d", base, index) < (int)n && !stat(dir, &st) && S_ISDIR(st.st_mode);
@@ -747,11 +747,11 @@ int dm_aoc_usable(int index) {
         LOG("[RED] aoc: add-on content %d in DM_AOC_DIR=%s is neither a folder, a RomFS image nor a .nup that is there: the game runs without it", index, base ? base : "unset");
         return 0;
     }
-    if (nup_is_spec(dir) || pn_nsp_is_spec(dir) || (!stat(dir, &st) && S_ISREG(st.st_mode))) {   // PEANUTS: or a dump spec (peanuts_nsp.h)
+    if (nup_is_spec(dir) || pn_nsp_is_spec(dir) || (!stat(dir, &st) && S_ISREG(st.st_mode))) {   // KIWI: or a dump spec (kiwi_nsp.h)
         romfs_img *m = img_open(dir);   // a red line says why when it does not open
         if (!m) { LOG("[RED] aoc: add-on content %d (%s) cannot be read (the line above says why): the game runs without it", index, dir); return 0; }
         romfs_image_close(m);
-    } else if (stat(dir, &st)) {   // PEANUTS: what aoc_dir named is neither a spec nor a path that is there (a link to a descriptor no reader takes): not owned, where it counted as owned and then did not mount
+    } else if (stat(dir, &st)) {   // KIWI: what aoc_dir named is neither a spec nor a path that is there (a link to a descriptor no reader takes): not owned, where it counted as owned and then did not mount
         LOG("[RED] aoc: add-on content %d (%s) is neither a package, a dump nor a folder that is there: the game runs without it", index, dir); return 0;
     }
     return 1;
@@ -774,7 +774,7 @@ HLE_FORCE("_ZN2nn2fs17MountAddOnContentEPKciPvm", "fsp-srv; add-on content → D
 // read-only. Any other archive answers "target not found", as for a title that is not installed
 #define SYSDATA_MIIMODEL 0x0100000000000802ull
 int dm_mii_standin(const char *dir);
-// PEANUTS begin: DM_MII_MODEL=<folder> (the Android app: MiiModel extracted from the player's firmware beside its shared fonts, nximport.c font_try_mii): the real
+// KIWI begin: DM_MII_MODEL=<folder> (the Android app: MiiModel extracted from the player's firmware beside its shared fonts, nximport.c font_try_mii): the real
 // MiiModel, mounted as it is, so Mario Kart 8 Deluxe draws Mii heads. The stand-in only when the folder lacks one of the six files the SDK reads whole
 static int sysdata_real_mii(char *dir, size_t n) {
     static const char *need[] = {"NXTextureLowLinear.dat", "NXTextureLowSRGB.dat", "NXTextureMidLinear.dat", "NXTextureMidSRGB.dat", "ShapeMid.dat", "ShapeHigh.dat"};
@@ -784,10 +784,10 @@ static int sysdata_real_mii(char *dir, size_t n) {
     static int logged; if (!logged++) LOG("mii: MiiModel system data from the firmware in %s (DM_MII_MODEL)", e);
     return 1;
 }
-// PEANUTS end
+// KIWI end
 static int sysdata_dir(char *dir, size_t n, uint64_t id) {
     char t[1024];
-    if (id == SYSDATA_MIIMODEL && sysdata_real_mii(dir, n)) return 1;   // PEANUTS: the firmware's MiiModel first
+    if (id == SYSDATA_MIIMODEL && sysdata_real_mii(dir, n)) return 1;   // KIWI: the firmware's MiiModel first
     if (id != SYSDATA_MIIMODEL || snprintf(dir, n, "%s_sysdata/%016llx", envdir("DM_TEMP", "run/platform/temp", t, sizeof t), (unsigned long long)id) >= (int)n) return 0;
     return dm_mii_standin(dir);
 }
@@ -1021,7 +1021,7 @@ out:
 HLE_FORCE("_ZN2nn2fs6CommitEPKcRKNS0_12CommitOptionE", "fsp-srv; same as Commit (the option only clears the restore flag)", Result, h_fs_CommitOpt, const char *name, const void *opt) { (void)opt; return h_fs_Commit(name); }
 // SDK 11's old name: CommitSaveData(mount name) is the later Commit (Metroid Dread)
 HLE_FORCE("_ZN2nn2fs14CommitSaveDataEPKc", "fsp-srv; same as Commit (SDK 11's old name)", Result, h_fs_CommitSaveData, const char *name) { return h_fs_Commit(name); }
-// PEANUTS begin: Unmount frees a non-save mount when its mount_refs reaches 0 (detaching any image to g_imgs[] so the mount slot is immediately reusable while open handles stay valid);
+// KIWI begin: Unmount frees a non-save mount when its mount_refs reaches 0 (detaching any image to g_imgs[] so the mount slot is immediately reusable while open handles stay valid);
 // with more than one user (dm_account_users >= 2), Unmount also frees a save's name (dropping uncommitted writes), while with one user save Unmount stays a no-op
 HLE_FORCE("_ZN2nn2fs7UnmountEPKc", "fsp-srv; frees a non-save mount (closing its image once open files close); with more than one user, frees a save's name (dropping uncommitted writes)", void, h_fs_Unmount, const char *name) {
     if (!name || !*name) return;
@@ -1047,7 +1047,7 @@ HLE_FORCE("_ZN2nn2fs7UnmountEPKc", "fsp-srv; frees a non-save mount (closing its
     pthread_mutex_unlock(&g_lock);
     if (detach_si >= 0) img_slot_detach(detach_si);
 }
-// PEANUTS end
+// KIWI end
 
 // ---------- Files ----------
 // With DM_FS: the host's time in open(2) and pread(2) for the game, one line every 2 s while it reads (how much of a load the files take; on Android's shared storage each
@@ -1082,7 +1082,7 @@ void dm_fs_time(uint64_t *open_ns, uint64_t *read_ns, uint64_t *read_bytes) {
 #ifndef DM_GAME_ROMFS_SUBST
 #define DM_GAME_ROMFS_SUBST ""
 #endif
-// PEANUTS begin: img_subst / img_serve take romfs_img * directly so callers holding a detached image slot ref never touch g_mnt[] after releasing PATH_LOCK()
+// KIWI begin: img_subst / img_serve take romfs_img * directly so callers holding a detached image slot ref never touch g_mnt[] after releasing PATH_LOCK()
 static int64_t img_subst(romfs_img *img, const char *path, const char **donor, int *dlen) {   // the substitute entry for a damaged path (-1: none named, or not in the image)
     const char *c = strchr(path, ':'), *rest = c ? c + 1 : path, *s = getenv("DM_ROMFS_SUBST");
     while (*rest == '/') rest++;
@@ -1128,7 +1128,7 @@ static int64_t img_serve(romfs_img *img, int64_t k, const char *path) {
                 nup_z_put(img, ent->a);
                 got_header = 1;
             }
-        } else if (ent->flags & IMG_ENT_NSP) {   // PEANUTS: a file of a dump image has no bytes at the image's descriptor (peanuts_nsp.h)
+        } else if (ent->flags & IMG_ENT_NSP) {   // KIWI: a file of a dump image has no bytes at the image's descriptor (kiwi_nsp.h)
             got_header = pn_nsp_read(img, ent, 0, h, 4);
         } else {
             got_header = romfs_image_read(img->fd, h, 4, (off_t)ent->a);
@@ -1146,10 +1146,10 @@ static int64_t img_serve(romfs_img *img, int64_t k, const char *path) {
     __atomic_fetch_or(&ent->flags, (uint8_t)(IMG_ENT_ZCHECKED | (bad ? IMG_ENT_BADZSTD : 0)), __ATOMIC_RELEASE);
     return r;
 }
-// PEANUTS end
+// KIWI end
 // Xbox button labels (DM_XBOX_LABELS=1, below h_fs_GetFileOpenMode): a font archive the game opens is served patched from memory; -1 when it is not one or the patch did not apply
 static int labels_open(const char *path, int mode);
-// PEANUTS begin: use detached image slot (si, gen) and img_get_handle_ref without g_path_lock
+// KIWI begin: use detached image slot (si, gen) and img_get_handle_ref without g_path_lock
 static void img_ref_cleanup(int *si) { if (*si >= 0) img_put_ref(*si); }
 HLE_FORCE("_ZN2nn2fs8OpenFileEPNS0_10FileHandleEPKci", "fsp-srv → open(2)", Result, h_fs_OpenFile, uint64_t *out, const char *path, int mode) { dm_thread_service_request();
     int mi, si = -1; uint16_t gen = 0; int64_t k; uint64_t fst0 = now_ns();
@@ -1173,7 +1173,7 @@ HLE_FORCE("_ZN2nn2fs8OpenFileEPNS0_10FileHandleEPKci", "fsp-srv → open(2)", Re
         if (g_flag.fs) LOG("fs open [%.2fs] %s mode=%d → image entry %lld", (now_ns() - g_t0_ns) / 1e9, path, mode, (long long)k);
         return RES_OK;
     }
-// PEANUTS end
+// KIWI end
     HP(path);
     if (mode & (MODE_WRITE | MODE_APPEND)) RW();
     int fd = open(hp, (mode & (MODE_WRITE | MODE_APPEND)) ? ((mode & MODE_READ) ? O_RDWR : O_WRONLY) : O_RDONLY);
@@ -1194,9 +1194,9 @@ HLE_FORCE("_ZN2nn2fs8OpenFileEPNS0_10FileHandleEPKci", "fsp-srv → open(2)", Re
 HLE_FORCE("_ZN2nn2fs8ReadFileEPmNS0_10FileHandleElPvm", "fsp-srv → pread(2)", Result, h_fs_ReadFile, size_t *out, uint64_t h, int64_t off, void *buf, size_t sz) { dm_thread_service_request(); h = FH_IN(h);
     if (!h) { *out = 0; return RES_FAIL; }   // a file handle is an fd; 0 is stdin and never a file the game opened: the null handle the game keeps using after a failed open
     size_t got = 0; int reprep = 0, fd = (int)h; int64_t base = 0;
-    int img_si __attribute__((cleanup(img_ref_cleanup))) = -1;   // PEANUTS: detached image slot ref
+    int img_si __attribute__((cleanup(img_ref_cleanup))) = -1;   // KIWI: detached image slot ref
     if (IMG_H(h)) {   // an image entry: read the image's descriptor at the entry's offset, never past its end
-        // PEANUTS begin: use detached image slot g_imgs[img_si] without g_path_lock
+        // KIWI begin: use detached image slot g_imgs[img_si] without g_path_lock
         uint32_t img_k = 0;
         if (!img_get_handle_ref(h, &img_si, &img_k)) { *out = 0; return RES_FAIL; }
         romfs_img *m = g_imgs[img_si].img;
@@ -1213,7 +1213,7 @@ HLE_FORCE("_ZN2nn2fs8ReadFileEPmNS0_10FileHandleElPvm", "fsp-srv → pread(2)", 
             *out = sz; fs_stat_note(1, f0, sz);
             return RES_OK;
         }
-        // a file of a dump image (peanuts_nsp.h): its bytes come from the NCA section reader (decrypted, patched and decompressed as read), by any
+        // a file of a dump image (kiwi_nsp.h): its bytes come from the NCA section reader (decrypted, patched and decompressed as read), by any
         // number of threads at once. A read that fails (the dump gone, a damaged block) is a red line, the first eight times, and a failed read to the game.
         // A destination the graphics layer write-protected again during the read (EFAULT, as in the pread loop below) is prepared and read again
         if (x->flags & IMG_ENT_NSP) {
@@ -1228,7 +1228,7 @@ HLE_FORCE("_ZN2nn2fs8ReadFileEPmNS0_10FileHandleElPvm", "fsp-srv → pread(2)", 
             if (g_fslog) { pthread_mutex_lock(&g_fslog_lock); fprintf(g_fslog, "%.4f\t%s\t%lld\t%zu\t%p\n", (now_ns() - g_t0_ns) / 1e9, fslog_img_path(h), (long long)off, sz, buf); pthread_mutex_unlock(&g_fslog_lock); }
             return RES_OK;
         }
-        // PEANUTS end
+        // KIWI end
     }
     uint64_t fst0 = now_ns();
     dm_guest_write_prepare(buf, sz);   // The destination may be a texture pool page write-protected by the graphics layer: a kernel write to a read-only page returns EFAULT instead of page-faulting, so unprotect and mark dirty first
@@ -1255,8 +1255,8 @@ HLE_FORCE("_ZN2nn2fs8ReadFileEPmNS0_10FileHandleElPvm", "fsp-srv → pread(2)", 
     if (g_fslog) { pthread_mutex_lock(&g_fslog_lock);
         static int hash_on = -1; if (hash_on < 0) hash_on = getenv("DM_FSLOG_HASH") != NULL;   // DM_FSLOG_HASH=1: append a column with the FNV-1a 64 of the content read (to compare whether the bytes read from two resource packs match)
         uint64_t fh = 0xcbf29ce484222325ull; if (hash_on) for (size_t i = 0; i < got; i++) fh = (fh ^ ((uint8_t *)buf)[i]) * 0x100000001b3ull;
-        if (hash_on) fprintf(g_fslog, "%.4f\t%s\t%lld\t%zu\t%p\t%016llx\n", (now_ns() - g_t0_ns) / 1e9, IMG_H(h) ? fslog_img_path(h) : (int)h < 4096 && g_fdpath[(int)h] ? g_fdpath[(int)h] : "?", (long long)off, got, buf, (unsigned long long)fh);   // PEANUTS: image paths (fslog_img_path)
-        else fprintf(g_fslog, "%.4f\t%s\t%lld\t%zu\t%p\n", (now_ns() - g_t0_ns) / 1e9, IMG_H(h) ? fslog_img_path(h) : (int)h < 4096 && g_fdpath[(int)h] ? g_fdpath[(int)h] : "?", (long long)off, got, buf);   // PEANUTS: image paths (fslog_img_path)
+        if (hash_on) fprintf(g_fslog, "%.4f\t%s\t%lld\t%zu\t%p\t%016llx\n", (now_ns() - g_t0_ns) / 1e9, IMG_H(h) ? fslog_img_path(h) : (int)h < 4096 && g_fdpath[(int)h] ? g_fdpath[(int)h] : "?", (long long)off, got, buf, (unsigned long long)fh);   // KIWI: image paths (fslog_img_path)
+        else fprintf(g_fslog, "%.4f\t%s\t%lld\t%zu\t%p\n", (now_ns() - g_t0_ns) / 1e9, IMG_H(h) ? fslog_img_path(h) : (int)h < 4096 && g_fdpath[(int)h] ? g_fdpath[(int)h] : "?", (long long)off, got, buf);   // KIWI: image paths (fslog_img_path)
         pthread_mutex_unlock(&g_fslog_lock); }
     if (g_flag.fs) {   // Read metering: print a line every 64 MiB accumulated or every 1000 reads
         static uint64_t n, bytes, next_b = 64 << 20; static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
@@ -1289,13 +1289,13 @@ HLE_FORCE("_ZN2nn2fs9WriteFileENS0_10FileHandleElPKvmRKNS0_11WriteOptionE", "fsp
 }
 HLE_FORCE("_ZN2nn2fs11GetFileSizeEPlNS0_10FileHandleE", "fsp-srv → fstat(2)", Result, h_fs_GetFileSize, int64_t *out, uint64_t h) { dm_thread_service_request(); h = FH_IN(h);
     if (!h) return RES_FAIL;
-    // PEANUTS begin: use detached image slot g_imgs[si] without g_path_lock
+    // KIWI begin: use detached image slot g_imgs[si] without g_path_lock
     if (IMG_H(h)) {
         int si __attribute__((cleanup(img_ref_cleanup))) = -1; uint32_t k = 0;
         if (!img_get_handle_ref(h, &si, &k)) return RES_FAIL;
         *out = (int64_t)g_imgs[si].img->e[k].b; return RES_OK;
     }
-    // PEANUTS end
+    // KIWI end
     struct stat st; if (fstat((int)h, &st)) return err_res("fstat", "fd");
     *out = st.st_size; return RES_OK;
 }
@@ -1310,7 +1310,7 @@ HLE_FORCE("_ZN2nn2fs11SetFileSizeENS0_10FileHandleEl", "fsp-srv → ftruncate(2)
 }
 HLE_FORCE("_ZN2nn2fs9FlushFileENS0_10FileHandleE", "fsp-srv; host writes are already in the page cache, flushing is a no-op", Result, h_fs_FlushFile, uint64_t h) { dm_thread_service_request(); (void)h; return RES_OK; }
 HLE_FORCE("_ZN2nn2fs9CloseFileENS0_10FileHandleE", "fsp-srv → close(2)", void, h_fs_CloseFile, uint64_t h) { dm_thread_service_request(); h = FH_IN(h);
-    // PEANUTS begin: use detached image slot g_imgs[si] without g_path_lock
+    // KIWI begin: use detached image slot g_imgs[si] without g_path_lock
     if (h && IMG_H(h)) {   // an image entry holds no descriptor; a compressed NUP file gives back the bytes its open held
         int si = -1; uint32_t k = 0;
         if (img_get_handle_ref(h, &si, &k)) {
@@ -1321,7 +1321,7 @@ HLE_FORCE("_ZN2nn2fs9CloseFileENS0_10FileHandleE", "fsp-srv → close(2)", void,
             img_put_ref(si);   // open-file ref from OpenFile
         }
         return; }
-    // PEANUTS end
+    // KIWI end
     if (!h) return;   // the null handle after a failed open (see ReadFile): do not touch fd 0
     g_fmode[(int)h & 0xffff] = 0; atomic_store(&g_ftxn[(int)h & 0xffff], 0);
     close((int)h); }
@@ -1592,7 +1592,7 @@ HLE_FORCE("_ZN2nn2fs10RenameFileEPKcS2_", "fsp-srv → rename(2)", Result, h_fs_
 // The Great Ace Attorney Chronicles (SDK 10) imports it; a directory carries its guest name the same way as a file
 HLE_FORCE("_ZN2nn2fs15RenameDirectoryEPKcS2_", "fsp-srv → rename(2) of a directory", Result, h_fs_RenameDir, const char *from, const char *to) { dm_thread_service_request(); return rename_entry(from, to); }
 HLE_FORCE("_ZN2nn2fs12GetEntryTypeEPNS0_18DirectoryEntryTypeEPKc", "fsp-srv → stat(2)", Result, h_fs_GetEntryType, int32_t *out, const char *path) { dm_thread_service_request();
-    // PEANUTS begin: hold image slot ref across img_serve / entry stat
+    // KIWI begin: hold image slot ref across img_serve / entry stat
     int mi, si = -1; int64_t k;
     if (img_path_ref(path, &mi, &k, &si, NULL)) {
         if (k < 0) return err_res("stat", path);
@@ -1601,7 +1601,7 @@ HLE_FORCE("_ZN2nn2fs12GetEntryTypeEPNS0_18DirectoryEntryTypeEPKc", "fsp-srv → 
         if (img_serve(m, k, path) < 0) return RES_PATH_NOT_FOUND;
         *out = m->e[k].type ? ENT_FILE : ENT_DIR; return RES_OK;
     }   // a damaged .zs without a substitute is "not found" here too (img_serve)
-    // PEANUTS end
+    // KIWI end
     HP(path); struct stat st;
     if (stat(hp, &st)) return err_res("stat", hp);
     *out = S_ISDIR(st.st_mode) ? ENT_DIR : ENT_FILE; return RES_OK;
@@ -1656,7 +1656,7 @@ static void dir_snapshot(dirh_t *h, const mount_t *m, const char *rest) {
     free(resolved); free(rel); free(guest); free(parent); free(all); free(names); free(roots);
 }
 HLE_FORCE("_ZN2nn2fs13OpenDirectoryEPNS0_15DirectoryHandleEPKci", "fsp-srv → opendir(3)", Result, h_fs_OpenDirectory, uint64_t *out, const char *path, int mode) { dm_thread_service_request();
-    // PEANUTS begin: hold image slot ref while snapshotting directory entries
+    // KIWI begin: hold image slot ref while snapshotting directory entries
     int mi, si = -1; int64_t k;
     if (img_path_ref(path, &mi, &k, &si, NULL)) {   // an image directory: its children are one run of entries, listed from a snapshot like the overlay's
         if (k < 0) return err_res("opendir", path);
@@ -1664,7 +1664,7 @@ HLE_FORCE("_ZN2nn2fs13OpenDirectoryEPNS0_15DirectoryHandleEPKci", "fsp-srv → o
         const romfs_img *m = g_imgs[img_si].img;
         if (m->e[k].type) { errno = ENOTDIR; return err_res("opendir", path); }
         const img_ent *x = &m->e[k];
-    // PEANUTS end
+    // KIWI end
         dirh_t *h = calloc(1, sizeof *h); if (!h || !(h->snap = calloc(x->b ? x->b : 1, sizeof *h->snap))) die("RomFS image directory allocation failed");
         h->nsnap = (int64_t)x->b; h->mode = mode; strlcpy(h->path, path, sizeof h->path);
         for (uint64_t j = 0; j < x->b; j++) {

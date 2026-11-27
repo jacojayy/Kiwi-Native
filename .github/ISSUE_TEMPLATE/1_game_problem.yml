@@ -1,4 +1,4 @@
-# Written by peanuts/scripts/issue_forms.py: change that script, then run it.
+# Written by kiwi/scripts/issue_forms.py: change that script, then run it.
 name: "Game problem"
 description: "A game crashes, freezes, shows a black screen, draws wrong, runs slowly, sounds wrong, or its controls or saves misbehave"
 labels: ["bug"]

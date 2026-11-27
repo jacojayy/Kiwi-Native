@@ -14,7 +14,7 @@ typedef struct { uint64_t addr, size; } vka_range;
 // What the draw path keeps of the NVN bindings, by NVN stage (the stage field of the bind records, as hle_nvn.c records them)
 typedef struct {
     vka_range ubo[VKA_NSTAGE][16], ssbo[VKA_NSTAGE][16];
-    uint64_t tex[VKA_NSTAGE][VKA_NTEX], samp[VKA_NSTAGE][128], img[VKA_NSTAGE][32];   // PEANUTS(upstream-candidate): raw guest handles, including patched and deferred binds
+    uint64_t tex[VKA_NSTAGE][VKA_NTEX], samp[VKA_NSTAGE][128], img[VKA_NSTAGE][32];   // KIWI(upstream-candidate): raw guest handles, including patched and deferred binds
     uint8_t push[2][DMSH_PUSH_SIZE];   // NVN2 pushed constants: graphics, compute
     int tex_base, samp_base;           // the executing queue's selected pools
     uint32_t base_instance;            // the draw's base instance (c0 + DMSH_C0_BASE_INSTANCE)
@@ -60,12 +60,12 @@ extern int vka_texu_elem;
 // *why set when the draw cannot run correctly. Storage buffers of global memory (SBUF, SBUF_UBO, UBO_PTR): with the library's ssbo_align (header; DMSH_VK_SSBO_ALIGN) they are
 // bound at their address rounded down to it, the range grown by the difference (the shader adds it back); with 0 (an older library) at the exact address, and one off the
 // device's dev_align refuses the draw. An UNKNOWN record refuses it too. *uses_pool is set when the shader reads set 1 (the texture or sampler pool)
-// PEANUTS: *uses_pool bits: VKA_POOL_READS the shader reads set 1 (pools); VKA_POOL_DYN it has dynamic handle arrays (DMSH_VK_KIND_TEX_DYN / SAMP_DYN), so c2 holds slot indices
-#define VKA_RF_DYN 0x80   // PEANUTS: vka_res.flags: an element of a dynamic handle array (most elements hold nothing the shader reads: nothing is reported for them)
-// PEANUTS: dmsh_vk_bind.flags of a record the replay rewrote (vka_shader.c tabpool): the one sampler of an array over a table of handles in a uniform buffer whose
+// KIWI: *uses_pool bits: VKA_POOL_READS the shader reads set 1 (pools); VKA_POOL_DYN it has dynamic handle arrays (DMSH_VK_KIND_TEX_DYN / SAMP_DYN), so c2 holds slot indices
+#define VKA_RF_DYN 0x80   // KIWI: vka_res.flags: an element of a dynamic handle array (most elements hold nothing the shader reads: nothing is reported for them)
+// KIWI: dmsh_vk_bind.flags of a record the replay rewrote (vka_shader.c tabpool): the one sampler of an array over a table of handles in a uniform buffer whose
 // textures the module now reads through the texture pool (vka_spv_table_pool), so the shader reads set 1
 #define VKA_BF_TABPOOL 0x40
-// PEANUTS begin: such a record keeps where its table is, so a draw makes the textures of the table's first entries as the array's bindings did (vka_draw.c make_images).
+// KIWI begin: such a record keeps where its table is, so a draw makes the textures of the table's first entries as the array's bindings did (vka_draw.c make_images).
 // Read only through the pool, a texture was made by the pool reads' feedback, a frame after its first read: Hogwarts Legacy drew a stone slab and ledge plants black for one
 // frame when they first came into view on the cliff path. vka_tabpool_record turns an array's record (TEX_UBO with a count) into its sampler's (kind, reg, off from the
 // sampler half; count 1; VKA_BF_TABPOOL) with the table in fields a sampler record leaves unused: step = uniform slot + 1 (a sampler record of count 1 reads no step; dmsh_abi_vk.h named the field reserved before bfd5b02e), bytes = element 0's byte offset | count << 16.
@@ -73,13 +73,13 @@ extern int vka_texu_elem;
 // once however many records read it (Hogwarts Legacy: up to 15 arrays over one table, one per sampler); *dim the first such record's shape. Returns how many (at most max)
 void vka_tabpool_record(dmsh_vk_bind *x);
 int vka_tabpool_ids(const vka_bstate *s, int nvn_stage, const dmsh_vk_entry *e, const dmsh_vk_bind *b, vka_read_fn rd, void *rd_ctx, int *ids, int max, uint8_t *dim);
-// PEANUTS end
+// KIWI end
 #define VKA_POOL_READS 1
 #define VKA_POOL_DYN 2
 int vka_walk(const vka_bstate *s, int nvn_stage, const dmsh_vk_entry *e, const dmsh_vk_bind *b, uint32_t ssbo_align, uint64_t dev_align, vka_read_fn rd, void *rd_ctx,
              vka_res *out, int max, int *uses_pool, char *why, size_t whyn);
 // Fills a driver segment as the GPU's driver would (nvn_mtl.m encode_args NVN_RB_DRV0 / DRV2 / PUSH): DMSH_DRV_SIZE bytes for banks 0 and 2, DMSH_PUSH_SIZE for the push bank.
-// pool: VKA_POOL_READS: the shader reads the pools (c2 then holds the handles without the pools' bases, as the game wrote them); VKA_POOL_DYN: c2 holds slot indices (PEANUTS)
+// pool: VKA_POOL_READS: the shader reads the pools (c2 then holds the handles without the pools' bases, as the game wrote them); VKA_POOL_DYN: c2 holds slot indices (KIWI)
 void vka_drv_fill(const vka_bstate *s, int nvn_stage, int bank, int pool, uint8_t *d);
 size_t vka_drv_size(int bank);
 // The handle the driver's c2 holds at byte off for a stage (nvn_mtl.m c2_handle), and a combined texture slot's handle (tex_slot_h: past slot 31 an image slot shares the word)

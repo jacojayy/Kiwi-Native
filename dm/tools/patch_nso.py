@@ -55,7 +55,7 @@ if '--target' in ARGS:
     ti = ARGS.index('--target')
     if ti + 1 >= len(ARGS) or ARGS[ti + 1] not in ('apple', 'android'): sys.exit('[RED] --target takes apple or android')
     TARGET = ARGS[ti + 1]; del ARGS[ti:ti + 2]
-# PEANUTS: --xmod <file> (scripts/pack_android.py, for a module of a build with code mods; "Cross-module branches" near the end of this file). Without it nothing below differs
+# KIWI: --xmod <file> (scripts/pack_android.py, for a module of a build with code mods; "Cross-module branches" near the end of this file). Without it nothing below differs
 XMOD = None
 if '--xmod' in ARGS:
     xi = ARGS.index('--xmod')
@@ -215,7 +215,7 @@ elif fps_target_why.startswith('[RED] '): print(f'[RED] {NAME}: {fps_target_why[
 # Its constructor reserves 37 GB of address space for its pools. Its one call is cut, and observation gate OBS_UE_MALLOC goes on it (below), where x0 holds the object: the host gives
 # the object its own allocator's vtable there (dm/host/hle_uemalloc.c), whose place and slot layout the fixups table names (UE_MALLOC_VT, UE_MALLOC_SLOT)
 import ue_malloc
-UE_CALLS, UE_VT, UE_SLOT, ue_why = ue_malloc.find(bytes(IMG), TEXT_END, RO_OFF, DATA_OFF)   # PEANUTS: every constructor call (#290)
+UE_CALLS, UE_VT, UE_SLOT, ue_why = ue_malloc.find(bytes(IMG), TEXT_END, RO_OFF, DATA_OFF)   # KIWI: every constructor call (#290)
 if UE_CALLS:
     for call_off in UE_CALLS:
         cuts.append((call_off, bytes(IMG[call_off:call_off + 4]).hex(), struct.pack('<I', NOP).hex(), f'{ue_why}: the constructor call at {call_off:#x} → nop, gate OBS_UE_MALLOC on it (ue_malloc.py)'))
@@ -440,7 +440,7 @@ def site_br_call(ins):
     return start
 
 def site_sysreg_x18(ins, source, dest):
-    """PEANUTS: move between virtual slots when an MRS/MSR names guest x18."""
+    """KIWI: move between virtual slots when an MRS/MSR names guest x18."""
     value, addr, key = 16, 17, 15
     start = here()
     emit(STP(value, addr, 31, -16)); emit(STUR(key, 31, -24))
@@ -453,7 +453,7 @@ def site_sysreg_x18(ins, source, dest):
 def site_sysreg_read(ins, kind):
     """mrs xN, tpidr_el0 / tpidrro_el0 → xN = thread slot value."""
     N = ins.bytes[0] & 31
-    if N == 18: return site_sysreg_x18(ins, kind, 'K18')   # PEANUTS: live x18 is reserved by the host
+    if N == 18: return site_sysreg_x18(ins, kind, 'K18')   # KIWI: live x18 is reserved by the host
     tmp = 16 if N != 16 else 17
     start = here()
     emit(STUR(tmp, 31, -16)); emit_tp(N); emit_slot_addr(N, tmp, kind); emit(LDRX(N, N)); emit(LDUR(tmp, 31, -16))   # tmp is saved by borrowing the red zone
@@ -462,7 +462,7 @@ def site_sysreg_read(ins, kind):
 
 def site_tpidr_write(ins):
     N = struct.unpack('<I', ins.bytes)[0] & 31
-    if N == 18: return site_sysreg_x18(ins, 'K18', 'KTLS')   # PEANUTS: read the guest slot, not the live host register
+    if N == 18: return site_sysreg_x18(ins, 'K18', 'KTLS')   # KIWI: read the guest slot, not the live host register
     (T,) = pick({N}, 1)
     start = here()
     emit(0xF81F0000 | (31 << 5) | T)           # stur xT,[sp,#-16]
@@ -549,18 +549,18 @@ def site_window(seg):
     # first branch-out stub, i.e. took the "compare not equal" path (SMBW main 0x81c40: the enqueue retried forever, the tail index filled up without storing a single task, and the job system hung). D2R's windows had no branch out, so it never hit this.
     exits = copy0 + 4 * n + 16
     ex_targets = []; words = []
-    branches = ('b', 'cbz', 'cbnz', 'tbz', 'tbnz')  # PEANUTS(upstream-candidate): in-window branches and clrex exits
+    branches = ('b', 'cbz', 'cbnz', 'tbz', 'tbnz')  # KIWI(upstream-candidate): in-window branches and clrex exits
     for k, x in enumerate(seg):
         w = struct.unpack('<I', x.bytes)[0]
         if has18(x): w = subst(x, S)
         m = x.mnemonic
-        if m in branches or m.startswith('b.'):  # PEANUTS (PR #164)
+        if m in branches or m.startswith('b.'):  # KIWI (PR #164)
             tgt = x.operands[-1].imm
             if lo <= tgt < hi: newt = copy0 + (tgt - lo)
             else: ex_targets.append(tgt); newt = exits + 16 * (len(ex_targets) - 1)
             pc = copy0 + 4 * k; off = (newt - pc) >> 2
             if m == 'b':
-                # PEANUTS(upstream-candidate): an exit from the load/store span must execute clrex, not jump past it.
+                # KIWI(upstream-candidate): an exit from the load/store span must execute clrex, not jump past it.
                 assert lo <= tgt < hi or (k and seg[k - 1].mnemonic == 'clrex' and not any(
                     y.operands[-1].imm == x.address for y in seg if y.mnemonic in branches or y.mnemonic.startswith('b.'))), hex(x.address)
                 w = B(pc, newt)
@@ -569,7 +569,7 @@ def site_window(seg):
             dd = dis(w, pc); assert dd.operands[-1].imm == newt and dd.mnemonic == m
         elif m == 'adrp': w = window_adrp(x, S, copy0 + 4 * k)
         else:
-            assert m not in ('adr', 'bl', 'br', 'blr', 'ret') and not (m == 'ldr' and '[' not in x.op_str), hex(x.address)  # PEANUTS (PR #164)
+            assert m not in ('adr', 'bl', 'br', 'blr', 'ret') and not (m == 'ldr' and '[' not in x.op_str), hex(x.address)  # KIWI (PR #164)
         words.append(w)
     for w in words: emit(w)
     for t in [hi] + ex_targets:   # fall-through first
@@ -640,7 +640,7 @@ def rd(o, enc):
     if app == 0x30: v += ehs
     return v, sz
 starts = set()
-# PEANUTS: a module without the table (MOD0's eh_frame_hdr start and end are the same offset: a mod's own subsdk built without one, as Luminescent's subsdk1
+# KIWI: a module without the table (MOD0's eh_frame_hdr start and end are the same offset: a mod's own subsdk built without one, as Luminescent's subsdk1
 # for Pokemon Brilliant Diamond) has no function starts to read; the bytes at ehs are then MOD0 itself and reading them as a table stopped the rewrite
 # (KeyError: 15). func_range() works without starts
 if struct.unpack_from('<i', IMG, m0 + 16)[0] != struct.unpack_from('<i', IMG, m0 + 20)[0]:
@@ -658,8 +658,8 @@ starts = sorted(x for x in starts if x < TEXT_END)
 # Data blocks in the text (nso_code.py: Absolum's main starts with 1.7 MB of them) are not code: words there that read as rewrite sites are left alone
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import nso_code
-# PEANUTS(upstream-candidate): defined before the data blocks, which count in them too. The x18 scan and the spin wait search only read the original image, so they can run in worker processes.
-# PEANUTS(upstream-candidate) begin
+# KIWI(upstream-candidate): defined before the data blocks, which count in them too. The x18 scan and the spin wait search only read the original image, so they can run in worker processes.
+# KIWI(upstream-candidate) begin
 def in_forks(fn, jobs, phase=None):
     """in_parallel by os.fork where multiprocessing cannot run: WORKERS children, child i computing jobs i, i + n, i + 2n, ..., its results pickled back through a
     pipe; a progress line for phase as each child is done. A child that fails or ends without its results fails the call; any error here (a stop: the tool is
@@ -730,7 +730,7 @@ def follow_parent_cpus():
             except OSError: pass
             time.sleep(2)
     threading.Thread(target=watch, daemon=True).start()
-# PEANUTS end
+# KIWI end
 def in_serial(fn, jobs, phase=None):
     out = []
     for i, job in enumerate(jobs):
@@ -743,18 +743,18 @@ def in_parallel(fn, jobs, phase=None):
     The workers are forked on each call, so they see the module's state as it is at that point."""
     if WORKERS < 2 or len(jobs) < 2:
         return in_serial(fn, jobs, phase)
-    if 'fork' not in multiprocessing.get_all_start_methods():   # PEANUTS(upstream-candidate): Windows, spawned workers (in_spawned)
+    if 'fork' not in multiprocessing.get_all_start_methods():   # KIWI(upstream-candidate): Windows, spawned workers (in_spawned)
         return in_spawned(fn, jobs, phase)
-    # PEANUTS(upstream-candidate) begin: a Python without _multiprocessing (the phone's embedded CPython: multiprocessing's Pool cannot start there) forks its workers
+    # KIWI(upstream-candidate) begin: a Python without _multiprocessing (the phone's embedded CPython: multiprocessing's Pool cannot start there) forks its workers
     # itself (in_forks); the same results in the same order
     try: import _multiprocessing   # noqa: F401
     except ImportError: return in_forks(fn, jobs, phase)
-    # PEANUTS end
+    # KIWI end
     with multiprocessing.get_context('fork').Pool(min(WORKERS, len(jobs))) as pool:
         return pool.starmap(fn, jobs)
 
 def in_spawned(fn, jobs, phase=None):
-    """PEANUTS(upstream-candidate): in_parallel where there is no fork (Windows). A spawned worker cannot import this script, whose top level is the rewrite
+    """KIWI(upstream-candidate): in_parallel where there is no fork (Windows). A spawned worker cannot import this script, whose top level is the rewrite
     itself, so it builds the script's namespace from its definitions and the globals fn reads, sent from here (rewrite_pool.py); the same results as forked
     workers. Before, Windows ran these phases in one process: a large Unreal main took over 10 minutes with every other thread idle"""
     import rewrite_pool
@@ -773,9 +773,9 @@ def in_spawned(fn, jobs, phase=None):
         return out
 
 def undecodable_piece(s, e):
-    """PEANUTS(upstream-candidate): nso_code.count_undecodable on one piece of a data block search, for in_parallel"""
+    """KIWI(upstream-candidate): nso_code.count_undecodable on one piece of a data block search, for in_parallel"""
     return nso_code.count_undecodable(IMG, s, e, md)
-DATA_BLOCKS = nso_code.data_blocks(IMG, TEXT_END, md, lambda pieces: in_parallel(undecodable_piece, pieces, 'load'))   # PEANUTS(upstream-candidate): in worker processes
+DATA_BLOCKS = nso_code.data_blocks(IMG, TEXT_END, md, lambda pieces: in_parallel(undecodable_piece, pieces, 'load'))   # KIWI(upstream-candidate): in worker processes
 CODE_RANGES = list(zip([0] + [e for _, e in DATA_BLOCKS], [s for s, _ in DATA_BLOCKS] + [TEXT_END]))
 def acquire_lock_sites(img, ranges):
     """Offsets of exclusive test-and-set lock acquires without acquire ordering: ldxr rt,[rn]; cbnz rt,<the ldxr>; stxr ws,rk,[rn]; cbnz ws,<the ldxr> (w or x, rk not zero), not followed by
@@ -838,7 +838,7 @@ def x18_words(lo, hi):
             if R18.search(op): out.add(addr)
         a = last + 4 if last + 4 >= end else last + 8   # the chunk is done, or the word after the last decoded one is no instruction
     return out
-# PEANUTS(upstream-candidate): in_serial, in_parallel and in_spawned are defined before the data blocks now (they count in them too)
+# KIWI(upstream-candidate): in_serial, in_parallel and in_spawned are defined before the data blocks now (they count in them too)
 def find_x18_words():
     """x18_words over all the code, in 1 MB pieces"""
     pieces = []
@@ -856,7 +856,7 @@ kinds = {}
 # Spin wait candidates (see "Spin waits" below): backward direct branches (b, b.cond, cbz / cbnz, tbz / tbnz) at most SPIN_WIN bytes back, by target
 SPIN_WIN, SPIN_TOPS = 512, {0x16, 0x17, 0x54, 0x34, 0x35, 0xB4, 0xB5, 0x36, 0x37, 0xB6, 0xB7}
 spin_cand = {}
-# PEANUTS(upstream-candidate): the scan in 1 MB pieces in worker processes (in_parallel), merged in address order, so kinds and spin_cand have the same
+# KIWI(upstream-candidate): the scan in 1 MB pieces in worker processes (in_parallel), merged in address order, so kinds and spin_cand have the same
 # entries in the same order as the scan word by word in one process (before: the whole text in one Python loop, serial)
 def scan_piece(lo, hi):
     """([(offset, kind)], [(spin target, branch offset)]) of the words in [lo, hi), in address order"""
@@ -1426,7 +1426,7 @@ if any(fb - fa > BIG_FN for fa, fb in funcs):
         split += [(p, q) for p, q in ps if bisect.bisect_left(sites18, p) < bisect.bisect_left(sites18, q)]   # the pieces that hold x18 sites
         print(f'function {fa:#x}..{fb:#x} ({(fb - fa) / 2**20:.2f} MB, no unwind entries) analysed in {len(ps)} pieces')
     funcs = split
-# PEANUTS(upstream-candidate): the functions in worker processes (in_parallel). Each is analysed on its own and returns addresses, not capstone objects; the
+# KIWI(upstream-candidate): the functions in worker processes (in_parallel). Each is analysed on its own and returns addresses, not capstone objects; the
 # results are taken in the functions' order, and what crosses functions is done here as before: the windows and retry blocks decoded again (dis), the checks
 # against every earlier function's windows and retry blocks, the jump tables merged in order. A few jump table forms (jump_masked_pred, jump_masked_not,
 # jump_zero_extended, forward_table_base) read the tables found in earlier functions: a worker notes any read of its tables (Tracked), and such a function is
@@ -1468,7 +1468,7 @@ def analyse_fn(fa, fb):
                     break
             if not (base and width):
                 tgt = jump_offsets(insl, j) or jump_adr_offsets(insl, j)
-                if not tgt and tail_call(insl, j): tails.append(ins.address); continue   # PEANUTS(upstream-candidate): analyse_fn returns them
+                if not tgt and tail_call(insl, j): tails.append(ins.address); continue   # KIWI(upstream-candidate): analyse_fn returns them
                 if not tgt and (far := jump_bytes_far(insl, j)): jumps[ins.address] = far; continue
                 if not tgt: tgt = jump_offsets(insl, j, copy_first=True, far_base=True)   # the index copied before the check (check_before_copy) or the base set far back, only where every other form failed
                 if not tgt: tgt = jump_masked_pred(insl, j)   # the check on a masked copy made in the block, the index masked in the block that branches to it
@@ -1478,7 +1478,7 @@ def analyse_fn(fa, fb):
                 assert tgt, f'jump table {ins.address:x}'
                 tabjumps[ins.address] = tgt; continue
             jumps[ins.address] = (base, width)
-    # No branch from outside may enter the middle of a window, except an out-of-line retry onto its store-exclusive (retry_block).  # PEANUTS (PR #164)
+    # No branch from outside may enter the middle of a window, except an out-of-line retry onto its store-exclusive (retry_block).  # KIWI (PR #164)
     inwin = {x.address for wseg in ws for x in wseg}; heads = {wseg[0].address for wseg in ws}
     rmid = set()
     for k, x in enumerate(insl):
@@ -1486,18 +1486,18 @@ def analyse_fn(fa, fb):
             t = x.operands[-1].imm
             if t in inwin and t not in heads:
                 wseg = next(w for w in ws if any(y.address == t for y in w))
-                if x.mnemonic != 'bl' and wseg[0].address <= x.address <= wseg[-1].address: continue  # PEANUTS(upstream-candidate): local jump is relocated within the copy
+                if x.mnemonic != 'bl' and wseg[0].address <= x.address <= wseg[-1].address: continue  # KIWI(upstream-candidate): local jump is relocated within the copy
                 rb = retry_block(insl, k, wseg) if x.mnemonic not in ('b', 'bl') else None
                 assert rb, f'branch into window {x.address:x}'
                 assert not any(y.address in done for y in rb[0]), f'retry block overlaps a window {rb[0][0].address:x}'
-                rets.append([([y.address for y in rb[0]], x.address + 4), ([y.address for y in rb[1]], wseg[-1].address + 4)])   # PEANUTS(upstream-candidate): addresses (analyse_fn)
+                rets.append([([y.address for y in rb[0]], x.address + 4), ([y.address for y in rb[1]], wseg[-1].address + 4)])   # KIWI(upstream-candidate): addresses (analyse_fn)
                 done |= {y.address for y in rb[0]}; rmid |= {y.address for y in rb[0][1:]}
     for x in insl:
         if x.mnemonic in ('b', 'bl', 'cbz', 'cbnz', 'tbz', 'tbnz') or x.mnemonic.startswith('b.'):
             assert x.operands[-1].imm not in rmid, f'branch into retry block {x.address:x}'
     jl, tl = list(dict.items(jumps))[own_j:], list(dict.items(tabjumps))[own_t:]   # this function's tables, in the order found (dict.items: not a read Tracked notes)
     return [[x.address for x in w] for w in ws], rets, rmid, tails, jl, tl, getattr(jumps, 'read', False) or getattr(tabjumps, 'read', False)
-progress('functions')   # PEANUTS(upstream-candidate): analyse_fn in workers, what crosses functions here (above)
+progress('functions')   # KIWI(upstream-candidate): analyse_fn in workers, what crosses functions here (above)
 for (fa, fb), r in zip(funcs, in_parallel(analyse_fn, funcs, 'functions')):
     if r[6]: r = analyse_fn(fa, fb)   # it read the jump tables: again with every earlier function's (jumps, tabjumps are this process's now)
     wl, rets, rmid, tails, jl, tl, _ = r
@@ -1601,7 +1601,7 @@ def stdalloc_gates():
     return out
 region_obs += stdalloc_gates()
 # Unreal's FMallocBinned3 (above): the gate on the cut constructor call, a nop now; x0 is the object (the gate number's upper bits name the register, 0)
-if UE_CALLS:   # PEANUTS: every constructor call (#290)
+if UE_CALLS:   # KIWI: every constructor call (#290)
     for call_off in UE_CALLS:
         assert call_off not in kinds and not any(lo <= call_off < hi for wseg in windows for lo, hi in [(wseg[0].address, wseg[-1].address + 4)]), f'FMallocBinned3 gate conflicts with a rewrite site {call_off:#x}'
         region_obs.append((call_off, OBS_UE_MALLOC, f'{NOP:08x}', 'FMallocBinned3 constructor call (cut): the object in x0; the host puts its allocator\'s vtable in (hle_uemalloc.c)'))
@@ -1976,7 +1976,7 @@ if FAR:   # patch area before the base: file = text + ro + data (padded to 16K) 
     if BIG_TEXT and len(patch) > FRONT - 0x4000 and 'DM_PATCH_FRONT' not in os.environ:
         need = (len(patch) + 0x4000 + 0xFFFF) & ~0xFFFF
         print(f'{NAME}: patch area of {len(patch):#x} bytes does not fit in {FRONT:#x} before the base; rewriting again with {need:#x}', flush=True)
-        if os.environ.get('DM_IN_PROCESS'):   # PEANUTS: run inside the app's process (pack_android.run_in_process): no exec there; it runs this again with the variable, after this run is undone
+        if os.environ.get('DM_IN_PROCESS'):   # KIWI: run inside the app's process (pack_android.run_in_process): no exec there; it runs this again with the variable, after this run is undone
             sys.exit({'rerun_env': {'DM_PATCH_FRONT': hex(need)}})
         if os.name == 'nt':   # Windows has no exec: os.execve starts a new process and ends this one, and the caller would take this one's exit as the rewrite's
             import subprocess; sys.exit(subprocess.call([sys.executable] + sys.argv, env=dict(os.environ, DM_PATCH_FRONT=hex(need))))
@@ -2000,7 +2000,7 @@ with open(P('fixups.tsv'), 'w', encoding='utf-8', newline='\n') as f:
     if TARGET == 'android': f.write('# TARGET_ANDROID\t1\n')   # the slot base of Targets above: an Apple host refuses this module, an Android host every other
     if FS_STATE_OFF: f.write(f'# FPS_STATE_OFF\t{FS_STATE_OFF:#x}\n')   # frame step state page (FRAME_STEP): the loader writes the target fps there
     if OOT_PATCHES: f.write('# OOT_PATCHES\t1\n')
-    if UE_CALLS: f.write(f'# UE_MALLOC_VT\t{UE_VT:#x}\n# UE_MALLOC_SLOT\t{UE_SLOT:#x}\n')   # PEANUTS: UE_CALLS. Unreal's FMallocBinned3 (ue_malloc.py): its vtable and the slot of its name getter, which names the slot layout
+    if UE_CALLS: f.write(f'# UE_MALLOC_VT\t{UE_VT:#x}\n# UE_MALLOC_SLOT\t{UE_SLOT:#x}\n')   # KIWI: UE_CALLS. Unreal's FMallocBinned3 (ue_malloc.py): its vtable and the slot of its name getter, which names the slot layout
     if FPS_TARGET_PTR is not None: f.write(f'# FPS_TARGET_PTR\t{FPS_TARGET_PTR:#x}\n# FPS_TARGET_FIELD\t{FPS_TARGET_FIELD:#x}\n')   # a target frame rate the game steps by (fps_target.py)
     for n, o in UE_CVARS.items(): f.write(f'# UE_CVAR:{n}\t{o:#x}\n')   # Unreal console variables (ue_cvar.py): the TAutoConsoleVariable registered under each name
     if RENDER_SCALE: f.write('# RENDER_SCALE\t1\n')   # a render-scale stub reads state +0x10 (the loader ignores the key; dm/games/settings.py offers the setting by it)
@@ -2043,15 +2043,15 @@ def changed_runs():
 with open(P('changed.tsv'), 'w', encoding='utf-8', newline='\n') as f:
     f.write(f'# BUILD_ID\t{BUILD_ID}\n')
     for off, n in changed_runs(): f.write(f'{off:#x}\t{n:#x}\n')   # Columns: offset, length in bytes
-# PEANUTS: <name>.orig.bin: the file's own bytes of those runs, one after the other in the table's order. A companion package's module reads the game's code to check
-# that it is the build it knows (a hash of a function's bytes) and to take addresses from its instructions; the Peanuts companion host gives it these bytes in place of the
-# rewritten ones (dm/peanuts/peanuts.c rt_orig). Fire Emblem: Three Houses' companion found 2 of its 42 map functions changed (x18 sites) and showed no monastery map
+# KIWI: <name>.orig.bin: the file's own bytes of those runs, one after the other in the table's order. A companion package's module reads the game's code to check
+# that it is the build it knows (a hash of a function's bytes) and to take addresses from its instructions; the Kiwi companion host gives it these bytes in place of the
+# rewritten ones (dm/kiwi/kiwi.c rt_orig). Fire Emblem: Three Houses' companion found 2 of its 42 map functions changed (x18 sites) and showed no monastery map
 with open(P('orig.bin'), 'wb') as f:
     for off, n in changed_runs(): f.write(ORIG_TEXT[off:off + n])
 with open(P('obs.tsv'), 'w', encoding='utf-8', newline='\n') as f:
     f.write(f'# BUILD_ID\t{BUILD_ID}\n')
     for off, oid, ow, why in obs: f.write(f'{off:#x}\t{oid}\t{ow}\t{why}\n')
-# PEANUTS begin: cross-module branches (--xmod). A code mod made for the console may branch straight from one module into another: Luminescent Platinum for Pokemon
+# KIWI begin: cross-module branches (--xmod). A code mod made for the console may branch straight from one module into another: Luminescent Platinum for Pokemon
 # Brilliant Diamond 1.3.0 patches 106 b / bl into main that go to its own subsdk1, and that module calls main 1,228 times the same way, each at the distance the two have on
 # the console, where rtld puts every module right after the one before it. The host's modules stand farther apart (each carries its key page and patch area), so the loader
 # aims each such branch again once it knows the bases (dm/host/loader.c xmod_apply), from <name>.xmod.tsv: the instruction's offset in this image, b or bl, the module it
@@ -2125,6 +2125,6 @@ def xmod_table():
           + (f'; {len(ptrs)} pointers out' + ''.join(f', {n} into {m} ({c} of them into its code)' for m, (n, c) in pinto.items() if n) if ptrs else '') + (f'; {n_inptr} pointers come in' if n_inptr else ''))
     if other: print(f'[RED] {NAME}: {other} adr / adrp / ldr literal words point outside the module by their own position: not re-aimed (data in the code, or the mod reads another module that way)')
 if XMOD: xmod_table()
-# PEANUTS end
+# KIWI end
 print(NAME, stats, 'cuts', len(cuts), 'obs', len(obs), 'patch', len(patch_front) + len(patch_back), 'PATCH_OFF', hex(PATCH_OFF), *(('BACK_OFF', hex(BACK_OFF), 'back', len(patch_back)) if TWO else ()), 'slot_refs', len(fix), 'gates', len(gates))
 if DATA_BLOCKS: print(NAME, 'data blocks left alone:', ', '.join(f'{s:#x}..{e:#x}' for s, e in DATA_BLOCKS))

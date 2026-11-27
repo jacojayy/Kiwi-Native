@@ -160,7 +160,7 @@ To enroll a cut for any game's own module:
 - **Note:** a census of all the `br x18` sites first (each shape within 16 / 32 / 48 instructions) saves a 12-minute rewrite per site.
 
 ### A TLS access uses the guest x18 register
-<!-- PEANUTS: Guest TLS register handling. -->
+<!-- KIWI: Guest TLS register handling. -->
 
 - **Symptom:** a rewritten TLS load faults at an unmapped low address after the game executes `mrs x18, tpidr_el0`.
 - **Cause:** the system-register rewrite put the guest TLS pointer in the real `x18`. Later rewritten instructions loaded `x18` from the guest's saved slot, which still held the previous value.
@@ -223,7 +223,7 @@ To enroll a cut for any game's own module:
 
 ### A local branch inside an exclusive window
 
-- **Symptom:** `retry block overlaps a window` when rewriting Trails in the Sky 2nd Chapter 1.0.3. <!-- PEANUTS(upstream-candidate) -->
+- **Symptom:** `retry block overlaps a window` when rewriting Trails in the Sky 2nd Chapter 1.0.3. <!-- KIWI(upstream-candidate) -->
 - **Cause:** The zero-value branch goes straight to the same window's store-exclusive. The nonzero path clears the reservation with `clrex` and skips the store. The rewriter classified the local branch as an out-of-line retry.
 - **Fix:** Keep the zero-value branch inside the relocated window. Route the unconditional skip through an exit stub only when no branch can bypass its `clrex`. Outside branches still cannot enter a window midstream except through the existing retry-block rule.
 - **Check:** `test_exclusive_window.py` inspects the emitted Android code for both paths and rejects external entry and branches that bypass `clrex`.

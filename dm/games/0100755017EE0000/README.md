@@ -1,7 +1,7 @@
-<!-- PEANUTS: offline Android profile for updates 1.5.0 and 2.2.0. -->
+<!-- KIWI: offline Android profile for updates 1.5.0 and 2.2.0. -->
 # FANTASY LIFE i: The Girl Who Steals Time (`0100755017EE0000`)
 
-Updates 1.5.0 (v524288) and 2.2.0 (v917504); Unreal Engine 4, NVN, SDK 18.3.7. The shader map is the union of both versions: 23,372 keys, including 2,687 vertex shaders ([Shaders](#shaders)). The opening uses dynamic texture slots. <!-- PEANUTS: #800 -->
+Updates 1.5.0 (v524288) and 2.2.0 (v917504); Unreal Engine 4, NVN, SDK 18.3.7. The shader map is the union of both versions: 23,372 keys, including 2,687 vertex shaders ([Shaders](#shaders)). The opening uses dynamic texture slots. <!-- KIWI: #800 -->
 
 ## Builds
 
@@ -18,7 +18,7 @@ The offline host does not provide Epic Online Services. On startup the game subs
 
 When the host reports dictionary version zero, the game's avatar form rejects ordinary names before running its two word checks. The final cut leaves both checks reachable when there is no dictionary version. On an Odin 2 with Turnip v27.0.0-R1, the 1.5.0 build accepted a name, started a new game, and allowed movement and conversations on the opening ship. Cold-loading the resulting save also reached the ship. Later quests, multiplayer, and the system GPU driver were not tested.
 
-<!-- PEANUTS: #800 -->
+<!-- KIWI: #800 -->
 ### 2.2.0
 
 `nso_fnmap.py` cannot carry these addresses: both `main` builds have unwind entries for only 18,414 functions, and none of the five cut functions is among them. Each 1.5.0 site was located in 2.2.0 instead by its ±0x40-byte instruction window, with the address bits masked as `nso_fnmap.py` masks them; each window occurs once in each build. Each site was then compared by disassembly:

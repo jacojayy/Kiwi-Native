@@ -1,7 +1,7 @@
 # One row for each row of docs/env_switches.tsv (dm/tools/advanced_switches.py writes and checks it; the columns are described there). The launcher shows the
 # friendly and advanced rows in Settings > Advanced and on each game's page; developer rows are behind "Show developer options"; internal rows are never shown.
 name	tier	area	label	try_if	type	choices	default	scope	warn	owner	profile_key	games	fixes	reason
-DMSH_VK_ABSENT_FILE	internal	Packing			text			both						Packer-generated per-build shader exclusion list [PEANUTS]
+DMSH_VK_ABSENT_FILE	internal	Packing			text			both						Packer-generated per-build shader exclusion list [KIWI]
 DMSH_VK_BATCH	developer	Packing			text			both						
 DMSH_VK_DELTA_FROM	developer	Diagnostics			text			both						
 DMSH_VK_KEEP	developer	Packing			text			both						
@@ -99,7 +99,7 @@ DM_GAMES_FIRST	developer	Game			text			both
 DM_GAME_ARGS_ADD	developer	Game			text			both						
 DM_GAME_ENV	developer	Game			text			both						
 DM_GFX_FIXTURE_OUT	internal	Diagnostics			text			both						test harness
-DM_GFX_QUALITY	internal	Graphics	Graphics quality	the game looks too plain (Quality) or runs too slowly (Performance)	choice	Performance=performance;Quality=quality	Performance	game						render_cfg profiles only; Peanuts has none [PEANUTS]
+DM_GFX_QUALITY	internal	Graphics	Graphics quality	the game looks too plain (Quality) or runs too slowly (Performance)	choice	Performance=performance;Quality=quality	Performance	game						render_cfg profiles only; Kiwi has none [KIWI]
 DM_GLSLC_CAPTURE	developer	Diagnostics			text			both						
 DM_GL_CAPTURE	developer	Diagnostics			text			both						
 DM_GL_DRAWLOG	developer	Diagnostics			text			both						
@@ -123,7 +123,7 @@ DM_HLECOUNT	developer	Diagnostics			text			both
 DM_HLECOUNT_AT	developer	Diagnostics			text			both						
 DM_ICON	developer	Diagnostics			text			both						
 DM_IMPORTS	developer	Diagnostics			text			both						
-DM_IN_PROCESS	internal	Packing			text			both						Set by the packer for a tool it runs in process [PEANUTS]
+DM_IN_PROCESS	internal	Packing			text			both						Set by the packer for a tool it runs in process [KIWI]
 DM_KBD	developer	Game			text			both						
 DM_KBD_PLAYER	internal	Game			text			both						Mac or iOS only
 DM_KEYS	developer	Input			text			both						
@@ -358,7 +358,7 @@ DM_QOS_EDGES	developer	Game			text			both
 DM_QOS_MAP	developer	Game			text			both						
 DM_REC	developer	Diagnostics			text			both						
 DM_REGIONS	developer	Diagnostics			text			both						
-DM_RENDER_PCT	internal	Graphics	Render size	the picture is too soft (raise it) or the game is too slow (lower it)	choice	33 %=33;50 %=50;59 %=59;67 %=67;100 %=100	50 %	game						render_cfg profiles only; Peanuts has none [PEANUTS]
+DM_RENDER_PCT	internal	Graphics	Render size	the picture is too soft (raise it) or the game is too slow (lower it)	choice	33 %=33;50 %=50;59 %=59;67 %=67;100 %=100	50 %	game						render_cfg profiles only; Kiwi has none [KIWI]
 DM_RENDER_SCALE	developer	Graphics			text			both						
 DM_RENDER_UNCAPPED	developer	Diagnostics			text			both						
 DM_RESOURCE_AOC	internal	Diagnostics			text			both						Mac or iOS only
@@ -438,7 +438,7 @@ DM_TEST_SWKBD_LAG_MS	developer	Diagnostics			text			both
 DM_TEST_TRANSFORM_FEEDBACK	internal	Diagnostics			text			both						test harness
 DM_TEST_UP_LEAK	developer	Diagnostics			text			both						
 DM_TEST_UP_LOST	developer	Diagnostics			text			both						
-DM_THERMAL_CAP	internal	Game			text			both						Mac, iOS; Android: a profile's thermal_cap [PEANUTS]
+DM_THERMAL_CAP	internal	Game			text			both						Mac, iOS; Android: a profile's thermal_cap [KIWI]
 DM_THR	developer	Diagnostics			text			both						
 DM_THRCPU	internal	Diagnostics			text			both						Mac or iOS only
 DM_TIME	developer	Game			text			both						
@@ -644,7 +644,7 @@ DM_VK_PASS_CLEARS	developer	Graphics			text			both
 DM_VK_PASS_KEEP	developer	Graphics			text			both						
 DM_VK_PCACHE	developer	Diagnostics			text			both						
 DM_VK_PCACHE_KEEP	developer	Memory			text			both						
-DM_VK_PCACHE_SAVE_BIG_S	developer	Memory			text			both						The large pipeline cache's save interval [PEANUTS]
+DM_VK_PCACHE_SAVE_BIG_S	developer	Memory			text			both						The large pipeline cache's save interval [KIWI]
 DM_VK_PCACHE_SAVE_S	developer	Memory			text			both						
 DM_VK_PCACHE_SAVE_SLOW_S	developer	Memory			text			both						
 DM_VK_PFB_SPV_DIR	internal	Diagnostics			text			both						test harness

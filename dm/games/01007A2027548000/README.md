@@ -1,6 +1,6 @@
 # Trails in the Sky 2nd Chapter (`01007A2027548000`)
 
-<!-- PEANUTS: local Android bring-up profile. -->
+<!-- KIWI: local Android bring-up profile. -->
 
 Switch update 1.0.3 (`v327680`), Nintendo SDK 21.4.4, ARM64, NVN. `main` imports Nintendo's movie module (`subsdk0`); the host supplies `rtld`. The NPDM declares 16 MiB of system resources. Before `nnMain`, the game requests a `0x81200000`-byte heap and an `0x2d1400000`-byte address region after roughly 1 GiB of SDK allocations. The profile reserves 2.25 GiB for the heap and 16 GiB of virtual address space for alias mappings; the provisional 128 MiB heap and 4.375 GiB alias caps stopped startup.
 

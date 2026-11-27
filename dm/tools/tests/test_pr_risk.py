@@ -29,7 +29,7 @@ class PrRisk(unittest.TestCase):
         self.assertEqual(kinds(diff('dm/tools/x.py', 'shutil.rmtree(root)')), ['delete'])
         self.assertEqual(kinds(diff('dm/tools/x.py', 'blob = "' + 'QUJD' * 40 + '"')), ['opaque'])
         self.assertEqual(kinds(diff('scripts/x.sh', 'echo hi')), ['host-build'])
-        self.assertEqual(kinds(diff('android/app/src/main/java/dev/nxnative/android/UpdateCheck.java', 'int a;')), ['updater'])
+        self.assertEqual(kinds(diff('android/app/src/main/java/hernandez/kiwinative/UpdateCheck.java', 'int a;')), ['updater'])
 
     def test_quiet_on_plain_code_and_docs(self):
         self.assertEqual(kinds(diff('dm/host/x.c', 'int a = b + c;', 'return a;')), [])

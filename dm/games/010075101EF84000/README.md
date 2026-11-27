@@ -1,6 +1,6 @@
 # Stray
 
-<!-- PEANUTS: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
+<!-- KIWI: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
 
 Base game (`v0`, 1.0.0), SDK 17.5.6. BlueTwelve Studio's **Unreal Engine 4** game on **NVN**, with Bink 2 (`subsdk0`, `NintendoSDK_movie`). Modules `main`, `subsdk0` and `sdk`. `ue_malloc.py` and `ue_region.py` handle Unreal Engine 4's allocator and virtual address region automatically; [`patches.py`](patches.py) and `fps_target 60` in [`game.tsv`](game.tsv) unlock 60 fps.
 

@@ -25,10 +25,10 @@ uint64_t dm_cheats_keys(void);
 void dm_pad_set(uint64_t buttons, int32_t lx, int32_t ly, int32_t rx, int32_t ry);
 void dm_pad_set_player(int player, uint64_t buttons, int32_t lx, int32_t ly, int32_t rx, int32_t ry);   // player 0..DM_PLAYERS-1 (player 1..8)
 void dm_pad_players(uint32_t mask);   // bit p: player p + 1 has a controller; player 1 always counts as connected (the keyboard, the touch gamepad, DM_KEYS)
-// PEANUTS begin: the companion runtime's side of the pad (hle_hid.c, dm/peanuts): player 1's state before the gate, and the gate fill applies to what the game reads
+// KIWI begin: the companion runtime's side of the pad (hle_hid.c, dm/kiwi): player 1's state before the gate, and the gate fill applies to what the game reads
 void dm_pad_raw(uint32_t *npad, uint64_t *buttons, int32_t axes[4]);
 extern void (*_Atomic dm_pad_gate)(int slot, uint64_t *buttons, int32_t axes[4]);
-// PEANUTS end
+// KIWI end
 uint32_t dm_pad_usable(void);   // bit p: the game reads player p + 1 (its npad is supported; every player in a one-player game), for pad_slot_fill
 void dm_pad_usable_callback(void (*fn)(void));   // the front end's: called on a guest thread when the supported npads change and when the controller applet opens
 // The game's assignments (hle_hid.c SwapNpadAssignment, DisconnectNpad), on a guest thread: DM_PAD_SWAP the controllers of players a and b trade places, DM_PAD_DISCONNECT
@@ -44,7 +44,7 @@ void dm_motion_clear(int player);   // clears GameController motion; another fre
 // Passive controller HID, already in the Switch frame (G, rad/s). sample_ns is the sample's host now_ns() time, not the packet's arrival; stale / reordered samples are ignored.
 // Kept separate from GameController and the phone; used while GameController supplies no fresh motion for that player. DM_MOTION_AXES / ACC_SIGN apply only to GameController.
 void dm_motion_set_hid(int player, const float acc[3], const float rot[3], uint64_t sample_ns);
-void dm_motion_set_switch_at(int player, const float acc[3], const float rot[3], uint64_t sample_ns);   // PEANUTS: dm_motion_set_switch with the sample's own time on the host clock (now_ns; 0: now), so samples that arrive together keep their real spacing
+void dm_motion_set_switch_at(int player, const float acc[3], const float rot[3], uint64_t sample_ns);   // KIWI: dm_motion_set_switch with the sample's own time on the host clock (now_ns; 0: now), so samples that arrive together keep their real spacing
 void dm_motion_clear_hid(int player);
 uint32_t dm_player_npad(int player);  // the npad id the game reads player p + 1 on: Handheld (0x20) or No1 (0) for player 1, No n (id n - 1) for player n
 

@@ -1,4 +1,4 @@
-# PEANUTS: exercise the production unbound-image placeholders with strict format lists.
+# KIWI: exercise the production unbound-image placeholders with strict format lists.
 """Unbound float/integer images need valid typed-zero views on the first run."""
 from pathlib import Path
 import shutil

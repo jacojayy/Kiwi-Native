@@ -1,4 +1,4 @@
-# PEANUTS: the fork's stats page frame rate cap (dev.peanuts.ui.StatsView, GameActivity's GameControls.Host)
+# KIWI: the fork's stats page frame rate cap (hernandez.kiwinative.kiwi.ui.StatsView, GameActivity's GameControls.Host)
 """The frame rate cap picked on the second screen's stats page while a game runs (StatsView's pop-up, GameActivity's GameControls.Host, the same calls as adb's
 game do=fps_cap): it is stored for the game before any live change is tried, so a pick the game takes only at its next start (to or from Game owned, a limited
 game's 120) is kept for that start; the pop-up opens again after such a pick with its "Restart the game to apply" note; the game's log says what was picked
@@ -11,9 +11,9 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
-UI = REPO / 'android/app/src/main/java/dev/peanuts/ui'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/StatsCapJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+UI = REPO / 'android/app/src/main/java/hernandez/kiwinative/kiwi/ui'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/StatsCapJvmTest.java'
 
 
 def body(text, head):
@@ -31,7 +31,7 @@ def body(text, head):
 class Wiring(unittest.TestCase):
     def setUp(self):
         self.act = (SRC / 'GameActivity.java').read_text(encoding='utf-8')
-        self.host = body(self.act, 'private dev.peanuts.ui.GameControls.Host peanutsControls()')
+        self.host = body(self.act, 'private hernandez.kiwinative.kiwi.ui.GameControls.Host kiwiControls()')
 
     def test_the_pick_is_stored_first(self):
         cap = body(self.host, '@Override public void cap(int v)')
@@ -59,7 +59,7 @@ class Wiring(unittest.TestCase):
         self.assertRegex(pick, r'if \(h\.capRunning\(\) != h\.cap\(\)\) openControl\(from, false\);', 'a pick that waits for a restart shows the note again')
 
     def test_adb_takes_the_same_call(self):
-        link = (REPO / 'android/app/src/main/java/dev/peanuts/ctl/GameLink.java').read_text(encoding='utf-8')
+        link = (REPO / 'android/app/src/main/java/hernandez/kiwinative/kiwi/ctl/GameLink.java').read_text(encoding='utf-8')
         self.assertIn('@Override public void cap(int v) { h.cap(v); }', link)
 
     def test_profiles(self):
@@ -85,7 +85,7 @@ def tsv_rows(path):
 OWNED_BEFORE = {
     '01001B300B9BE000', '01002C9022770000', '01004D300C5AE000', '01006000040C2000', '010065301A2E0000', '010069401ADB8000', '01006AE02236C000',
     '01006F600FFC8000', '01006F8002326000', '01007A2027548000', '010085500130A000', '010097F018538000', '0100DAE01E4C8000', '0100F7E00C70E000',
-    '01008FE00E2F6000',   # PEANUTS: One Piece Pirate Warriors 4 (#714): 30 and 60 fps both at normal game speed on the contributor's runs
+    '01008FE00E2F6000',   # KIWI: One Piece Pirate Warriors 4 (#714): 30 and 60 fps both at normal game speed on the contributor's runs
 }
 
 
@@ -117,7 +117,7 @@ class DefaultLimit(unittest.TestCase):
 @unittest.skipUnless(shutil.which('javac') and shutil.which('java'), 'no JDK')
 class StatsCapJvm(unittest.TestCase):
     def test_jvm(self):
-        stub = ('package dev.nxnative.android;\npublic final class BuildConfig {\n    public static final String NX_PROFILES = "";\n'
+        stub = ('package hernandez.kiwinative;\npublic final class BuildConfig {\n    public static final String NX_PROFILES = "";\n'
                 '    public static final String NX_DMSH_VK_CHAIN = "c0ffee000001", NX_DMSH_VK_ABI = "abc123abc123", NX_DMSH_VK_ABI_COMPAT = "";\n}\n')
         with tempfile.TemporaryDirectory() as d:
             d = Path(d); (d / 'stub').mkdir()
@@ -126,7 +126,7 @@ class StatsCapJvm(unittest.TestCase):
             r = subprocess.run(['javac', '-Xlint:all,-try', '-Werror', '-encoding', 'UTF-8', '-d', str(d / 'classes'), *map(str, srcs), str(TEST), str(d / 'stub/BuildConfig.java')],
                                capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-            r = subprocess.run(['java', '-cp', str(d / 'classes'), 'dev.nxnative.android.StatsCapJvmTest'], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', str(d / 'classes'), 'hernandez.kiwinative.StatsCapJvmTest'], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertEqual(r.stdout.strip(), 'ok')
 

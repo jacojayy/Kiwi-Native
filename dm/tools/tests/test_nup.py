@@ -21,7 +21,7 @@ import romfs_image
 import pack_dump
 import nso
 
-TID = 0x010028600EBDA000   # Super Mario 3D World + Bowser's Fury: a profile in dm/games (modules main sdk)   # PEANUTS: upstream: Donkey Kong Bananza, a Switch 2 profile Peanuts does not carry
+TID = 0x010028600EBDA000   # Super Mario 3D World + Bowser's Fury: a profile in dm/games (modules main sdk)   # KIWI: upstream: Donkey Kong Bananza, a Switch 2 profile Kiwi does not carry
 VER = 262144
 DLC = TID + 0x1001
 
@@ -69,7 +69,7 @@ def dump(root):
         (d / 'romfs/Shader/big.bin').write_bytes(BIG)
         (d / 'romfs/Shader/deep/er/same1').write_bytes(b'same bytes ' * 50); (d / 'romfs/Shader/deep/er/same2').write_bytes(b'same bytes ' * 50)
     (root / f'updates/{VER}/romfs/only_in_update').write_text('new')
-    (root / 'dlc/010028600ebdb001/0/romfs').mkdir(parents=True)   # PEANUTS: the add-on of TID
+    (root / 'dlc/010028600ebdb001/0/romfs').mkdir(parents=True)   # KIWI: the add-on of TID
     (root / 'dlc/010028600ebdb001/0/romfs/dlcfile').write_text('dlc ' * 10)
 
 
@@ -113,7 +113,7 @@ class Read(Fixture):
         self.assertFalse((romfs.Path(f'{self.nup}:base/exefs') / '.listing').exists())   # the writer leaves dump-tool listings out (SPEC §6.3)
 
     def test_same_tree_as_the_folders(self):
-        for sel, folder in (('base', 'base'), (f'update/{VER}', f'updates/{VER}'), (f'addon/{DLC:016x}', 'dlc/010028600ebdb001/0')):   # PEANUTS: the add-on of TID
+        for sel, folder in (('base', 'base'), (f'update/{VER}', f'updates/{VER}'), (f'addon/{DLC:016x}', 'dlc/010028600ebdb001/0')):   # KIWI: the add-on of TID
             for sub in ('exefs', 'romfs'):
                 if not (self.dump / folder / sub).is_dir(): continue
                 want = {k: v for k, v in self.tree(self.dump / folder / sub).items() if not k.endswith('.listing')}
@@ -179,14 +179,14 @@ class Read(Fixture):
                 if peek >= io.DEFAULT_BUFFER_SIZE:   # buffered: the reader asks for its whole buffer
                     with romfs.open(p, 'rb') as f: self.assertEqual(f.read(4), BIG[:4])
                 with romfs.open(p, 'rb', buffering=0) as f:
-                    assert isinstance(f, nup._Zstd)   # PEANUTS(upstream-candidate): unbuffered compressed extent reader.
+                    assert isinstance(f, nup._Zstd)   # KIWI(upstream-candidate): unbuffered compressed extent reader.
                     self.assertEqual(f.read(4), BIG[:4])
-                    assert f.head is not None   # PEANUTS(upstream-candidate): a prefix read retains its small head.
+                    assert f.head is not None   # KIWI(upstream-candidate): a prefix read retains its small head.
                     self.assertLessEqual(len(f.head), 4)
                     f.seek(100); self.assertEqual(f.read(8), BIG[100:108])   # past the prefix kept: decoded again further, still not whole
                 self.assertEqual(load.call_count, 0)
                 with romfs.open(p, 'rb', buffering=0) as f:   # read on to the end: the whole file is loaded once and the prefix dropped
-                    assert isinstance(f, nup._Zstd)   # PEANUTS(upstream-candidate): inspect the compressed reader's cached head.
+                    assert isinstance(f, nup._Zstd)   # KIWI(upstream-candidate): inspect the compressed reader's cached head.
                     self.assertEqual(f.read(4), BIG[:4]); self.assertEqual(f.read(), BIG[4:]); self.assertIsNone(f.head)
                 self.assertEqual(load.call_count, 1)
                 with romfs.open(p, 'rb', buffering=0) as f:   # chunks that run past PEEK: the same bytes as one read
@@ -201,7 +201,7 @@ class RawOnly(Fixture):
 
     def test_no_zstd_module_needed(self):   # a raw-only file reads with no zstd module at all; a zstd file then names the missing module
         code = ('import sys; sys.modules["compression.zstd"] = None; sys.modules["backports"] = None; sys.path.insert(0, sys.argv[1]); import romfs, nup\n'
-                'p = romfs.Path(sys.argv[2] + ":update/262144/romfs"); print(sum(len(f.read_bytes()) for f in p.rglob("*") if f.is_file()))\n')   # PEANUTS: VER
+                'p = romfs.Path(sys.argv[2] + ":update/262144/romfs"); print(sum(len(f.read_bytes()) for f in p.rglob("*") if f.is_file()))\n')   # KIWI: VER
         r = subprocess.run([sys.executable, '-I', '-c', code, str(REPO / 'dm/tools'), str(self.nup)], capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertEqual(int(r.stdout), sum(f.stat().st_size for f in (self.dump / f'updates/{VER}/romfs').rglob('*') if f.is_file()))
@@ -273,7 +273,7 @@ class Tools(Fixture):
         try: import capstone, lz4.block   # noqa: F401  (pack_android.py checks them before any work)
         except ImportError: self.skipTest('no capstone / lz4 (android/environment.yml)')
         import pack_android
-        def fake_rewrite(py, srcs, out, jobs, g, in_process=False, xmod=None):   # PEANUTS: xmod, as rewrite() takes it   # the rewriter's input as it reads it (nso.py), as its output
+        def fake_rewrite(py, srcs, out, jobs, g, in_process=False, xmod=None):   # KIWI: xmod, as rewrite() takes it   # the rewriter's input as it reads it (nso.py), as its output
             for m, src in srcs.items():
                 (out / f'{m}.patched.bin').write_bytes(bytes(nso.read(str(pack_android.rewriter_src(src, out, m))).image)); (out / f'{m}.android.key').write_text(pack_android.rewrite_key(src, g) + '\n')
         packs = {}
@@ -284,7 +284,7 @@ class Tools(Fixture):
                 pack_android.main()
             packs[tag] = out
         rows = {t: (p / 'pack.tsv').read_text().splitlines() for t, p in packs.items()}
-        self.assertIn(f'romfs\tupdates/{VER}/romfs', rows['folder']); self.assertIn('aoc\t1\tdlc/010028600ebdb001/0/romfs', rows['folder'])   # PEANUTS: the add-on of TID
+        self.assertIn(f'romfs\tupdates/{VER}/romfs', rows['folder']); self.assertIn('aoc\t1\tdlc/010028600ebdb001/0/romfs', rows['folder'])   # KIWI: the add-on of TID
         self.assertIn(f'romfs\tGame.nup:update/{VER}/romfs', rows['nup']); self.assertIn(f'aoc\t1\tGame.nup:addon/{DLC:016x}/romfs', rows['nup'])
         strip = lambda rs: [r for r in rs if not r.startswith(('romfs\t', 'aoc\t'))]
         self.assertEqual(strip(rows['nup']), strip(rows['folder']))
@@ -339,7 +339,7 @@ class Descriptor(Fixture):
         try: import capstone, lz4.block   # noqa: F401
         except ImportError: self.skipTest('no capstone / lz4 (android/environment.yml)')
         import pack_android
-        def fake_rewrite(py, srcs, out, jobs, g, in_process=False, xmod=None):   # PEANUTS: xmod, as rewrite() takes it
+        def fake_rewrite(py, srcs, out, jobs, g, in_process=False, xmod=None):   # KIWI: xmod, as rewrite() takes it
             for m, src in srcs.items():
                 (out / f'{m}.patched.bin').write_bytes(bytes(nso.read(str(pack_android.rewriter_src(src, out, m))).image)); (out / f'{m}.android.key').write_text(pack_android.rewrite_key(src, g) + '\n')
         packs = {}
@@ -360,7 +360,7 @@ class Descriptor(Fixture):
 class Launcher(unittest.TestCase):
     """The launcher's side on the JVM: android/app/src/jvmtest NupJvmTest (its header) with Nup, Zstd, Pack, Profile and ShaderLibs and a stub BuildConfig: the reader,
     DM_ROMFS / DM_AOC_DIR rows, and which folders and .nup files Prepare starts from (Pack.isDump: an update, or the base game alone). The zstd fixtures need a Python with zstd"""
-    STUB = '''package dev.nxnative.android;
+    STUB = '''package hernandez.kiwinative;
 public final class BuildConfig {
     public static final String NX_PROFILES = "040074A01BF12000\\tDonkey Kong Bananza\\t22852\\tabcdef012345\\t458752 main=aa";
     public static final String NX_DMSH_VK_CHAIN = "6607c8d19abc";
@@ -370,14 +370,14 @@ public final class BuildConfig {
 '''
 
     def test_jvm(self):
-        src = REPO / 'android/app/src/main/java/dev/nxnative/android'
+        src = REPO / 'android/app/src/main/java/hernandez/kiwinative'
         t = Path(tempfile.mkdtemp(prefix='nupjvm_'))
         try:
             (t / 'BuildConfig.java').write_text(self.STUB)
             subprocess.run(['javac', '-d', str(t / 'classes')] + [str(src / f'{c}.java') for c in ('Nup', 'Nsp', 'Zstd', 'Pack', 'DumpLayout', 'BuildCheck', 'RomfsCheck', 'Profile', 'ShaderLibs', 'PickedPath', 'CopyPlan')]
-                           + [str(REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/NupJvmTest.java'), str(t / 'BuildConfig.java')], check=True, capture_output=True, text=True)
+                           + [str(REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/NupJvmTest.java'), str(t / 'BuildConfig.java')], check=True, capture_output=True, text=True)
             (t / 'run').mkdir()
-            r = subprocess.run(['java', '-cp', str(t / 'classes'), 'dev.nxnative.android.NupJvmTest', str(REPO), str(t / 'run')] + ([sys.executable] if have_zstd() else []),
+            r = subprocess.run(['java', '-cp', str(t / 'classes'), 'hernandez.kiwinative.NupJvmTest', str(REPO), str(t / 'run')] + ([sys.executable] if have_zstd() else []),
                                capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout[-2000:] + r.stderr[-2000:])
             self.assertRegex(r.stdout, r'^ok \d+')

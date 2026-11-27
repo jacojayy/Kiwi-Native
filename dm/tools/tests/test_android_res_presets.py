@@ -14,10 +14,10 @@ sys.path.insert(0, str(REPO / 'dm/tools')); sys.path.insert(0, str(REPO / 'dm/ga
 import game   # noqa: E402
 import scene_res   # noqa: E402
 
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/ResPresetsJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/ResPresetsJvmTest.java'
 GRADLE = REPO / 'android/app/build.gradle'
-STUB = '''package dev.nxnative.android;
+STUB = '''package hernandez.kiwinative;
 public final class BuildConfig {
     public static final String NX_PROFILES = "";
     public static final String NX_DMSH_VK_CHAIN = "c0ffee000001", NX_DMSH_VK_ABI = "abc123abc123", NX_DMSH_VK_ABI_COMPAT = "";
@@ -25,11 +25,11 @@ public final class BuildConfig {
 '''
 
 
-OOT = str(REPO / 'peanuts/tests/fixtures/profiles/ocarina')   # PEANUTS: Ocarina of Time's rows, a fixture (its Switch 2 profile is not carried); no Switch 1 profile has presets
+OOT = str(REPO / 'kiwi/tests/fixtures/profiles/ocarina')   # KIWI: Ocarina of Time's rows, a fixture (its Switch 2 profile is not carried); no Switch 1 profile has presets
 
 
 def rows(game_id, key):
-    t = (Path(game_id) if Path(game_id).is_absolute() else REPO / 'dm/games' / game_id) / 'game.tsv'   # PEANUTS: or a profile folder's path
+    t = (Path(game_id) if Path(game_id).is_absolute() else REPO / 'dm/games' / game_id) / 'game.tsv'   # KIWI: or a profile folder's path
     return [line.split('\t') for line in t.read_text(encoding='utf-8').splitlines() if line.startswith(key + '\t')]
 
 
@@ -57,23 +57,23 @@ class Wiring(unittest.TestCase):
         self.assertIn('p.presets = c.length > 22 ? c[22] : "";', (SRC / 'Profile.java').read_text(encoding='utf-8'))
 
     def test_oot_column(self):
-        self.assertEqual(presets_of(OOT), 'quality|Quality|1920x1080|default|0|1920|1080|measured;medium|Balanced|1920x1080|fixed|720|1920|1080|measured;'   # PEANUTS: the fixture
+        self.assertEqual(presets_of(OOT), 'quality|Quality|1920x1080|default|0|1920|1080|measured;medium|Balanced|1920x1080|fixed|720|1920|1080|measured;'   # KIWI: the fixture
                          'performance|Performance|1280x720|fixed|540|1280|720|measured')
 
     def test_from_column(self):
         """Profile column 26 (build.gradle presetFromOf): the earlier ids map to the presets that replaced them"""
         g = GRADLE.read_text(encoding='utf-8')
-        # PEANUTS: check the serialized field index. Later fields may also be inline expressions.
+        # KIWI: check the serialized field index. Later fields may also be inline expressions.
         row = g.split('def nxProfiles =', 1)[1].split('g -> [', 1)[1].split('].join(', 1)[0]
         fields = re.split(r',\s*(?![^()]*\))', row)   # keep commas inside the column builders' arguments
         self.assertEqual(fields[26], 'presetFromOf(g)')
         self.assertIn('p.presetFrom = c.length > 26 ? c[26] : "";', (SRC / 'Profile.java').read_text(encoding='utf-8'))
-        self.assertEqual([c[1:3] for c in rows(OOT, 'res_preset_from')], [['balanced', 'medium'], ['max-performance', 'performance']])   # PEANUTS: the fixture
+        self.assertEqual([c[1:3] for c in rows(OOT, 'res_preset_from')], [['balanced', 'medium'], ['max-performance', 'performance']])   # KIWI: the fixture
         scene_res.res_presets(game.load(OOT))   # refuses a row naming a preset that is not there
 
     def test_column_matches_the_pack_step(self):
         """Every profile: the presets the launcher offers with a scene of their own are the overlays the pack step makes, at the scale the launcher labels"""
-        for g in list(game.all_games()) + [game.load(OOT)]:   # PEANUTS: and the fixture
+        for g in list(game.all_games()) + [game.load(OOT)]:   # KIWI: and the fixture
             col = presets_of(g.id if g.dir.parent == REPO / 'dm/games' else str(g.dir))
             if not col: continue
             launcher = {f[0]: int(f[4]) / int(f[6]) for f in (r.split('|') for r in col.split(';')) if f[3] != 'default'}
@@ -106,7 +106,7 @@ class ResPresetsJvm(unittest.TestCase):
             r = subprocess.run(['javac', '-Xlint:all,-try', '-Werror', '-encoding', 'UTF-8', '-d', str(d / 'classes'), *map(str, srcs), str(TEST), str(d / 'stub/BuildConfig.java')],
                                capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-            r = subprocess.run(['java', '-cp', str(d / 'classes'), 'dev.nxnative.android.ResPresetsJvmTest', str(d / 'run')], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', str(d / 'classes'), 'hernandez.kiwinative.ResPresetsJvmTest', str(d / 'run')], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertEqual(r.stdout.strip(), 'ok')
 

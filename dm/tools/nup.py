@@ -48,7 +48,7 @@ if hasattr(os, 'pread'): pread = os.pread
 else:
     import threading
     _seek_lock = threading.Lock()
-    def pread(fd, n, offset, /):   # PEANUTS(upstream-candidate): the same positional-only contract as os.pread.
+    def pread(fd, n, offset, /):   # KIWI(upstream-candidate): the same positional-only contract as os.pread.
         out = []
         with _seek_lock:
             os.lseek(fd, offset, os.SEEK_SET)
@@ -87,7 +87,7 @@ def zstd():
     """The zstd module: compression.zstd (Python 3.14), else backports.zstd (the same API)"""
     try: from compression import zstd as z
     except ImportError:
-        try: from backports import zstd as z   # pyright: ignore[reportMissingImports]  # PEANUTS: optional fallback for Python before 3.14.
+        try: from backports import zstd as z   # pyright: ignore[reportMissingImports]  # KIWI: optional fallback for Python before 3.14.
         except ImportError: raise Error(f'Python {sys.version_info[0]}.{sys.version_info[1]} has no compression.zstd (3.14+): a .nup with zstd files needs it, '
                                         'or pip install backports.zstd') from None
     return z
@@ -280,7 +280,7 @@ class Nup:
             else: hi = mid
         return kids[lo] if lo < len(kids) and self.name(kids[lo]) == want else None
 
-    def find(self, inner, start: str | int | tuple[str, int]=''):   # PEANUTS(upstream-candidate): virtual package roots are ('pkg', index).
+    def find(self, inner, start: str | int | tuple[str, int]=''):   # KIWI(upstream-candidate): virtual package roots are ('pkg', index).
         """The node of a path inside the container ('' its root; 'update/458752/romfs/a/b', 'base/exefs/main'); FileNotFoundError when there is none"""
         k = start
         for part in inner.split('/'):
@@ -407,7 +407,7 @@ class _Zstd(io.RawIOBase):
             data = self.head[self.pos:self.pos + want]
         elif self.length <= SMALL:
             if self.data is None: self._load()
-            assert self.data is not None   # PEANUTS(upstream-candidate): _load fills data or raises.
+            assert self.data is not None   # KIWI(upstream-candidate): _load fills data or raises.
             data = self.data[self.pos:self.pos + want]
         else:
             if self.stream is None or self.stream.tell() > self.pos:
@@ -421,7 +421,7 @@ class _Zstd(io.RawIOBase):
     def readall(self):
         if self.tmp is None and self.length <= SMALL:
             if self.data is None: self._load()
-            assert self.data is not None   # PEANUTS(upstream-candidate): _load fills data or raises.
+            assert self.data is not None   # KIWI(upstream-candidate): _load fills data or raises.
             data = self.data[self.pos:]; self.pos = max(self.pos, self.length); return bytes(data)
         return super().readall()
     def fileno(self):

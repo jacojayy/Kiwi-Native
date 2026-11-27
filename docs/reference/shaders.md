@@ -6,7 +6,7 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 
 ### Level-5 VFS3 shader objects
 
-<!-- PEANUTS(upstream-candidate): the Level-5 VFS3 reader, GitHub PR #230 -->
+<!-- KIWI(upstream-candidate): the Level-5 VFS3 reader, GitHub PR #230 -->
 
 - **Symptom:** the split misses the GLSLC objects in `data/preload_zstd.vfs`.
 - **Cause:** VFS3 v16 generation 1 indexes names and zstd block lists by file ID, not table order. Its compressed members store blocks rather than complete frames.
@@ -32,13 +32,13 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 ### Phyre NVN effects in Virtuos VBF archives
 
 - **Symptom:** the shader split finds no game programs despite loose `.fx.phyre` effects and multi-GB `.vbf` archives.
-- **Cause:** Phyre stores GPU code immediately before its control section, often at unaligned offsets inside `RYHP` effect containers. Virtuos `SRYK` archives keep the effects in 64 KB zlib or raw blocks. These are neither BNSH nor whole GLSLC outputs. The codec of a compressed archive is the archive's own: zlib in FINAL FANTASY X/X-2 HD Remaster, raw LZ4 in FINAL FANTASY XII THE ZODIAC AGE. <!-- PEANUTS(upstream-candidate): the LZ4 codec was met on FINAL FANTASY XII THE ZODIAC AGE. -->
+- **Cause:** Phyre stores GPU code immediately before its control section, often at unaligned offsets inside `RYHP` effect containers. Virtuos `SRYK` archives keep the effects in 64 KB zlib or raw blocks. These are neither BNSH nor whole GLSLC outputs. The codec of a compressed archive is the archive's own: zlib in FINAL FANTASY X/X-2 HD Remaster, raw LZ4 in FINAL FANTASY XII THE ZODIAC AGE. <!-- KIWI(upstream-candidate): the LZ4 codec was met on FINAL FANTASY XII THE ZODIAC AGE. -->
 - **Fix:** `vbf.py` reads the Switch archive's two hash tables, file records, names and block lengths through the RomFS adapter. The split reads compiled effects and shader members without extracting textures or audio. `phyre_shaders` verifies the adjacent code header, the control's code length and stage, and preserves the original bytes and keys. Single-stage vertex programs use a pixel-input cover for padding.
 - **Found on:** [FINAL FANTASY X/X-2 HD Remaster](../../dm/games/0100BC300CB48000/README.md); base and both supplied DLC packs yield 5,752 unique shaders.
 - **Check:** `test_vbf.py` covers raw and zlib blocks, shared/missing members, truncation, unaligned effects, loose shader keys and inconsistent lengths. All 5,752 programs translate on the Mac.
 
 ### Diablo III's console packages
-<!-- PEANUTS: Diablo III shader package support. -->
+<!-- KIWI: Diablo III shader package support. -->
 
 - **Symptom:** the split finds no shaders (`[RED] the shader split found no shaders in main or the RomFS`), the RomFS holds only `.cpk` files, and `cpk.py` refuses them (`not a CPK`); the run prints `[RED] shader … is not in the shader map` for every program.
 - **Cause:** Diablo III: Eternal Collection's `.cpk` files are Blizzard's console packages, not CRI's: they start with the u32 `0xa1b2c3d4` and a version (7), then bit-packed tables and the data in 64 KiB sectors. Each file is stored or one zlib stream behind a 6-byte record `{u32 decoded length, u16 stored length}`; the game's SNO assets (`0xdeadbeef` headers) are such streams, and its shader assets hold each program as a control section directly followed by its code area. No reader looked inside the streams.
@@ -127,7 +127,7 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 ### GLSLC outputs in main and in loose files
 
 - **How it is stored:** 13 Sentinels (Vanillaware's engine) has no shader file in RomFS, whose six CRI CPK archives hold textures, scripts, CRI audio and USM movies: 838 GLSLC compiler outputs sit in `main`'s read-only segment, each referenced from a `{pointer, size, 0}` table in `.data`. Other engines keep whole outputs in loose RomFS files of their own formats (below).
-- **Layout:** an output starts with the magic `0x19866891`, and its total size is at +0x44. Most single-stage outputs put the code area immediately after the control length at control +0x20. The stage comes from SPH word 0, as for BAHS. Multi-stage and SDK 4 outputs are read through their section headers ([several stages](#glslc-outputs-holding-several-stages), [section headers](#glslc-outputs-read-through-their-section-headers)). <!-- PEANUTS -->
+- **Layout:** an output starts with the magic `0x19866891`, and its total size is at +0x44. Most single-stage outputs put the code area immediately after the control length at control +0x20. The stage comes from SPH word 0, as for BAHS. Multi-stage and SDK 4 outputs are read through their section headers ([several stages](#glslc-outputs-holding-several-stages), [section headers](#glslc-outputs-read-through-their-section-headers)). <!-- KIWI -->
 - **Reader:** `shader_split.py` reads them in every game's `main`, accepting only outputs that pass the control / code / length check. Loose RomFS files are searched the same way: it reads GLSLC outputs in any RomFS file no other reader takes. When the reader was written, of the other profiles' files only Metroid Dread's MSHD files held any, which `mshd_shaders` reads ([MSHD in MercurySteam's bshdat files](#mshd-in-mercurysteams-bshdat-files)).
 - **Found on:**
   - [13 Sentinels: Aegis Rim](../../dm/games/01003FC01670C000/README.md): 838 in `main`.
@@ -135,7 +135,7 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
   - [FINAL FANTASY TACTICS - The Ivalice Chronicles](../../dm/games/010038B015560000/README.md): 257 whole GLSLC outputs in the engine's technique files (`*.tec`: `resources_nx/release/master/shader/*.tec`, magic `TEC\0`, each output whole after a table of parameter names) beside 49 in `main`.
   - [Absolum](../../dm/games/0100A83022A22000/README.md): 163 GLSLC outputs in `shaders.nx.bin` (`rom:/shaders.nx.bin`: a u32 count, then per entry a u32 hash, a u32 size and one whole output): 162 unique shaders, 83 pixel and 79 vertex, every vertex shader paired with the single-stage cover ([Single-stage programs paired with a cover](#single-stage-programs-paired-with-a-cover)). Its `.xnb` effects are XNA's D3D9 effects, MOJOSHADER linked in, which the GPU does not run.
   - [Catherine: Full Body](../../dm/games/0100BF00112C0000/README.md): 3,050 loose files in `data/shaders_binary` (`*.vs` / `*.ps`, one stage each, one output per file), read like FINAL FANTASY TACTICS' technique files; its vertex shaders are in two parts ([VertexA and VertexB parts merged into one vertex shader](#vertexa-and-vertexb-parts-merged-into-one-vertex-shader)).
-  - **PEANUTS:** Trails in the Sky 2nd Chapter 1.0.3 stores GLSLC outputs in loose `.nvn` files and in `main`. The compute output at `main+0x7764c0` has 384 bytes between the nominal control end and the code offset in the section header. Treating the nominal offset as headerless compute feeds constants into the decoder. If the section table identifies the same control and valid headered compute code, use it; preserve the legacy layout otherwise.
+  - **KIWI:** Trails in the Sky 2nd Chapter 1.0.3 stores GLSLC outputs in loose `.nvn` files and in `main`. The compute output at `main+0x7764c0` has 384 bytes between the nominal control end and the code offset in the section header. Treating the nominal offset as headerless compute feeds constants into the decoder. If the section table identifies the same control and valid headered compute code, use it; preserve the legacy layout otherwise.
 
 ### GLSLC outputs holding several stages
 
@@ -199,7 +199,7 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 
 ### GLSLC outputs in Alchemy's igArchive files
 
-<!-- PEANUTS(upstream-candidate): the igArchive reader, first met on Crash Team Racing Nitro-Fueled -->
+<!-- KIWI(upstream-candidate): the igArchive reader, first met on Crash Team Racing Nitro-Fueled -->
 
 - **Symptom:** the split finds only the few GLSLC outputs in `main` (`shaders: 12 …; sources main 12`), and the RomFS is hundreds of `.pak` files that start with `IGA\x1a`, one of them named for shaders (`archives/shaders_nx.pak`). Run with such a library, the game logs `not in the shader library` for nearly every draw.
 - **Cause:** Vicarious Visions' Alchemy keeps its files in igArchive archives (version 13 here). After a 0x38-byte header come a hash and a 16-byte record per file (offset, ordinal, length, mode), then three block tables of u32, u16 and u8 entries. A file whose mode is not `0xFFFFFFFF` is LZMA (mode's top 4 bits = 2) in blocks of 0x8000 bytes; the rest of the mode is the file's first entry in the table its length picks (at most 0x7F sectors of 0x800 bytes: the u8 table; at most 0x7FFF: the u16 table; else the u32 table). An entry's top bit says its block is compressed (u32 stored length, 5 LZMA property bytes, the raw stream) and its other bits are the block's sector from the file's offset; a block that did not shrink is stored as it is. The shader `.igz` files hold whole GLSLC outputs, one stage each, so their magic is in no stored byte of the archive.
@@ -208,7 +208,7 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 
 ### BNSH files in TT Games' DAT archives
 
-<!-- PEANUTS(upstream-candidate): the TT Games DAT reader, first met on LEGO CITY UNDERCOVER -->
+<!-- KIWI(upstream-candidate): the TT Games DAT reader, first met on LEGO CITY UNDERCOVER -->
 
 - **Symptom:** the split finds only the GLSLC outputs in `main` (`shaders: 331 …; sources main 331`), and the RomFS is a few multi-GB `GAME*.DAT` files (an update adds `PATCH.DAT`) whose first u32 has its top bit set.
 - **Cause:** TT Games' engine keeps its files in DAT archives: the first u32 gives the index's place (`((v ^ 0xffffffff) << 8) + 0x100` with the top bit set), the big-endian index (`.CC40TAD`, version -11) a name table, a name tree of 12-byte entries and a 16-byte entry per file (u64 offset, stored length, length with bit 31 set when compressed). A compressed file is a run of `RFPK` chunks (u32 stored length, u32 length; equal lengths mean stored), each a RefPack-like stream with its own bit layout (the game's `unref`), or `ZIPX` chunks (RC4, the key the chunk's length; the `.txt` files). The shaders are BNSH files of one stage each in the `.nnx_shaders` resources, which no stored byte shows.
@@ -285,7 +285,7 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 
 ### Level-5 NNDXDHSC shader objects
 
-<!-- PEANUTS(upstream-candidate): the Level-5 NNDXDHSC reader, GitHub PR #243 -->
+<!-- KIWI(upstream-candidate): the Level-5 NNDXDHSC reader, GitHub PR #243 -->
 
 - **Symptom:** the CPK directory and CRILAYLA decoder find shader files, but the split does not recognize their contents.
 - **Cause:** each `NNDXDHSC` version 1 object wraps one shader. Its stage tag at `+0x0c` identifies vertex (1), pixel (2), geometry (3) or compute (6). Little-endian offset/length pairs at `+0x48` and `+0x50` locate code and control, respectively. Reflection data may follow.
@@ -304,9 +304,9 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 - **Symptom:** archive or loose asset shaders are absent from the map; only boot shaders in `main` are found, sometimes reported as raw controls with no identified code area.
 - **Cause:** Monolith uses ARH1/ARD archives and XBC1 streams. HCPS shader containers live inside models, map streams and standalone shader files; a standalone SLCT in `main` omits the HCPS header.
 - **Fix:** `shader_split.py` reconstructs paths from the ARH1 XOR trie, reads bounded archive entries in parallel, and decodes stored/zlib/zstd XBC1 streams recursively. The ARH stored size excludes an XBC1 wrapper's 48 bytes. Decoded members are searched for both HCPS and complete GLSLC outputs (effect asset packs); compressed literals are visited only after decoding. HCPS's SLCT/NVSD descriptors locate each variant's control and code ranges; a vertex bundle can include geometry, so stages are split by each control's own lengths. Text-bearing controls advance at eight-byte alignment. Standalone SLCT sections use offsets relative to their own start. Source-only HCPS containers with empty code/control ranges hold no NVN binaries. Pairs stay within their program variant. Synthetic fixtures cover wrapper bounds, embedded geometry, variants, standalone offsets and compressed streams containing literal container magics.
-<!-- PEANUTS begin: nxnative ARH2 and mixed HCPS support for Xenoblade X DE. -->
+<!-- KIWI begin: nxnative ARH2 and mixed HCPS support for Xenoblade X DE. -->
 - **ARH2 and mixed HCPS:** ARH2 replaces paths with hashes and records disk sizes including the XBC1 wrapper. The reader accumulates aligned disk sizes, checks the index and each member against its data file, and shares the ARH1 extraction path. HCPS assets may contain both Maxwell and NVN2 programs; each control's version selects its length fields and stage decoder. Treating every control as Maxwell discards an archive job at a short NVN2 control. Synthetic fixtures cover both formats in one asset, alignment, empty members and invalid bounds. Adapted from nxnative `aa9e0ff71d93`; found on [Xenoblade Chronicles X: Definitive Edition](../../dm/games/0100453019AA8000/README.md#files-and-shaders).
-<!-- PEANUTS end -->
+<!-- KIWI end -->
 - **Nested effect compression:** Firehawk WIPAC resources can wrap their `BlShaderArchive` GLSLC programs in `cmp\0zlib`: an eight-byte signature, little-endian stored/raw u32 lengths, then zlib. This layer lives inside the decoded XBC1 entry. The recursive reader checks both lengths and the end of the stream; it excludes these compressed ranges from raw container scans too. The four initially missing geometry/pixel keys and two additional vertex/pixel keys from Xenoblade Chronicles 3's opening match `/effect/fld/ma01a.wipac` after this decoding. Synthetic tests cover nested literal streams and incorrect sizes.
 - **Loose containers:** HCPS programs, XBC1 streams, DRSM model streams and compressed effect resources also occur outside ARH/ARD archives. Both the file scanner and nested-container scanner dispatch their headers to the same recursive decoder, before the generic shader-magic filter. Otherwise even a complete loose HCPS program is discarded. Synthetic file scans cover direct programs, compressed programs and several embedded streams, independent of filename suffix.
 - **Found on:** [Xenoblade Chronicles 3](../../dm/games/010074F013262000/README.md#files-and-shaders), whose note records the census and runtime key checks; [Xenoblade Chronicles 2](../../dm/games/0100E95004038000/README.md#files-and-shaders), with the same archive and standalone SLCT layouts on SDK 3.5.0; [Xenoblade Chronicles: Definitive Edition](../../dm/games/0100FF500E34A000/README.md#files-and-shaders), with loose containers.
@@ -336,7 +336,7 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 
 ### Embedded programs in main that no code points at (adjacent code area, unaligned control section)
 
-<!-- PEANUTS(upstream-candidate): offline programs embedded in `main` that no relocation and no built address points at, found by the neighbour rule; first met on FINAL FANTASY XII THE ZODIAC AGE. -->
+<!-- KIWI(upstream-candidate): offline programs embedded in `main` that no relocation and no built address points at, found by the neighbour rule; first met on FINAL FANTASY XII THE ZODIAC AGE. -->
 
 - **Symptom:** the packed shader library has no program for a key the game binds at run time (`[RED] shader <key> is not in the shader map`), the scene draws black while sound and cutscenes play, and the split prints no `[RED]` line about it, so nothing says where the program is.
 - **Cause:** the game builds such programs from NVN control sections embedded in `main` with their code area immediately before them, and no relocation slot points at them and no `adrp` + `add` pair in the code builds their addresses, the two kinds of evidence `raw_shaders` uses for a control section that is in no GLSLC output and no BNSH file. Half of them sit at offsets that are not 4-byte aligned (here `main` +`0xfca50d` with its code area at `0xfca30d`, and `+0xfd1699` with its code at `+0xfd1599`), which the aligned scan never looked at.
@@ -475,7 +475,7 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 - **Found on:** [Orbitals](../../dm/games/040032B023CA4000/README.md): 24 compute shaders.
 
 ### A movie pak is mistaken for an Unreal shader archive
-<!-- PEANUTS: Unreal movie-only package detection. -->
+<!-- KIWI: Unreal movie-only package detection. -->
 
 - **Symptom:** shader splitting stops with `there are no decoded shader code archives` even though the game's global shaders and material shaders are inline.
 - **Cause:** `uepak.inline_shaders` classified every readable nonempty pak without inline shaders as a shader archive. Movie and other asset paks therefore triggered a decode step with no shader archives to decode.
@@ -765,7 +765,7 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 
 ### A dual-source output written per component is refused by Qualcomm's driver (Android)
 
-<!-- PEANUTS(upstream-candidate): `vk_android_spv.py` `dual_source` writes output 1 with one whole-vector store; found on FINAL FANTASY XII THE ZODIAC AGE. -->
+<!-- KIWI(upstream-candidate): `vk_android_spv.py` `dual_source` writes output 1 with one whole-vector store; found on FINAL FANTASY XII THE ZODIAC AGE. -->
 
 - **Symptom:** Android, system driver (Qualcomm 512.676, Adreno 740): pipelines fail with `VK_ERROR_INITIALIZATION_FAILED` (`-13`) and their draws are skipped. On FINAL FANTASY XII THE ZODIAC AGE 25 of 94 pipelines had failed by frame 2700 and the log reported 45 % of draws skipped over the last 300 frames; the intro drew black and the target rings were missing. The same build on Turnip had no failure.
 - **Cause:** the library's `MOD_DUAL` modules ([A written secondary blend source](rendering.md#a-written-secondary-blend-source-nvn-dual-source-blending)) put output 1 at `Location 0`, `Index 1`, and the translator writes every output through per-component access chains, one `OpAccessChain` and `OpStore` of a float per component. Qualcomm 512.676 refuses a pipeline whose pixel shader writes `Index 1` that way, although the module passes `spirv-val`; the same shader with one whole-vector store is accepted, and so is per-component writing to an output that is not dual-source. Turnip accepts both. Found by bisecting with module overrides of one failing pipeline on a captured frame replay: only the `Index 1` output written per component mattered (a minimal vertex shader, no alpha-test tail, no output read-back and no `OpKill` still failed; output 1 at `Location 1` and a whole-vector store did not).
@@ -1427,7 +1427,7 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 - **Fix:** general, in the replay (`sg_plan` in `dm/gfx/vk_android/vka_shader.c`, `vka_pso.c`): per stage, for the shaders that use subgroup operations: no subgroup operations in the stage on this device, or a subgroup size that is wrong for the library or varies and cannot be pinned, = the module rewritten as one-invocation subgroups (`vka_spv_subgroup_single`, as for Qualcomm's vertex and geometry stages); a varying size the stage may pin (`subgroupSizeControl`, `requiredSubgroupSizeStages`) = `VkPipelineShaderStageRequiredSubgroupSizeCreateInfo` with the library's size (64, else 32) on its graphics and compute pipelines; the device's fixed size, right for the library = as built. On `VK_DRIVER_ID_MESA_TURNIP` the geometry stage counts as one without subgroup operations (a driver rule: `DM_VK_SUBGROUP_GS=1` restores the device's answer). `DM_VK_SUBGROUP_PIN` (restart): 0 = no pinning, 1 = every stage the device lets pin (default), otherwise a `VkShaderStageFlags` mask. The log line `[vk] subgroup shaders (built for 64 lanes; the device's 128, 64-128, pinnable in 0x30, pinned in 0x30): vertex one lane, ..., fragment pinned 64, compute pinned 64` says what each stage got. Qualcomm's driver is unchanged (fragment and compute as built).
 - **Found on:** [Donkey Kong Bananza](../../dm/games/040074A01BF12000/README.md) on the Honor PNM-N49 with Mainline Turnip v32 and T30 (android/README.md "Custom GPU drivers").
 
-<!-- PEANUTS: Luigi's Mansion 3 #283 -->
+<!-- KIWI: Luigi's Mansion 3 #283 -->
 ### Warp shuffles inside a quad read ended helper lanes on Turnip
 
 - **Symptom:** (Android, Turnip) thin dashed lines in red, green and blue along the edges of the scene's triangles, wherever the flashlight lights the room, on every Turnip build; they go when the flashlight is off. Luigi's Mansion 3 (#283).
@@ -1460,11 +1460,11 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 
 ### A bindless handle spilled to local memory
 
-<!-- PEANUTS: an entry of this fork. -->
+<!-- KIWI: an entry of this fork. -->
 
 - **Symptom:** `Failed to find handle source for bindless access of type "imageBuffer"` (or another type) in the shader's notes, marked `translator: `; the access is removed, so its reads come back 0 and its stores and atomics write nothing. In a GPU particle simulation the particles never age or die: an effect stays on screen (a bright disc), and the auto exposure that measures the scene swings between white and dark.
 - **Cause:** the game's compiler spilled the handle (a c2 word) to local memory with STL and reloaded it with LDL before the access. Ryujinx does not follow a value through local memory, so `BindlessElimination` found no source for the handle and deleted the access.
-- **Fix:** `ForwardLocalHandles` in the vendored `BindlessElimination.cs` (marked `PEANUTS:`, run from `Optimizer.cs` after `GlobalToStorage`): a load from a constant local-memory word takes the c2 word that every store to that word writes, when they all write the same one (through phis; undefined inputs are paths where nothing was stored) and no store to local memory has a computed address. Anything else keeps the old path. A chain change.
+- **Fix:** `ForwardLocalHandles` in the vendored `BindlessElimination.cs` (marked `KIWI:`, run from `Optimizer.cs` after `GlobalToStorage`): a load from a constant local-memory word takes the c2 word that every store to that word writes, when they all write the same one (through phis; undefined inputs are paths where nothing was stored) and no store to local memory has a computed address. Anything else keeps the old path. A chain change.
 - **Found on:** [Hogwarts Legacy](../../dm/games/0100F7E00C70E000/README.md): the Niagara simulation `c8974ea070ce1208` lost 55 particle-data image accesses (`Load.LocalMemory` of the handle); with the fix all 55 are kept and its bindings are unchanged. A full build of 1.0.5 before and after the fix: 65,045 of 65,047 shaders both times (the same two left out), every one of the 83,431 modules valid for spirv-val; 103 entries differ, all of them compute shaders, each one whose handle the fix takes through local memory. The removed-access notes go from 2,958 in 106 shaders to 62 in 8 (5 of the 103 keep some whose handle is not a single c2 word). Also [FINAL FANTASY RESONANCE](../../dm/games/0100606026F12000/README.md): three game compute shaders of the same shape (`f6639fb39110e3c1`, `8445c6e7596e1373`, `e59eee7e3d006af8`) each lost one particle-buffer image store this way, now kept.
 
 ### Texture slots picked at run time
@@ -1498,7 +1498,7 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 
 ### Handles in a game uniform buffer with their sampler in c2 (Android)
 
-<!-- PEANUTS: an entry of this fork. -->
+<!-- KIWI: an entry of this fork. -->
 - **Symptom:** (Android) the 3D world black behind a correct HUD, or dark with NaN: `DM_VK_NANSCAN` finds 46-52 % NaN texels in the scene colour after the base pass, every input `DM_VK_TEX_STATS` scans is finite, and no `[RED]` line. In the library, almost every material shader has `TEX` bindings with `DMSH_VK_BF_NOSLOT` (reg −1) named `fp_t_cb196613_<h>`, `fp_t2d_cb196615_10568000` (count 32) and the like.
 - **Cause:** a type-1 handle (texture word and separate sampler word) whose texture word is in the game's own uniform buffer (`cb<slots>`, low 16 bits 3–16: c[3..16]) and whose sampler word is in the driver table c2 (high 16 bits − 1 = 2: the separate sampler table at 0x568). `dmsh_build.py decode_ubo_tex` takes a type-1 sampler only from another game uniform buffer, and `decode_tex` places textures only in c2, so `vk_android_build.py classify` left the texture half with no slot; the replay binds a null descriptor there and every such texture reads 0. Unreal Engine 4's materials bind their textures this way: normal maps read as 0 make NaN in the lighting, and the tonemapped picture is black. Arrays (`fp_t2d_cb196615_10568000`, 32 elements) are Ryujinx's texture array from a buffer, element k = the handle at byte 8k ([An array of handles in a uniform buffer](#an-array-of-handles-in-a-uniform-buffer)).
 - **Fix:** `vk_android_build.py ubo_tex_c2_sampler`: the texture half becomes `TEX_UBO` (uniform slot, byte offset, the array's elements at 8k as before), the sampler half stays the separate sampler slot `decode_tex` gives (`SAMP`). Buffer textures of that form keep their old record. A Vulkan chain change: the libraries are made again. Checked against a copy of Hogwarts Legacy's library with its records rewritten by hand: the same records for all 139,302 bindings (53 name patterns, vertex, pixel and compute), and the world drew in that copy. `test_vk_android_ubo_tex.py`.
@@ -1507,7 +1507,7 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 
 ### A table of handles longer than the translator's 32-element array (Android)
 
-<!-- PEANUTS: an entry of this fork. -->
+<!-- KIWI: an entry of this fork. -->
 - **Symptom:** (Android) stone walls and floors a saturated dark red and orange, bright parts yellow, in most launches and right in a few, from the first gameplay frame; the picture is right while the pass that makes the indirect lighting is skipped (`DM_VK_SKIP_FS`), because the reflections are scaled by it, and with `DM_VK_TEXU_ELEM=0`. No `[RED]` line.
 - **Cause:** the game picks textures at run time from tables of 64-bit handles in its uniform buffers (Unreal Engine 4 with the publisher's "array of resources": `ReflectionTextureAOR`, `LightProbesTextureAOR`, `ShadowMapAOR`), and the translator makes each table a fixed array of 32 combined image samplers with the index clamped to 31 (`Program.cs` `QueryTextureArrayLengthFromBuffer`, Ryujinx `BindlessToArray`). The game's code sizes them (`main` 1.0.5: the tables' constructors are called with the name and 0x200 entries for `ReflectionTextureAOR` at main+0x5e72d18, 0x310 for `LightProbesTextureAOR` at main+0xd73c18, 0x280 for `ShadowMapAOR` at main+0x95f16c). The reflection capture table has 512 entries, two per capture (colour, occlusion), handed out as the captures load, so the entries a room uses differ by launch: with a room's captures at 55 / 56 and 81 / 82, every read took element 31, another capture's cube map, for both the colour and the occlusion, and the material divided it by the right capture's average brightness. The light probe table has 784 entries and the shadow map table 640; the rooms measured stayed below 32 in those.
 - **Fix:** the replay rewrites such a module when it loads it (`vka_spvpatch.c` `vka_spv_table_pool`, `vka_shader.c` `tabpool`): the handle is loaded from the table in the uniform buffer, as on the console, and its texture ID indexes the texture pool's sampled images (set 1); the array's variable becomes its one sampler, the binding record a sampler record, and the pool reads take the feedback code every pool read has, which makes the textures. No per-draw descriptors for the table (512 a draw would not fit), and no chain change: the library's modules and records are as before. Up to 16 such arrays a module (the game's pixel shaders have up to 15 over one table, one per sampler); a module with more keeps the 32-element array for the rest. Records with a sampler per element (`SAMP_UBO`) and devices without the pool set or its read feedback keep the 32-element array. `DM_VK_TABLE_POOL=0` (restart) turns it off. Hogwarts Legacy on the Odin 2 (Turnip Gen8 V38), the Grand Staircase of one save: red in 0 of 7 launches (before: 7 of 8); 30.00 fps on screen (819 presents, every gap 33.3 ms), recording 5.5 ms a frame as before, GPU busy 6.9-7.2 ms (6.5 before); one of the fixed launches had a room's captures at entries 45 / 46 and 71 / 72 and drew right. Those launches took up to 8 arrays a module; 16 is checked offline only (a 15-array pixel shader of the game rewritten, valid by spirv-val).
@@ -1518,7 +1518,7 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 
 ### A descriptor array read at a per-pixel index without NonUniform (Android)
 
-<!-- PEANUTS: an entry of this fork. -->
+<!-- KIWI: an entry of this fork. -->
 - **Symptom:** (Android, Adreno) dark or wrongly lit blocks of 8×8 pixels, aligned to the screen's 8-pixel grid, in rows along depth edges of mid-distance rock and walls (and on characters), steady while the camera stands; foliage patches flickering black. `DM_VK_SKIP_FS` of the pass's pixel shader takes the blocks away; an image dump (`DM_VK_IMG_DUMP`) shows them already in that pass's target.
 - **Cause:** the shader picks a texture from a descriptor array by a value it computes per pixel (Hogwarts Legacy's forward lighting: the light grid cell's lights, each light's shadow map from a 32-element table of handles in a uniform buffer: `fp_t2d_cb196614_10570000` of `f80a82b5ea3cbaa6`). Vulkan takes an index without the `NonUniform` decoration to be the same in every invocation of a subgroup, and an Adreno fragment wave covers 8×8 pixels: where neighbouring pixels have different lights, the whole block read one pixel's shadow map. The translator decorates such an index only when its host answers that it indexes non-uniformly (Ryujinx `MarkNonUniform`, `QueryHostSupportsShaderNonUniformIndexing`), which `Program.cs` leaves at the default, no (Metal does not need it).
 - **Fix:** `vk_android_spv.py nonuniform_arrays` (in `vk_android_build.py finish`): every access chain into an image, sampler or sampled-image array at a non-constant index, its load and what is made of it (`OpCopyObject`, `OpImage`, `OpSampledImage`) are decorated `NonUniform`, with `ShaderNonUniform`, `SampledImageArrayNonUniformIndexing` (and the storage-image one when needed) and, before SPIR-V 1.5, `SPV_EXT_descriptor_indexing`; the replay enables the device's Vulkan 1.2 features it reports. A Vulkan chain change, so the Metal output stays as it was. Checked with the one module swapped (`DM_VK_SPV_OVERRIDE`, valid for `spirv-val --target-env vulkan1.3`): the blocks went at the cliff in the opening, Turnip Gen8 V38 on the Odin 2, at 30 fps. `test_vk_android_nonuniform.py`.
@@ -1526,7 +1526,7 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 
 ### A separate sampler ID in a uniform buffer on Vulkan (handle type 2)
 
-<!-- PEANUTS: an entry of this fork; nxnative ca26ef65 is the Metal side. -->
+<!-- KIWI: an entry of this fork; nxnative ca26ef65 is the Metal side. -->
 - **Symptom:** (Android) shadows drawn as a grid of black and yellow squares on far ground, and blocky dark areas with hard edges over walls and around candle light; the shader library has no `[RED]` line and every module is valid. The library's results list the shader's combined image samplers with sampler kind `samp` and no slot (`sreg` none) for handles `<stage>_t_cb<slots>_2xxxxxxx`.
 - **Cause:** handle type 2 (Ryujinx's SeparateSamplerId: the shader ORs the texture word with a second word shifted left by 20) keeps the texture word in the driver table c2 and the sampler ID itself in a word of one of the game's own uniform buffers (bank: the high 16 bits of slots, less one; word: `(handle >> 14) & 0x3fff`). `vk_android_build.py sampler_half` decoded only a c2 sampler slot, so every such sampler was left without a slot and sampled with no sampler of the game's: comparison samplers of shadow maps among them. The Witcher 3 (`01003D100E9C6000`, 4.04b): 20,212 bindings in 6,323 of its 29,673 shaders.
 - **Fix:** `vk_android_build.py type2_sampler` decodes the word (as nxnative's `dmsh_reflect.py decode_ubo_samp_id` does for Metal); the binding's sampler half is `DMSH_VK_KIND_SAMP_UBO` at that uniform slot and byte offset with the new flag `DMSH_VK_BF_SAMP_RAW`, and `vka_bind.c samp_of` takes such a word as the sampler ID itself (low 12 bits, plus the pool's base) instead of a handle's high 12 bits. A Vulkan chain change (`DMSH_VK_CHAIN`, `DMSH_VK_ABI`). Checked on an AYN Thor (Turnip 27.0.0-R2, driver ID 18): The Witcher 3's Kaer Morhen balcony and bedroom before and after, the grid and the blocks gone at 60 fps. `test_vk_android_type2_sampler.py`.
@@ -1534,7 +1534,7 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 
 ### A domain shader built in the translator's default tessellation mode (Vulkan)
 
-<!-- PEANUTS: an entry of this fork; nxnative 48dca7a4 reads the same fields for its Metal replay. -->
+<!-- KIWI: an entry of this fork; nxnative 48dca7a4 reads the same fields for its Metal replay. -->
 - **Symptom:** (Android) tessellated ground drawn as fans of wedges and flat stripes (The Witcher 3's Kaer Morhen valley); the domain module's disassembly says `Triangles`, `SpacingEqual`, `VertexOrderCw` whatever the game asked for.
 - **Cause:** the translator answers its tessellation queries with a fixed default; the mode is the domain shader's own control section: +0x738 primitive mode, +0x73c spacing, +0x744 vertex order, as OpenGL enums. The Witcher 3's terrain domains are quads with fractional_even spacing.
 - **Fix:** `vk_android_build.py tess_mode_read` reads the three words when it makes the job, and `finish` rewrites the module's execution modes (`tess_modes_set`; a value it does not know keeps the translator's). The tessellation pipelines take a lower-left domain origin (`vka_pso.c`), OpenGL's, which the translated modules assume, so the vertex order is not reversed. A Vulkan chain change. Checked on an AYN Thor (Turnip 27.0.0-R2) with the tessellated draws of a branch that draws them: the valley's terrain whole at 60 fps. `test_vk_android_tess_mode.py`.
@@ -1929,7 +1929,7 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 
 ### Other versions' pixel shaders return during Android translation
 
-- **Symptom:** The Android build stops at 18%. The Vulkan builder requests more shaders than the launcher selected and reports the extra keys missing from the package. <!-- PEANUTS -->
+- **Symptom:** The Android build stops at 18%. The Vulkan builder requests more shaders than the launcher selected and reports the extra keys missing from the package. <!-- KIWI -->
 - **Cause:** A shared vertex shader can be paired with different pixel shaders across game updates. Expanding those pairs against the whole profile restored keys the split had already verified belonged to another version.
 - **Fix:** Both packers pass the validated missing keys to the Vulkan builder. It expands vertex dependencies within the remaining profile keys and checks the required records in the package.
 - **Found on:** [Super Mario Bros. Wonder](../../dm/games/010015100B514000/README.md#shaders) 1.2.1 and [Mario Kart 8 Deluxe](../../dm/games/0100152000022000/README.md#files-and-shaders) 4.0.0 and 4.0.1.
@@ -1996,7 +1996,7 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 - **Fix (explicit diagnostic adaptation):** on the build host, `scripts/optimize_android_shader.py source.lib destination.lib --key <compute-key>` runs SPIRV-Tools `--redundancy-elimination --simplify-instructions` on every variant of the selected compute entry. It validates the input and output for Vulkan 1.3, preserves the library's ABI, entry metadata, bindings, constants and all other entries, and publishes a new library without overwriting an existing file. Requires `spirv-opt`, `spirv-val` and Python `zstandard`. Select it through `DM_VK_SHLIB`; the source library remains available for A/B. The pair of passes succeeds where each alone fails in the observed case. This is a workaround for the closed compiler, not a diagnosed compiler fix or an automatic policy for other shaders. Module validation and pipeline creation alone do not establish gameplay correctness.
 - **Found on:** [Ocarina of Time](../../dm/games/0400486024DEC000/README.md#found-on-this-game), Foliage compute on Adreno 830.
 
-<!-- PEANUTS begin: handle arrays read by record. -->
+<!-- KIWI begin: handle arrays read by record. -->
 ### Textures picked from the records of a table all read as one texture
 
 - **Symptom:** ground or other surfaces that pick their texture by a value the shader computes draw flat, in one placeholder colour or in tile-shaped blocks. No `[RED]` line names it, or only `has no view of shape` lines of a placeholder texture.
@@ -2012,7 +2012,7 @@ Finding, keying and translating shaders (`dm/gfx/tools/shader_split.py`, `dmsh_b
 - **Fix:** the vendored SPIR-V generator decorates the reads of an array of at most 256 textures or samplers (`SamplerDeclaration.IsShaderIndexed`: the arrays `BindlessToArray` makes from handles in a buffer) with `NonUniform`, whatever the host capability says, and declares `SPV_EXT_descriptor_indexing` with its capabilities in those shaders. The pools of every texture and sampler are longer and stay as they were. The replay already enables every Vulkan 1.2 feature the device has (`vka_dev.c`).
 - **Check:** the decoration by hand on the three ground shaders through `DM_VK_SPV_OVERRIDE` removed the dashed border on Turnip 27.0.0 (Adreno 740); the library built by the changed translator is not yet run on a device. A thin dashed outline a few pixels outside each darker plot remains with it: open, another cause.
 - **Found on:** Tomodachi Life: Living the Dream (010051F0207B2000), the island's ground between two ground types.
-<!-- PEANUTS end -->
+<!-- KIWI end -->
 
 ## Optional page candidates for compute-mesh raw loads
 

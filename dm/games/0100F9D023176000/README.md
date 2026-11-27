@@ -1,6 +1,6 @@
 # Viewfinder
 
-<!-- PEANUTS: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
+<!-- KIWI: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
 
 Base game (`v0`, 1.0.0), SDK 19.3.9. Sad Owl Studios' **Unity 2022.3.61f1 IL2CPP** game on **NVN**, with Bink 2 (`subsdk0`, `NintendoSDK_movie`) and FMOD. Modules `main`, `subsdk0` and `sdk`. No game code is cut and no host rule is added.
 

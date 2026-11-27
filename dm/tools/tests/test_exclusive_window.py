@@ -1,5 +1,5 @@
 """Exercise exclusive-window branches through the real Android rewriter."""
-# PEANUTS(upstream-candidate): synthetic only; no game dumps required.
+# KIWI(upstream-candidate): synthetic only; no game dumps required.
 import os
 from pathlib import Path
 import subprocess

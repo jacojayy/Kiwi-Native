@@ -1,4 +1,4 @@
-// PEANUTS: exact-build, expected-byte-checked Warehouse code plans, applied
+// KIWI: exact-build, expected-byte-checked Warehouse code plans, applied
 // only before code is sealed.
 #ifndef DM_FPSLOCKER_PLAN_H
 #define DM_FPSLOCKER_PLAN_H

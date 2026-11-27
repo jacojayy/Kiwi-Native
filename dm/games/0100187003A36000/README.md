@@ -1,6 +1,6 @@
 # Pokémon: Let's Go, Eevee! (`0100187003A36000`)
 
-<!-- PEANUTS: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
+<!-- KIWI: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
 
 Update 1.0.2 (`v131072`) over the base game, SDK 5.4.151. [Pokémon: Let's Go, Pikachu!](../010003F003A34000/README.md)'s twin: the same engine, and the same `sdk`, `subsdk0` (GLSLC) and `subsdk1` (movie) builds; only `main` is a build of its own. Everything in Pikachu's note about the engine, its files, shaders, controllers and memory holds here; this note gives only what differs or was checked again. The profile is Pikachu's with Eevee's title, name, IPA name, build row and shader tables.
 

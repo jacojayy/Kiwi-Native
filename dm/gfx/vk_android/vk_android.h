@@ -4,15 +4,15 @@
 
 struct ANativeWindow;
 
-// PEANUTS: Startup pipeline prewarm. Progress is -1 before the phase is decided, 0 after it, or total (high 32 bits) and processed (low 32) while waiting.
+// KIWI: Startup pipeline prewarm. Progress is -1 before the phase is decided, 0 after it, or total (high 32 bits) and processed (low 32) while waiting.
 void vka_pso_prepare_launch(void);
 __attribute__((visibility("default"))) int64_t nxhost_prewarm_progress(void);
-__attribute__((visibility("default"))) void nxhost_prewarm_skip(void);   // PEANUTS: Play anyway on the Preparing shaders screen (vka_pso.c)
+__attribute__((visibility("default"))) void nxhost_prewarm_skip(void);   // KIWI: Play anyway on the Preparing shaders screen (vka_pso.c)
 
 // The surface to present to: the launcher calls it from any thread, before or after nxhost_main, again with every new surface (surfaceCreated / surfaceChanged) and with NULL when the
 // surface goes (surfaceDestroyed, before it returns). The replay holds its own reference (ANativeWindow_acquire) until the next call. Without a window, presents are counted and dropped
 __attribute__((visibility("default"))) void nxhost_set_window(struct ANativeWindow *w);
-// PEANUTS: Android Display.getPresentationDeadlineNanos queue lead; zero means unavailable. Callable before or after host start.
+// KIWI: Android Display.getPresentationDeadlineNanos queue lead; zero means unavailable. Callable before or after host start.
 __attribute__((visibility("default"))) void nxhost_presentation_deadline_set(uint64_t ns);
 // No game needed: sets the window, then clears a texture in placed guest memory to a colour through the NVN replay (records, submit, fence), reads two texels back through a
 // texture→buffer copy, and presents it for frames frames (the colour goes round the hues every 6 s). Returns 0 when every step worked; the log lines start with "[vk] selftest".
@@ -27,7 +27,7 @@ __attribute__((visibility("default"))) int nxhost_fps(float *out, int n);
 // resolution in % of the game's (0 = auto: 100 %), taken from the next frame. The status: 0 off, 1 generating, 2 on and not generating, -1 unavailable; buf gets the reason
 __attribute__((visibility("default"))) void nxhost_framegen_set(int on, int multiplier, int target_rate, int flow_pct);
 __attribute__((visibility("default"))) int nxhost_framegen_status(char *buf, int n);
-__attribute__((visibility("default"))) int nxhost_framegen_enabled(void);   // PEANUTS: requested state, independent of rendering warm-up
+__attribute__((visibility("default"))) int nxhost_framegen_enabled(void);   // KIWI: requested state, independent of rendering warm-up
 // Where the letterboxed picture sits in the window's free space, never scaled or cropped: x 0 = left, 1 = right; y 0 = top, 1 = bottom (as the user sees it); 0.5 = centred,
 // the default. Taken from the next present; values outside 0..1 are clamped
 __attribute__((visibility("default"))) void nxhost_picture_place(float x, float y);

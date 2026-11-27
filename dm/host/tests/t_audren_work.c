@@ -20,7 +20,7 @@ static void work_free(void *p) {
 #define posix_memalign work_alloc
 #define free work_free
 #include "../hle_audren.c"
-int dm_audren_served(void) { return 0; }   // PEANUTS: the host's audio renderer service (hle_audren_svc.c), not served here
+int dm_audren_served(void) { return 0; }   // KIWI: the host's audio renderer service (hle_audren_svc.c), not served here
 #undef posix_memalign
 #undef free
 
@@ -84,15 +84,15 @@ void *objmap_del(const void *key) {
 void *dm_guest_thread_spawn(void (*fn)(void *), void *arg, int prio, size_t stack) {
     (void)fn; (void)arg; (void)prio; (void)stack; starts++; return (void *)1;
 }
-static int join_slot;   // PEANUTS(upstream-candidate): nxnative 18b435ac38 / a334797d12, more than one audio renderer (the slot of the renderer being closed)
+static int join_slot;   // KIWI(upstream-candidate): nxnative 18b435ac38 / a334797d12, more than one audio renderer (the slot of the renderer being closed)
 void dm_guest_thread_join(void *tt) {
-    assert(tt == (void *)1 && !atomic_load(&g_ar[join_slot].open));   // PEANUTS
+    assert(tt == (void *)1 && !atomic_load(&g_ar[join_slot].open));   // KIWI
     assert(((uint8_t *)sdk_work)[SDK_WORK - 1] == 0x5a);   // storage also survives the render thread
     joins++;
 }
 uint64_t now_ns(void) { return 0; }
-module_t *module_of(const void *p) { (void)p; return NULL; }   // PEANUTS: ar_open names the call site
-__thread _Atomic int dm_host_work;   // PEANUTS: dm.h's host-work count (hle_thread.c), which the render lock's waiters raise
+module_t *module_of(const void *p) { (void)p; return NULL; }   // KIWI: ar_open names the call site
+__thread _Atomic int dm_host_work;   // KIWI: dm.h's host-work count (hle_thread.c), which the render lock's waiters raise
 void *dm_pcmout_open(int ch) { (void)ch; return NULL; }
 void dm_pcmout_close(void *k) { (void)k; }
 void dm_pcmout_start(void *k) { (void)k; }
@@ -105,7 +105,7 @@ void hle_bind_system_event(void *ev, int ac) {
 }
 uint32_t hle_dup_readable_handle(uint32_t h) { assert(h == 0x1002); return 0x1003; }
 
-// PEANUTS: a thread that waits for the render lock counts as blocked (host work), so the same-core handoff of the render thread's signal of the game's renderer event
+// KIWI: a thread that waits for the render lock counts as blocked (host work), so the same-core handoff of the render thread's signal of the game's renderer event
 // (which it makes holding that lock) ends when the woken sound thread's catch-up render waits for it: the deadlock of Metroid Dread's issue #8
 static _Atomic(_Atomic int *) lock_waiter_work;
 static _Atomic int lock_waiter_done;
@@ -180,7 +180,7 @@ int main(void) {
         assert(!memcmp(param, saved, sizeof param));
         if (route) {
             assert((uint8_t *)sdk_event >= (uint8_t *)g_rev && (uint8_t *)sdk_event < (uint8_t *)(g_rev + 4));
-            assert(g_ar[0].handle[1] == (event_in_handle ? sdk_event : (uint8_t *)sdk_work + 0x80));   // PEANUTS: the renderer's slot
+            assert(g_ar[0].handle[1] == (event_in_handle ? sdk_event : (uint8_t *)sdk_work + 0x80));   // KIWI: the renderer's slot
             memset(event, 0xee, sizeof event);   // the game may reuse its object at once (LEGO Star Wars: on its stack; Little Nightmares): nothing refers to it
         }
         int d = event_destroys;
@@ -214,7 +214,7 @@ int main(void) {
         assert(handle[0] == work && allocations == a && !map_key);
         h_ar_Close(handle[0], handle[1]);
     }
-    // PEANUTS: two renderers open at once (the port of nxnative 18b435ac38; this case is this fork's). Each gets a slot and a render thread, Close ends its own and frees its slot
+    // KIWI: two renderers open at once (the port of nxnative 18b435ac38; this case is this fork's). Each gets a slot and a render thread, Close ends its own and frees its slot
     // for the next open, and the other renderer goes on
     void *work2, *handle2[2]; assert(!posix_memalign(&work2, WORK_PAGE, SDK_WORK));
     s = starts; int j = joins;
@@ -229,6 +229,6 @@ int main(void) {
     assert(joins == j + 3 && !g_ar[0].handle[0] && allocations == a && !map_key);
     free(work2);
     free(work);
-    puts("audren work buffer: Horizon sizing fixtures, both opens, nested open, failures, close lifetime and two renderers at once passed");   // PEANUTS
+    puts("audren work buffer: Horizon sizing fixtures, both opens, nested open, failures, close lifetime and two renderers at once passed");   // KIWI
     return 0;
 }

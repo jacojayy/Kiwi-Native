@@ -1,7 +1,7 @@
 # Pokémon Mystery Dungeon: Rescue Team DX (01003D200BAA2000): the rewriter's patches of this game's own builds. dm/tools/patch_nso.py loads every profile's patches.py
 # and applies those of a module's NSO build ID ("Registered patches" there).
 
-# PEANUTS: Unity 2018.3.12f1's ThreadedStreamBuffer, the ring buffer every Unity worker thread is fed through (UnityGfxDeviceWorker, BatchDeleteObjects, ...), wakes a sleeping side
+# KIWI: Unity 2018.3.12f1's ThreadedStreamBuffer, the ring buffer every Unity worker thread is fed through (UnityGfxDeviceWorker, BatchDeleteObjects, ...), wakes a sleeping side
 # with a Dekker handshake on two words, as in FINAL FANTASY CRYSTAL CHRONICLES Remastered Edition (0100CE4010AAC000, Unity 2018.4.2f1: same offsets +0x118 / +0x80 and +0xd8 / +0x40).
 # The reader that finds nothing to read sets its "reader sleeping" flag (+0x118) with a store-release and loads the write position (+0x80) again before sleeping on its semaphore
 # (main+0x1684438 / main+0x1684440, in the function whose AcquireSemaphore call returns to main+0x16844c8: the frame the hung UnityGfxDeviceWorker and BatchDeleteObjects wait in);

@@ -3,10 +3,10 @@
 Kiwi Native starts a game for an emulator frontend (ES-DE, Daijisho, Beacon, Pegasus, or anything that runs `am start`). The frontend lists your `.nup` files ([NUP.md](NUP.md)) and sends the one you pick to the app. The app's component for this is:
 
 ```
-hernandez.kiwinative.live/dev.nxnative.android.Launch
+hernandez.kiwinative.live/hernandez.kiwinative.Launch
 ```
 
-`Launch` is an alias of `FrontendLaunch`, and its name follows the application ID, so the test app's is `hernandez.kiwinative.test/dev.nxnative.android.Launch`. The alias, and `Open` for file managers, are the only exported parts of the app that start games.
+`Launch` is an alias of `FrontendLaunch`, and its name follows the application ID, so the test app's is `hernandez.kiwinative.test/hernandez.kiwinative.Launch`. The alias, and `Open` for file managers, are the only exported parts of the app that start games.
 
 ## What the app accepts
 
@@ -47,7 +47,7 @@ ES-DE reads custom emulators from `ES-DE/custom_systems/es_find_rules.xml` and c
 <ruleList>
     <emulator name="BANANA-NATIVE">
         <rule type="androidpackage">
-            <entry>hernandez.kiwinative.live/dev.nxnative.android.Launch</entry>
+            <entry>hernandez.kiwinative.live/hernandez.kiwinative.Launch</entry>
         </rule>
     </emulator>
 </ruleList>
@@ -83,7 +83,7 @@ Daijisho has no screen for adding a player by hand. Its platforms are JSON files
   "uniqueId": "switch.hernandez.kiwinative.live",
   "description": "Supported extensions: nup.",
   "acceptedFilenameRegex": "^(.*)\\.(?:nup)$",
-  "amStartArguments": "-n hernandez.kiwinative.live/dev.nxnative.android.Launch\n -e game {file.path}",
+  "amStartArguments": "-n hernandez.kiwinative.live/hernandez.kiwinative.Launch\n -e game {file.path}",
   "killPackageProcesses": false,
   "killPackageProcessesWarning": false,
   "extra": ""
@@ -97,13 +97,13 @@ A second entry with `-a android.intent.action.VIEW\n -d {file.uri}` is the URI f
 Any frontend that runs `am start` works with the same arguments. In Pegasus's `metadata.pegasus.txt`:
 
 ```
-launch: am start -n hernandez.kiwinative.live/dev.nxnative.android.Launch -e game "{file.path}"
+launch: am start -n hernandez.kiwinative.live/hernandez.kiwinative.Launch -e game "{file.path}"
 ```
 
 From a computer, with the phone on adb:
 
 ```bash
-adb shell am start -n hernandez.kiwinative.live/dev.nxnative.android.Launch -e game /storage/emulated/0/ROMs/game.nup
+adb shell am start -n hernandez.kiwinative.live/hernandez.kiwinative.Launch -e game /storage/emulated/0/ROMs/game.nup
 ```
 
 ## Opening a .nup from a file manager

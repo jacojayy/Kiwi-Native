@@ -68,7 +68,7 @@ def payoff(gap):   # the Gaps order: open gaps, then blocked, kept and unreviewe
 
 # The host's build-keyed rows: (table, the start of the row's label ('' = any), main build ('' = any), entry); the first that fits classifies a row
 HOST_BINDING = [
-    # PEANUTS: Document the two exact builds with reviewed clock hooks.
+    # KIWI: Document the two exact builds with reviewed clock hooks.
     ('', '', '4b159f0f7a360669738390ee8657b4f0', {'what': 'ASTRAL CHAIN elapsed-time step on Android', 'now': 'build', 'goal': 'game', 'purpose': 'frame rate',
      'why': 'the elapsed-time hook and its cinematic flag are verified for this build', 'blocked': 'a new build needs its clock and timer hooks checked'}),
     ('', '', '277178b7dba1b6d4949a84778d4abc58', {'what': 'Tears of the Kingdom elapsed-time step on Android', 'now': 'build', 'goal': 'game', 'purpose': 'frame rate',
@@ -103,7 +103,7 @@ HOST_BINDING = [
      'why': "engine code other Frostbite games ship (the simulation's own rate is already set by name)", 'blocked': 'one Frostbite game here'}),
     ('k_locks', 'sead', '', {'what': "sead's dynamic interval controller floor behind a fixed global (the app object's framework)", 'now': 'build', 'goal': 'engine', 'purpose': 'frame rate',
      'why': "sead's game framework code that other Nintendo EPD games ship: the rewriter now finds the controller by its code (nso_code.py sead_find) and its gate hands the host the controller's address, which the floor could take instead of the fixed chain"}),
-    # PEANUTS begin: the fork's k_locks rows (hle_fpslock.c)
+    # KIWI begin: the fork's k_locks rows (hle_fpslock.c)
     ('k_locks', 'Grezzo frame controller', '', {'what': "Grezzo's frame controller least and most extra vsyncs behind a fixed global (Link's Awakening)", 'now': 'build', 'goal': 'game', 'purpose': 'frame rate',
      'checked': "main 909e904af78ac1b8 (1.1.0), where the row was found; another project describes the same bytes for 1.0.1",
      'why': "the game's own frame controller: its clamp to the two bytes and the game manager's pointer are plain code a function fingerprint could find",
@@ -120,7 +120,7 @@ HOST_BINDING = [
      'checked': 'Sword main a3b75bcd3311385a and Shield main a16802625e7826bf (1.3.2): the same offset in both',
      'why': "the game's own table of frame times by present interval (16666667, 33333334, 50000000 ... ns as 64-bit words), which a search for those values could find in any build",
      'blocked': 'one version of each game on hand'}),
-    # PEANUTS end
+    # KIWI end
     ('k_ue', '', 'feae83dc9e9fb34c77d0a62f1fa9ae9f', {'what': "UE3's GMalloc setup skipped, the host allocator in (hle_uemalloc.c)", 'now': 'build', 'goal': 'game', 'purpose': 'address space',
      'why': "UE3 inlines the allocator's constructor into the GMalloc setup and has its own vtable layout (25 slots, 32-bit sizes), so the Unreal 4/5 discovery does not apply"}),
     ('k_nier_dr', '', '', {'what': "NieR's frame interval and dynamic-resolution floor at fixed addresses", 'now': 'build', 'goal': 'game', 'purpose': 'frame rate',
@@ -164,7 +164,7 @@ SWITCH_BINDING = [
      'why': "the most image memory the game's scenes need, measured on the game; the measured limit still acts below it"}),
     ('low_ram_app_pool_mb', '', {'what': 'a smaller memory total reported to the game on a device of 12 GB or less, the pool unchanged', 'now': 'game', 'goal': 'game', 'purpose': 'memory',
      'why': "the total the game's SDK sizes its cache of freed pages from, measured on the game; the pool and the map limit stay the profile's"}),
-    ('place_join_mb', '', {'what': "a larger run of a pool's placed parts joined into one", 'now': 'game', 'goal': 'host', 'purpose': 'rendering',   # PEANUTS: GitHub issues #394, #651
+    ('place_join_mb', '', {'what': "a larger run of a pool's placed parts joined into one", 'now': 'game', 'goal': 'host', 'purpose': 'rendering',   # KIWI: GitHub issues #394, #651
      'why': "a join holds the joined bytes twice for a moment, so the default stays 256 MiB; a larger default for every game once the transient is measured on the phones of 8 GB or less"}),
     ('tex_soft', '', {'what': 'large block-compressed textures kept without their finest level', 'now': 'game', 'goal': 'game', 'purpose': 'memory',
      'why': 'a loss of detail chosen for a game that does not fit a device otherwise'}),
@@ -190,11 +190,11 @@ SWITCH_BINDING = [
     ('fps_hold', '', {'what': 'no frame held past the cap', 'now': 'game', 'goal': 'game', 'purpose': 'frame rate', 'why': "the game's pacing"}),
     ('fps_target', '', {'what': 'frame rate target', 'now': 'game', 'goal': 'game', 'purpose': 'frame rate', 'why': 'a choice per game'}),
     ('fps_modes', '', {'what': 'reviewed supported frame rates', 'now': 'game', 'goal': 'game', 'purpose': 'frame rate', 'why': 'restrict the launcher to rates reviewed for this game'}),
-    # PEANUTS: Document the opt-in profile switch for elapsed game time.
+    # KIWI: Document the opt-in profile switch for elapsed game time.
     ('fps_step_elapsed', '', {'what': 'launch with elapsed-time frame-step hooks enabled', 'now': 'game', 'goal': 'game', 'purpose': 'frame rate', 'why': 'keep the game clock active while display pacing selects the frame rate'}),
-    # PEANUTS: Document the Game owned default for a game whose elapsed-time plan is opt-in.
+    # KIWI: Document the Game owned default for a game whose elapsed-time plan is opt-in.
     ('fps_owned_default', '', {'what': 'start Game owned until the player picked a frame rate (Android, before 0.1.8; since then it starts at 60 fps, Game owned a choice)', 'now': 'game', 'goal': 'game', 'purpose': 'frame rate', 'why': "the game's own pacing where its elapsed-time plan collapses on slower phones"}),
-    # PEANUTS: Document the opt-in thermal cap (Hogwarts Legacy).
+    # KIWI: Document the opt-in thermal cap (Hogwarts Legacy).
     ('thermal_cap', '', {'what': 'hold 30 fps while the phone is hot (Android)', 'now': 'game', 'goal': 'game', 'purpose': 'frame rate', 'why': "a choice per game: one whose frame limits heat a phone into its GPU throttle"}),
     ('fps_limit', '', {'what': "the host's frame limit by default (Android)", 'now': 'game', 'goal': 'game', 'purpose': 'frame rate', 'why': 'a choice per game: steady frames and less heat where its own rate wanders below 60'}),
     ('ue_fps_cvar', '', {'what': "the game's own Unreal frame-limit variable", 'now': 'game', 'goal': 'game', 'purpose': 'frame rate', 'why': "the game's own variable, which its settings apply to t.MaxFPS; the rewriter finds it by name (ue_cvar.py)"}),
@@ -485,5 +485,5 @@ if __name__ == '__main__':
         if OUT.read_text() != text: sys.exit(f'{rel(OUT)} is out of date: run dm/tools/docs_patches.py')
         print(f'{rel(OUT)} is current')
     else:
-        OUT.write_text(text, newline='\n')   # PEANUTS(upstream-candidate): LF on every host (Windows' default translation wrote CR LF, a diff of every line)
+        OUT.write_text(text, newline='\n')   # KIWI(upstream-candidate): LF on every host (Windows' default translation wrote CR LF, a diff of every line)
         print(f'{rel(OUT)}: {text.count("### ")} games')

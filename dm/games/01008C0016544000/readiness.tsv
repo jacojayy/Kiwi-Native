@@ -1,4 +1,4 @@
-# PEANUTS: Sea of Stars (01008C0016544000) Android readiness requirements.
+# KIWI: Sea of Stars (01008C0016544000) Android readiness requirements.
 # Playable on OnePlus 13R (Snapdragon 8 Gen 3, 11.0 GiB totalMem) with Turnip T30 (v983040): 20+ minutes / 88,113 frames at 60.0 fps median; Qualcomm 512.762.41 renders broken graphics and hits VK_ERROR_DEVICE_LOST (game.tsv recommends Turnip on Qualcomm < 512.800).
 status	playable
 

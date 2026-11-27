@@ -1,4 +1,4 @@
-// PEANUTS begin: host chunks for command memory grants from an empty pool (GitHub issue #807)
+// KIWI begin: host chunks for command memory grants from an empty pool (GitHub issue #807)
 // A game whose own allocator for command memory comes back empty grants a null pool before it records (hle_nvn.c, "Host-supplied segment"). Such a recording has no guest
 // bytes the game could give out again, so the host never reclaims it. Each grant gets a room of its own, carved from a shared chunk at the free start, which moves past the
 // whole room at the grant: nothing else is handed those bytes, whoever writes in them. When a recording ends inside the room handed out last (the free start is still that
@@ -53,4 +53,4 @@ static inline int nvn_cmdarena_lane_at(const nvn_cmdarena *a, const uint8_t *p) 
     return -1;
 }
 #endif
-// PEANUTS end
+// KIWI end

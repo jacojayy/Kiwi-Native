@@ -8,8 +8,8 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-JAVA = REPO / 'android/app/src/main/java/dev/nxnative/android'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/FixFinderJvmTest.java'
+JAVA = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/FixFinderJvmTest.java'
 
 
 class Wiring(unittest.TestCase):
@@ -36,7 +36,7 @@ class Finder(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='fixfinder_') as t:
             subprocess.run(['javac', '-Xlint:all', '-Werror', '-encoding', 'UTF-8', '-d', t, str(JAVA / 'AdvancedTable.java'), str(JAVA / 'FixFinder.java'), str(TEST)],
                            check=True, capture_output=True, text=True)
-            r = subprocess.run(['java', '-cp', t, 'dev.nxnative.android.FixFinderJvmTest', str(REPO / 'docs/advanced_settings.tsv'), str(REPO / 'dm/tools/advanced_fix.tsv')],
+            r = subprocess.run(['java', '-cp', t, 'hernandez.kiwinative.FixFinderJvmTest', str(REPO / 'docs/advanced_settings.tsv'), str(REPO / 'dm/tools/advanced_fix.tsv')],
                                capture_output=True, text=True)
             self.assertEqual(r.stdout.strip(), 'ok', r.stdout + r.stderr)
 

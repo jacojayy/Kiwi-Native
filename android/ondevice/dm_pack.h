@@ -30,7 +30,7 @@ int dm_pack_run(const char *tool, int argc, char **argv, const char *const *env,
 // Returns 1 when a run was interrupted, 0 when none was running.
 int dm_pack_interrupt(void);
 
-// JNI form for the app (class dev.nxnative.android.PackNative, the app's side owns it):
+// JNI form for the app (class hernandez.kiwinative.PackNative, the app's side owns it):
 //   static native int init0(String pythonHome);
 //   static native int run0(String tool, String[] args, String[] env, String logPath);   // env: "KEY=VALUE" or null; logPath: null for none
 //   static native int interrupt0();

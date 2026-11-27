@@ -310,14 +310,14 @@ static void oot_patches_apply(void) {
 // The settings in the state page, written when the game starts (main.c, after host loading): on iOS the loading runs at app launch, before the launcher has set DM_FPS_TARGET and
 // DM_RENDER_SCALE (Launcher.swift), and nothing reads the page before the game runs
 __attribute__((weak)) void dm_fps_step_fold(void) {}   // hle_fpslock.c; tests that link the loader alone have no limiter
-static int fpslocker_clock_selected(void);   // PEANUTS: defined below for every platform (the Mac host had a second definition here)
+static int fpslocker_clock_selected(void);   // KIWI: defined below for every platform (the Mac host had a second definition here)
 void dm_fps_state_apply(void) {
     oot_patches_apply();
     if (!dm_fps_state) return;
     const char *e = getenv("DM_FPS_TARGET"); int t = e ? atoi(e) : DM_GAME_FPS_TARGET;
     if (t != 0 && t != 30 && t != 60) { LOG("[RED] DM_FPS_TARGET=%s: must be 0, 30 or 60; using the game's own frame step", e); t = 0; }
     float f = (float)t; memcpy(dm_fps_state, &f, sizeof f);
-    // PEANUTS: These exact builds have reviewed elapsed-time clocks on Android.
+    // KIWI: These exact builds have reviewed elapsed-time clocks on Android.
     if (PLAT_ANDROID && t && (!strcmp(dm_main_build(), "4b159f0f7a360669738390ee8657b4f0") ||
                              !strcmp(dm_main_build(), "277178b7dba1b6d4949a84778d4abc58"))) {
         __atomic_store_n((uint32_t *)(dm_fps_state + 0x3c), 1, __ATOMIC_RELAXED);
@@ -328,7 +328,7 @@ void dm_fps_state_apply(void) {
     if (rs) { char *end; sc = strtof(rs, &end); if (end == rs || *end || !(sc >= 0.5f && sc <= 1.0f)) { LOG("[RED] DM_RENDER_SCALE=%s: must be 0.5 to 1.0; keeping the game's size", rs); sc = 1.0f; } else LOG("%s: 3D views rendered at %.2f of the game's size (DM_RENDER_SCALE)", g_fps_mod, sc); }
     memcpy(dm_fps_state + 0x10, &sc, sizeof sc);
     char cap[32]; snprintf(cap, sizeof cap, ", capped at %d fps", t);
-    // PEANUTS: Report the active clock mode in the launch log.
+    // KIWI: Report the active clock mode in the launch log.
     const char *mode = t == 0 ? "as the game sets it" : dm_fps_elapsed_step() ? "from elapsed time" : "in whole vsyncs decided by the host";
     LOG("%s: frame step %s%s (%s)", g_fps_mod, mode, t && !dm_fps_elapsed_step() ? cap : "", e ? "DM_FPS_TARGET" : "game profile fps_target");
     // The frame limit (DM_FPS_LIMIT, on Android the profile's fps_limit) caps the step too (hle_fpslock.c dm_fps_step_fold)
@@ -678,7 +678,7 @@ static void map_image(module_t *m, const char *dir) {
 // maximum instead broke the terrain: something else assumes the game's own maximum). Rows are checked: the table must grow, every list byte must be a level; read-only data
 // is still writable here (map_image seals the text and the patch area only)
 static int levels_apply(module_t *m, unsigned cw, unsigned ch) {
-#ifdef DM_RUNTIME_PROFILE   // PEANUTS: the generic host reads the profile's own table instead of a static const initialized from the macro
+#ifdef DM_RUNTIME_PROFILE   // KIWI: the generic host reads the profile's own table instead of a static const initialized from the macro
     dm_pf_res_levels_t *rows = g_profile.res_levels;
 #else
     static const struct { const char *build; uint64_t table; unsigned n, nl; struct { uint64_t off; unsigned len; } l[12]; } rows[] = DM_GAME_RES_LEVELS;
@@ -713,7 +713,7 @@ static int levels_apply(module_t *m, unsigned cw, unsigned ch) {
 
 // A main build with a render_cfg row takes DM_WINDOW_SIZE as the output of its render configurations instead (hle_render.c), at run time
 #include "render_cfg.h"
-#ifdef DM_RUNTIME_PROFILE   // PEANUTS: the generic host builds the host row types over the profile's own rows once, at first use
+#ifdef DM_RUNTIME_PROFILE   // KIWI: the generic host builds the host row types over the profile's own rows once, at first use
 static rcfg_row_t g_pf_rcfg[DM_PROFILE_RENDER_CFG_CAP]; static pthread_once_t g_pf_rcfg_once = PTHREAD_ONCE_INIT;
 static void pf_rcfg_build(void) {
     rcfg_row_t *rows = g_pf_rcfg;
@@ -730,7 +730,7 @@ static void pf_rcfg_build(void) {
 const rcfg_row_t *dm_pf_rcfg_rows(void) { pthread_once(&g_pf_rcfg_once, pf_rcfg_build); return g_pf_rcfg; }
 #endif
 static int render_cfg_row(const char *build) {
-#ifdef DM_RUNTIME_PROFILE   // PEANUTS: see dm_pf_rcfg_rows
+#ifdef DM_RUNTIME_PROFILE   // KIWI: see dm_pf_rcfg_rows
     const rcfg_row_t *rows = dm_pf_rcfg_rows();
 #else
     static const rcfg_row_t rows[] = DM_GAME_RENDER_CFG;
@@ -741,7 +741,7 @@ static int render_cfg_row(const char *build) {
 static void window_apply(module_t *m) {
     if (strcmp(m->name, "main") || m->nro || render_cfg_row(m->build_id)) return;
     const char *e = getenv("DM_WINDOW_SIZE");
-#ifdef DM_RUNTIME_PROFILE   // PEANUTS: the generic host reads the profile's own table instead of a static const initialized from the macro
+#ifdef DM_RUNTIME_PROFILE   // KIWI: the generic host reads the profile's own table instead of a static const initialized from the macro
     dm_pf_window_fn_t *rows = g_profile.window_fn;
 #else
     static const struct { const char *build; uint64_t wfn, hfn; unsigned w, h; } rows[] = DM_GAME_WINDOW_FN;
@@ -783,7 +783,7 @@ static void window_apply(module_t *m) {
 // size. render_cfg's max_render takes the written size's only when it was written (dm_rt_pool_max_render). Not on iOS (the text is signed code there)
 #include "rt_pool.h"
 __attribute__((weak)) int vka_low_ram(void);
-#ifdef DM_RUNTIME_PROFILE   // PEANUTS: the generic host builds rtpool_row_t rows over the profile's rt_pool rows once, at first use
+#ifdef DM_RUNTIME_PROFILE   // KIWI: the generic host builds rtpool_row_t rows over the profile's rt_pool rows once, at first use
 static rtpool_row_t g_pf_rtp[DM_PROFILE_RT_POOL_CAP]; static pthread_once_t g_pf_rtp_once = PTHREAD_ONCE_INIT;
 static void pf_rtp_build(void) {
     rtpool_row_t *rows = g_pf_rtp;
@@ -799,7 +799,7 @@ static void pf_rtp_build(void) {
 static const rtpool_row_t *dm_pf_rtpool_rows(void) { pthread_once(&g_pf_rtp_once, pf_rtp_build); return g_pf_rtp; }
 #endif
 static void rt_pool_apply(module_t *m) {
-#ifdef DM_RUNTIME_PROFILE   // PEANUTS: see dm_pf_rtpool_rows
+#ifdef DM_RUNTIME_PROFILE   // KIWI: see dm_pf_rtpool_rows
     const rtpool_row_t *rows = dm_pf_rtpool_rows();
 #else
     static const rtpool_row_t rows[] = DM_GAME_RT_POOL;
@@ -812,7 +812,7 @@ static void rt_pool_apply(module_t *m) {
         return;
     }
     const rtpool_row_t *row = &rows[r];
-#ifdef DM_RUNTIME_PROFILE   // PEANUTS: see dm_pf_rcfg_rows
+#ifdef DM_RUNTIME_PROFILE   // KIWI: see dm_pf_rcfg_rows
     const rcfg_row_t *rc = dm_pf_rcfg_rows();
 #else
     static const rcfg_row_t rc[] = DM_GAME_RENDER_CFG;
@@ -915,7 +915,7 @@ static void pac_patch_text(module_t *m) {
 #endif
 }
 
-// PEANUTS(upstream-candidate): general host fix, not Peanuts-specific — reserves a module arena so Android's mmap layout matches the console's (Link's Awakening OOB read).
+// KIWI(upstream-candidate): general host fix, not Kiwi-specific — reserves a module arena so Android's mmap layout matches the console's (Link's Awakening OOB read).
 // Modules back to back in load order, as Horizon's rtld places them (main, subsdk*, sdk adjacent, each after the last): a game may read a little past its own module and get
 // the next one's bytes without a fault. The Legend of Zelda: Link's Awakening builds its main camera actor with actor profile 0xFFFF and indexes the profile table with it
 // unchecked (main+0x1c180): the byte read, main+0x214c889, lies in subsdk0 on the console, and on the Mac too, where vm_allocate hands out ascending addresses and the
@@ -923,9 +923,9 @@ static void pac_patch_text(module_t *m) {
 // the modules' spans (the sizes map_image computes) and each image is placed at the next cursor, so the layout is the console's up to the patch area each module carries.
 // DM_MODULE_ARENA=0: separate mappings, as before
 static uint8_t *g_arena, *g_arena_cur, *g_arena_end;
-#define ARENA_TAIL ((size_t)1 << 20)   // PEANUTS
-static uint8_t *g_tail, *g_tail_end;   // PEANUTS: the arena's pages after the last module
-// PEANUTS: the next size bytes (whole 16 KiB pages) after the last module, readable, writable and zero, or NULL (no arena, or its tail is used up)
+#define ARENA_TAIL ((size_t)1 << 20)   // KIWI
+static uint8_t *g_tail, *g_tail_end;   // KIWI: the arena's pages after the last module
+// KIWI: the next size bytes (whole 16 KiB pages) after the last module, readable, writable and zero, or NULL (no arena, or its tail is used up)
 void *dm_module_arena_tail(size_t size) {
     if (!g_tail || !size || (size & 0x3FFF) || size > (size_t)(g_tail_end - g_tail)) return NULL;
     uint8_t *p = mmap(g_tail, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0);
@@ -942,7 +942,7 @@ static size_t module_span(module_t *m, const char *dir) {   // what map_image ma
 static void arena_reserve(module_t *mods, int n, const char *dir) {
     const char *e = getenv("DM_MODULE_ARENA"); if (e && !strcmp(e, "0")) return;
     size_t total = 0; for (int i = 0; i < n; i++) total += module_span(&mods[i], dir);
-    // PEANUTS: 1 MiB more after the last module, for a companion's helper code (dm_module_arena_tail): with the modules back to back and other mappings
+    // KIWI: 1 MiB more after the last module, for a companion's helper code (dm_module_arena_tail): with the modules back to back and other mappings
     // on both sides of the arena, no other page within a branch's reach of main is free (Pokemon Sword: main first, three modules after it)
     uint8_t *a = mmap(NULL, total + ARENA_TAIL, PROT_NONE, MAP_PRIVATE | MAP_ANON | MAP_NORESERVE, -1, 0);
     if (a == MAP_FAILED) { LOG("[RED] module arena of %#zx bytes not reserved: modules mapped apart", total); return; }
@@ -960,7 +960,7 @@ static uint8_t *module_mmap(const char *name, size_t len, int nro) {   // the ne
     return p;
 }
 
-// PEANUTS: apply a reviewed Warehouse plan before executable permissions, without changing any pack file.
+// KIWI: apply a reviewed Warehouse plan before executable permissions, without changing any pack file.
 #include "fpslocker_plan.h"
 #include "option_patch.h"
 static void option_apply_patches(module_t *m) {
@@ -986,7 +986,7 @@ static uint64_t fpslocker_reserve(module_t *m,uint64_t size) {
     if (!owned && p->aux) { m->fpslocker_code_off=size;m->fpslocker_data_off=size+FPW_AUX_PAGE;size+=2*FPW_AUX_PAGE; }
     return size;
 }
-// PEANUTS: aspect rows (game.tsv aspect_plan, aspect_plan.h): the game's own 16:9 number becomes the picture's shape, before code is sealed.
+// KIWI: aspect rows (game.tsv aspect_plan, aspect_plan.h): the game's own 16:9 number becomes the picture's shape, before code is sealed.
 #include "aspect_plan.h"
 static void aspect_apply_plan(module_t *m) {
     if (strcmp(m->name,"main") || m->nro) return;
@@ -1002,7 +1002,7 @@ static void aspect_apply_plan(module_t *m) {
     LOG("%s: aspect plan: %d words for the %.4f picture (restart to change)",m->name,n,shape);
 }
 static void fpslocker_apply_plan(module_t *m) {
-    aspect_apply_plan(m);   // PEANUTS: aspect rows, at the same pre-seal point
+    aspect_apply_plan(m);   // KIWI: aspect rows, at the same pre-seal point
     struct fpw_plan *p=m->fpslocker_plan;if (!p) return;
     uint64_t original=m->fpslocker_code_off?m->fpslocker_code_off:m->size;
     int n=fpw_plan_apply(p,m->base,original,m->fpslocker_code_off,m->fpslocker_data_off,!m->fpslocker_active);
@@ -1035,7 +1035,7 @@ static void map_image(module_t *m, const char *dir) {
         if (sz < fl + bl) die("%s is shorter than FILE_IMAGE_LEN %#llx + BACK_LEN %#llx", path, (unsigned long long)fl, (unsigned long long)bl);
         m->size = fpslocker_reserve(m,m->image_size); m->patch_len = (sz - bl - fl + 0x3FFF) & ~0x3FFFull;
         if (m->patch_len > pre) die("%s patch area of %#llx bytes does not fit in the %#llx before the base", path, (unsigned long long)m->patch_len, (unsigned long long)pre);
-        uint8_t *a = module_mmap(m->name, pre + m->size, m->nro);   // PEANUTS: module arena (see above)
+        uint8_t *a = module_mmap(m->name, pre + m->size, m->nro);   // KIWI: module arena (see above)
         if (a == MAP_FAILED) die("%s mmap %#llx", m->name, (unsigned long long)(pre + m->size));
         m->base = a + pre;
         memcpy(m->base, raw, fl); memcpy(a, raw + fl, sz - bl - fl); if (bl) memcpy(m->base + m->back_off, raw + sz - bl, bl);
@@ -1049,7 +1049,7 @@ static void map_image(module_t *m, const char *dir) {
         return;
     }
     m->size = fpslocker_reserve(m,(sz + 0x3FFF) & ~0x3FFFull);
-    m->base = module_mmap(m->name, m->size, m->nro);   // PEANUTS: module arena (see above)
+    m->base = module_mmap(m->name, m->size, m->nro);   // KIWI: module arena (see above)
     if (m->base == MAP_FAILED) die("%s mmap", m->name);
     memcpy(m->base, raw, sz); free(raw); install_key_page(m); window_apply(m); fiber_pac_apply(m); pac_patch_text(m); rt_pool_apply(m); option_apply_patches(m); fpslocker_apply_plan(m);
     uint64_t rx = (m->text_end + 0x3FFF) & ~0x3FFFull;
@@ -1060,7 +1060,7 @@ static void map_image(module_t *m, const char *dir) {
 }
 #endif
 
-// PEANUTS begin: cross-module branches of a build with code mods (dm/tools/xmod.py, patch_nso.py --xmod). A mod made for the console may branch straight from one
+// KIWI begin: cross-module branches of a build with code mods (dm/tools/xmod.py, patch_nso.py --xmod). A mod made for the console may branch straight from one
 // module into another at the distance the two have there, each right after the one before it: Luminescent Platinum for Pokemon Brilliant Diamond 1.3.0 patches 106
 // b / bl into main that go to the subsdk1 it adds (at main+0x5708000 on the console), and that module calls main 1,228 times the same way. Here every module carries
 // its key page and patch area, so the distances differ, and each such branch ran into whatever stood there. <module>.xmod.tsv lists them: the instruction's offset in
@@ -1149,7 +1149,7 @@ static void xmod_apply_all(const char **mdir, int ptrs) {
     (void)mdir; (void)ptrs;
 #endif
 }
-// PEANUTS end
+// KIWI end
 
 static char g_module_dir[1024];   // the folder the modules were loaded from (dm_module_dir)
 const char *dm_module_dir(void) { return g_module_dir; }
@@ -1190,7 +1190,7 @@ void load_modules(const char *dir, const char **names, int n) {
     }
     plat_slots_init();
 #if PLAT_ANDROID
-    arena_reserve(g_mod, n, dir);   // PEANUTS: module arena (see above)
+    arena_reserve(g_mod, n, dir);   // KIWI: module arena (see above)
 #endif
     for (int i = 0; i < n; i++) {
         module_t *m = &g_mod[i];
@@ -1201,10 +1201,10 @@ void load_modules(const char *dir, const char **names, int n) {
         LOG("%s: base %p size %#zx", names[i], m->base, m->size);
         m->loaded = 1; g_loaded[g_nloaded++] = m; g_nmod++;
     }
-    xmod_apply_all(mdir, 0);   // PEANUTS: a code mod's branches between modules (see xmod_apply)
+    xmod_apply_all(mdir, 0);   // KIWI: a code mod's branches between modules (see xmod_apply)
     force_init();
     t = now_ns(); for (int i = 0; i < g_nmod; i++) relocate(&g_mod[i]); tr = now_ns() - t;
-    xmod_apply_all(mdir, 1);   // PEANUTS: and the addresses of another module it keeps as data, over what relocate() wrote there
+    xmod_apply_all(mdir, 1);   // KIWI: and the addresses of another module it keeps as data, over what relocate() wrote there
     force_check();
     preload_nros(dir, nros);   // mapped now, relocated when the game loads them (hle_ro.c)
     { void hlecount_seal(void); hlecount_seal(); }   // DM_HLECOUNT: relocation done, seal the counting stub pages as read-only executable
@@ -1218,7 +1218,7 @@ void load_modules(const char *dir, const char **names, int n) {
 void run_module_inits(void) {
     for (int i = 0; i < g_nmod; i++) {
         module_t *m = &g_mod[i];
-        // PEANUTS begin: DM_MOD_INIT_ARRAY=1 (a test switch, off by default): a module without DT_INIT that has an init_array (a mod's own module built with
+        // KIWI begin: DM_MOD_INIT_ARRAY=1 (a test switch, off by default): a module without DT_INIT that has an init_array (a mod's own module built with
         // devkitA64, such as Luminescent Platinum's subsdk1: 5 entries, static constructors) gets its entries called here in order. rtld calls DT_INIT only,
         // so by default they do not run, as far as is known on the console either; the switch is for a mod whose globals read as zero without them
         if (!m->init && !m->nro && m->init_arraysz >= 8 && getenv("DM_MOD_INIT_ARRAY") && *getenv("DM_MOD_INIT_ARRAY") == '1') {
@@ -1229,7 +1229,7 @@ void run_module_inits(void) {
             }
             continue;
         }
-        // PEANUTS end
+        // KIWI end
         if (!m->init || m->nro) continue;   // an NRO's init runs when the game loads it (hle_ro.c)
         LOG("%s: DT_INIT +%#llx (init_array %llu entries)", m->name, m->init, m->init_arraysz / 8);
         ((void (*)(void))(m->base + m->init))();

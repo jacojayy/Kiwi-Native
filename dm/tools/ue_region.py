@@ -92,7 +92,7 @@ def plt_stubs(img, text_end, name):
         if (d >> 10) & 0xFFF == lo and ((a - 12) & ~0xFFF) + page + lo in slots: out.add(a - 12)
     return out
 
-# PEANUTS: UE 5.4.3 stores the size in startup, then calls a shared reservation helper.
+# KIWI: UE 5.4.3 stores the size in startup, then calls a shared reservation helper.
 # Prove the helper rounds that same global and passes it with its adjacent base to the import.
 # Gate the caller's store, not the helper: its other caller must retain the original size.
 def startup_size_store(img, call, helper):
@@ -147,7 +147,7 @@ def find(img, text_end, ro_off, data_off):
             if word(p) >> 26 != 0x25: continue
             callee = target(p)
             if callee not in stubs:
-                # PEANUTS: only one direct helper, calling the imported allocator at +32.
+                # KIWI: only one direct helper, calling the imported allocator at +32.
                 if (p - start >= 36 and 0 <= callee <= text_end - 36 and word(callee + 32) >> 26 == 0x25
                         and target(callee + 32) in stubs and startup_size_store(img, p, callee)):
                     found.append((callee + 32, start, p - 4, 8, None))
@@ -158,7 +158,7 @@ def find(img, text_end, ro_off, data_off):
     if len(found) != 1:
         return None, None, None, f'[RED] Unreal\'s engine region: {len(found)} reservations in nninitStartup ({", ".join(f"{f:#x}" for f in fns)})' + ''.join(f'; {x}' for x in why)
     call, start, off, s, x1_mov = found[0]
-    return off, s, x1_mov, f'Unreal\'s engine region: reserved at {call:#x} from nninitStartup\'s {start:#x}, its size stored from x{s} at {off:#x}' + (f', x1 set from it at {x1_mov:#x}' if x1_mov is not None else '')  # PEANUTS: the call can be in a helper
+    return off, s, x1_mov, f'Unreal\'s engine region: reserved at {call:#x} from nninitStartup\'s {start:#x}, its size stored from x{s} at {off:#x}' + (f', x1 set from it at {x1_mov:#x}' if x1_mov is not None else '')  # KIWI: the call can be in a helper
 
 if __name__ == '__main__':
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

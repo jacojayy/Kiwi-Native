@@ -1,4 +1,4 @@
-// PEANUTS(upstream-candidate): which texture first used as a sample takes its content from its pool storage (dm/gfx/vk_android/vka_texcontent.h; vka_tex.c storage_mode): the conditions of the
+// KIWI(upstream-candidate): which texture first used as a sample takes its content from its pool storage (dm/gfx/vk_android/vka_texcontent.h; vka_tex.c storage_mode): the conditions of the
 // rule on Switch 2 (NVN2: coherent memory, the kartnative rule: the storage may be empty at the first use) and on Switch 1 (NVN1: the storage must hold data at the
 // first use), and the shapes that must stay out of it. The accepted NVN1 shape is FINAL FANTASY XII THE ZODIAC AGE's target-ring texture, measured 2026-11-20.
 #include <stdio.h>

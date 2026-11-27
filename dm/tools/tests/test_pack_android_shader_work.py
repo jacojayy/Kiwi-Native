@@ -1,4 +1,4 @@
-"""PEANUTS: scripts/pack_android.py's folder for the library build's temporary files follows --shader-cache. A pack made with --out and --shader-cache
+"""KIWI: scripts/pack_android.py's folder for the library build's temporary files follows --shader-cache. A pack made with --out and --shader-cache
 in another place than the game (a .nup read in place on a drive the pack must not be written to) still made <title ID>-work/android-shaders/work beside the
 .nup, because that folder was always taken from the game's folder. Without --shader-cache it is where it was. No game files needed."""
 import argparse
@@ -40,7 +40,7 @@ class ShaderWork(unittest.TestCase):
         self.assertNotIn("work / 'android-shaders' / 'work'", src)
         self.assertNotIn("work / 'android-shaders' / 'keys.txt'", src)
 
-    def test_optional_absences_reach_builder_without_relaxing_package_checks(self):  # PEANUTS
+    def test_optional_absences_reach_builder_without_relaxing_package_checks(self):  # KIWI
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
             pkg = root / 'pkg'
@@ -57,7 +57,7 @@ class ShaderWork(unittest.TestCase):
             with patch.multiple(pack_android, require_shaders=lambda g: None,
                                 vk_chain=lambda: 'test', library_current=lambda *a: False,
                                 shader_python=lambda p: 'python', child_env=lambda **kw: kw,
-                                peanuts_env=lambda s: {'DMSH_VK_REQUIRE_ALL': '1'},
+                                kiwi_env=lambda s: {'DMSH_VK_REQUIRE_ALL': '1'},
                                 selected_keys=lambda p: None, absent_optional=lambda *a: {'b', 'a'}):
                 with patch.object(pack_android.subprocess, 'run', side_effect=run) as child:
                     with self.assertRaisesRegex(pack_android.Error, 'exit code 1'):
@@ -91,7 +91,7 @@ class ShaderWork(unittest.TestCase):
             with patch.multiple(pack_android, WINDOWS=True, require_shaders=lambda g: None,
                                 vk_chain=lambda: 'test', library_current=lambda *a: False,
                                 shader_python=lambda p: 'python', child_env=lambda **kw: kw,
-                                peanuts_env=lambda s: {}, selected_keys=lambda p: [p.name],
+                                kiwi_env=lambda s: {}, selected_keys=lambda p: [p.name],
                                 absent_optional=lambda *a: set()):
                 with patch.object(pack_android.subprocess, 'run', side_effect=run):
                     build(0)

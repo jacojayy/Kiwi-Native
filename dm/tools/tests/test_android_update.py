@@ -9,8 +9,8 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/UpdateCheckJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/UpdateCheckJvmTest.java'
 BODY = REPO / 'android/app/src/jvmtest/release-v0.1.3.md'   # gh release view v0.1.3 -R moceure/BananaNative --json body
 FORGEJO = REPO / 'android/app/src/jvmtest/forgejo-releases-v0.2.0.json'   # GET https://git.eden-emu.dev/api/v1/repos/moceure/BananaNative/releases, body and author trimmed
 MANIFEST = REPO / 'android/app/src/main/AndroidManifest.xml'
@@ -28,7 +28,7 @@ class UpdateCheckJvm(unittest.TestCase):
     def tearDownClass(cls): cls.tmp.cleanup()
 
     def java(self, *a):
-        r = subprocess.run(['java', '-Dstdout.encoding=UTF-8', '-cp', self.tmp.name, 'dev.nxnative.android.UpdateCheckJvmTest', *a], capture_output=True, text=True, encoding='utf-8')
+        r = subprocess.run(['java', '-Dstdout.encoding=UTF-8', '-cp', self.tmp.name, 'hernandez.kiwinative.UpdateCheckJvmTest', *a], capture_output=True, text=True, encoding='utf-8')
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         return r.stdout
 

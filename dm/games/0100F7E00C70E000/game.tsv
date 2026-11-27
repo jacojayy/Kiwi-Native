@@ -1,8 +1,8 @@
 # Game profile of Hogwarts Legacy (Switch, update 1.0.5 = v327680 over the base game 1.0.0 = v0)
 # Format: see dm/games/README.md
-# PEANUTS: a Kiwi Native profile (Kiwi Native has none for this title); whole file Peanuts' own
+# KIWI: a Kiwi Native profile (Kiwi Native has none for this title); whole file Kiwi' own
 # Avalanche Software / Warner Bros. Games, Unreal Engine 4.27.2 (EpicGames+UnrealEngine-4_27_2 in main; the desktop renderer, SF_GLSL_SWITCH shaders), SDK 17.5.4, NVN, Wwise sound, Bink movies.
-# Status: provisional profile (dm/games/profile_guess.py from the survey, peanuts/docs/NEW-GAME.md), not booted yet; the note (README.md) says what is a guess
+# Status: provisional profile (dm/games/profile_guess.py from the survey, kiwi/docs/NEW-GAME.md), not booted yet; the note (README.md) says what is a guess
 
 # ---- Identity ----
 title_id	0100F7E00C70E000
@@ -19,7 +19,7 @@ build	v327680	1.0.5	main=0c00fc37b0610fbdb2cf73aed0cc73e7	subsdk0=d0c48eef6dc2f1
 build	v0	1.0.0	main=70658a5c238d69c24698fded6a34efa6	subsdk0=7c1a58cac01c4aa3935c6243f69cf0d3	sdk=835c229763ce5c1816a70f875bd70ccd
 package	v327680
 shader_versions	v327680
-# PEANUTS: the app builds 1.0.5 only (the shader tables are of 1.0.5)
+# KIWI: the app builds 1.0.5 only (the shader tables are of 1.0.5)
 android_builds	v327680
 
 # ---- Files ----
@@ -51,12 +51,12 @@ pad_layout	full
 shader_groups	ShaderArchive-Global-=global ShaderArchive-=game
 shader_note	Hogwarts Legacy shaders
 
-# PEANUTS: frame rate, FPSLocker Warehouse 0100F7E00C70E000/0C00FC37B0610FBD.yaml (1.0.5): r.DynamicRes.FrameTimeBudget, t.MaxFPS, r.VSync off. Unreal steps by elapsed time; marked experimental (README, Frame rate)
+# KIWI: frame rate, FPSLocker Warehouse 0100F7E00C70E000/0C00FC37B0610FBD.yaml (1.0.5): r.DynamicRes.FrameTimeBudget, t.MaxFPS, r.VSync off. Unreal steps by elapsed time; marked experimental (README, Frame rate)
 fps_limit_present	1
 fps_limit_max	60
-# PEANUTS: Game owned (its own 30 fps, interval 2) until the player picks a limit. Since 0.1.8 fps_limit_present puts the game on the frame limit list, whose default is Game owned; this row is a safety net. In 0.1.7 the launcher passed the main screen's cap of 60 and FPSLocker interval 1 with no limit, an uncapped 24-37 fps that heated a Galaxy S24 Ultra into its GPU throttle (2026-11-24)
+# KIWI: Game owned (its own 30 fps, interval 2) until the player picks a limit. Since 0.1.8 fps_limit_present puts the game on the frame limit list, whose default is Game owned; this row is a safety net. In 0.1.7 the launcher passed the main screen's cap of 60 and FPSLocker interval 1 with no limit, an uncapped 24-37 fps that heated a Galaxy S24 Ultra into its GPU throttle (2026-11-24)
 fps_owned_default	1
-# PEANUTS: the thermal cap on Android (opt-in): a frame limit above 30 holds 30 while the phone is severe or worse (README, Frame rate)
+# KIWI: the thermal cap on Android (opt-in): a frame limit above 30 holds 30 while the phone is severe or worse (README, Frame rate)
 thermal_cap	1
 fpslocker	0c00fc37b0610fbdb2cf73aed0cc73e7	frame_ms_f32	0xa42c688/0x0	2	0
 fpslocker	0c00fc37b0610fbdb2cf73aed0cc73e7	target_f32	0xa4603a0/0x0	2	0

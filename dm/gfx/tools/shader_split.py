@@ -36,16 +36,16 @@
 #   · GFPAK (Game Freak, Pokémon Sword, Pokémon Legends: Arceus): BNSH entries of the archives under bin/archive (Sword's LZ4; Arceus's Oodle Kraken, decoded by the game's own decoder in the Mac host), see gfpak_members
 #   · DRPF (New Pokémon Snap): the entries of its 1,034 .drp files, each decrypted in one XorShift stream under a seed the entry carries (drp.py), its Oodle payload decoded by the game's own
 #       decoder in the Mac host (or the ooz worker, DM_OODLE_OOZ) and checked against its seed, then scanned like a loose file (the shaders are GLSLC outputs in the SSBH shader databases of
-#       its .nushdb entries), see the DRPF branch of scan_file_in and drp.py   PEANUTS(upstream-candidate)
+#       its .nushdb entries), see the DRPF branch of scan_file_in and drp.py   KIWI(upstream-candidate)
 #   · .tfxo (Silicon Studio's YEBIS post effects, Pokémon Sword): control sections each followed by its code area, in a zlib stream in main, see tfxo_streams and tfxo_shaders
 #   · control sections loose in main, in no GLSLC output or BNSH file (Advance Wars 1+2: Re-Boot Camp's Bink 2 shaders): paired with their code areas by data records or adjacency, see raw_shaders
 #   · SNVN (Retro Studios, Donkey Kong Country: Tropical Freeze, Metroid Prime Remastered): zlib program records in the SNVN chunks of MaterialArchive.arc, of the MTRL resources in its
 #       .pak archives and of the startup material archive LZSS-compressed in main, see rfrm_shaders and retro_main_forms
-#   · REDengine 3 (The Witcher 3): GLSLC outputs in RDHS material caches and FZLC static caches, see rdhs_shaders and fzlc_shaders   PEANUTS(upstream-candidate): nxnative a4c82979
+#   · REDengine 3 (The Witcher 3): GLSLC outputs in RDHS material caches and FZLC static caches, see rdhs_shaders and fzlc_shaders   KIWI(upstream-candidate): nxnative a4c82979
 #   · BERG (Snowdrop, Mario + Rabbids Sparks of Hope): shader objects in the individually zstd-compressed records of its SDF data slices, see snowdrop_shaders
 #   · bnd2 (Criterion's Bundle 2, Need for Speed: Hot Pursuit Remastered): whole GLSLC outputs in the zlib resources of SHADERS.BNDL, see bnd2_resources and bnd2_shaders
 #   · Heaps (Dead Cells): whole GLSLC outputs in base64 after the GLSL of the engine's shader cache (shaders.cache.nx), inside its PAK archive, see heaps_pak_files and heaps_shaders
-#   · igArchive (Vicarious Visions' Alchemy, Crash Team Racing Nitro-Fueled): whole GLSLC outputs in the shader .igz files of its .pak archives (LZMA in 0x8000-byte blocks), see iga_entries and iga_shaders   PEANUTS(upstream-candidate)
+#   · igArchive (Vicarious Visions' Alchemy, Crash Team Racing Nitro-Fueled): whole GLSLC outputs in the shader .igz files of its .pak archives (LZMA in 0x8000-byte blocks), see iga_entries and iga_shaders   KIWI(upstream-candidate)
 #   · Frostbite (EA SPORTS FC 27): the CompiledBytecode resources of the bundles its superbundle tables (.toc) list, in its cas files (Oodle Leviathan, decoded by the game's own decoder in the
 #       Mac host), each a VNVN record with one code area and control section (frostbite.py), see frostbite_jobs and frostbite_shaders
 #   · PDAT (the engine with the namespace phx, Kirby Air Riders): flatbuffer records tagged PMAP, zstd frames in the .dat archives, each holding a program's control sections and code areas, see pdat_jobs and pdat_shaders
@@ -71,18 +71,18 @@
 #   Environment DM_SPLIT_FILES=<file>: also write the RomFS files any shader was found in, first appearances or not (a profile's shader_files.tsv, from a full split)
 #   Environment DM_SPLIT_SELECTED=1 (the phone's split of a profile with a selected set, PackService): the package keeps the code of only the profile's shader_seen.tsv keys and the pixel
 #   shaders paired with them (what vk_android_build.py builds from a key list); every other shader's record is empty (KEEP, Shaders). The tables (shader_map.tsv ...) are those of a full split
-#   PEANUTS: DM_SPLIT_DIRECT (with DM_SPLIT_TARGETED=1; see map_sources/direct_targets/direct_file below) and DM_SPLIT_WORKER/DM_UE_DECODE (see pool/_pool_init and
+#   KIWI: DM_SPLIT_DIRECT (with DM_SPLIT_TARGETED=1; see map_sources/direct_targets/direct_file below) and DM_SPLIT_WORKER/DM_UE_DECODE (see pool/_pool_init and
 #   main's ue_ondevice.decode below) are the on-device split's own environment, needed because the phone's split runs through PackService rather than the Mac tooling.
 #   Environment DM_SPLIT_DIRECT=1 (with DM_SPLIT_TARGETED=1; the phone's split): a file whose map sources all name a container with its offset (#BNSH@, #BAHS@, #IDRK@) is read at those
 #   containers only, not whole (direct_targets, direct_file); its tables must still be the profile's, else the targeted scan of the whole files follows (log: 'direct split: ...')
 # Memory: the shaders are deduplicated by key as they are found (Shaders), and a large compressed container is inflated into a temporary file rather than memory (idrk_shaders); a file of
 #   RomFS over LARGE bytes prints 'progress: <done>/<total> <n>%' as it is read, when the scan runs in this process (J=1)
 #   Environment DM_SPLIT_WORKER=<command> (the phone's split, PackService): the pool's workers (J > 1) are processes of that command, which runs Python as `python3 -c` does, fed over pipes
-#   (split_pool.py; the phone's Python has no python executable and no _multiprocessing: dm/peanuts/pack_worker's nxpack_worker through /system/bin/linker64); unset, concurrent.futures' process pool
+#   (split_pool.py; the phone's Python has no python executable and no _multiprocessing: dm/kiwi/pack_worker's nxpack_worker through /system/bin/linker64); unset, concurrent.futures' process pool
 # Pair table: (vertex key, pixel key) of every BNSH variation (every Unity program); dmsh_build uses it to give vertex shaders the outputs their pixel shaders read but they do not write (see dmsh_build.py vs_pad)
-import base64, collections, concurrent.futures as cf, functools, glob, hashlib, json, os, pickle, posixpath, re, struct, subprocess, sys, time, zlib   # PEANUTS(upstream-candidate): posixpath for pak paths on Windows
+import base64, collections, concurrent.futures as cf, functools, glob, hashlib, json, os, pickle, posixpath, re, struct, subprocess, sys, time, zlib   # KIWI(upstream-candidate): posixpath for pak paths on Windows
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../tools'))
-from typing import NoReturn, cast   # PEANUTS(upstream-candidate): profile_files validates the targeted main build IDs
+from typing import NoReturn, cast   # KIWI(upstream-candidate): profile_files validates the targeted main build IDs
 from romfs import os, open, is_image
 import nup
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../games')); import game as _game
@@ -579,7 +579,7 @@ def glslc_shaders(d, label, need=True, skip=(), sink=None):
             (ctl, code), = sec; st = glslc_stage(ctl, code)
             if not st or check(label, st, ctl, code): continue
         elif st == 'cs' and not code.startswith(CS_MAGIC):
-            # PEANUTS(upstream-candidate): Trails has a longer control section in the header; the shorter offset lands in constant data.
+            # KIWI(upstream-candidate): Trails has a longer control section in the header; the shorter offset lands in constant data.
             sec = glslc_section(d, h, size)
             if sec and len(sec) == 1:
                 sc, sk = sec[0]
@@ -588,7 +588,7 @@ def glslc_shaders(d, label, need=True, skip=(), sink=None):
     if not out and need: red(f'{label}: no GLSLC output')
     return out
 
-# PEANUTS: Level-5 VFS3 v16 generation 1 (Ni no Kuni II). The payload offsets are relative to the aligned end of the index.
+# KIWI: Level-5 VFS3 v16 generation 1 (Ni no Kuni II). The payload offsets are relative to the aligned end of the index.
 VFS3 = b'VFS3\x10\0\0\0\x01\0\0\0'
 VFS3_STAGES = {'.vfxo': 'vs', '.pfxo': 'ps', '.gfxo': 'gs', '.cfxo': 'cs'}
 
@@ -831,7 +831,7 @@ def idrk_data(d, a, b, flags, head=None, sink=None):
         a += cs
     return None if sink is not None else b''.join(out)
 
-# PEANUTS: on-device split support (see file header)
+# KIWI: on-device split support (see file header)
 def idrk_shaders(path, label, out, only=None):
     """Koei Tecmo's KTGL keeps its shaders in G2S containers ('_S2G3000', type KTID 0x7bcd279f in Age of Calamity: 23,108 entries in three RDB files, 2.3 GB inflated), each a material's variations
     as GLSLC compiler outputs (glslc_shaders). One '_DOK0000' container (type KTID 0x20a6a0bb, the engine's system resources; once in system.rdb.bin and once in the update's .bin1) holds 151 bare
@@ -839,14 +839,14 @@ def idrk_shaders(path, label, out, only=None):
     and only entries whose data starts with one of those two magics are inflated. A container that inflates to more than SPOOL bytes (Pokémon Pokopia's 2.38 GiB .fdata) is
     inflated into a temporary file, read through a mapping, instead of joined in memory; its outputs go to out as they are found (a Shaders keeps one copy of each key).
     only: the data offsets of the entries to read (the direct scan, direct_file); the others are passed over without a look at their data"""
-    # PEANUTS: on-device split support (see file header) — only= above
+    # KIWI: on-device split support (see file header) — only= above
     from romfs import mmap
     import tempfile
     with open(path, 'rb') as f, mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as d:
         at = InFile(label, len(d))
         for a, b, flags, n in idrk_entries(d):
             at.now(a)
-            if only is not None and a not in only: continue   # PEANUTS: on-device split support (direct scan)
+            if only is not None and a not in only: continue   # KIWI: on-device split support (direct scan)
             if idrk_data(d, a, b, flags, 4) not in (b'_S2G', b'_DOK'): continue
             where = f'{label}#IDRK@{a:#x}'
             if n > SPOOL and flags & 0x500000:
@@ -1130,10 +1130,10 @@ def pkz_shaders(path, rel, ents, out):
             scan_blob(d, f'/{rel}/{name}', out)
 
 CPK = b'CPK '
-def cpk_jobs(files, parts=64, names=None):   # PEANUTS: names= (the targeted scan's entries, see below)
+def cpk_jobs(files, parts=64, names=None):   # KIWI: names= (the targeted scan's entries, see below)
     """Every entry of every CRI CPK archive in ranges of about equal length (Bayonetta 2: six in the RomFS root, 9.5 GB, 6,091 files, 12 GB of them CRILAYLA-compressed; its shaders are BNSH
     files in shader.dat, shader2.dat and shadereff.dat, but no file name is relied on). → ([(path, rel, entries), …], the CPK paths)
-    PEANUTS: names ({rel: entry names}, the targeted scan's, cpk_map_entries): only those entries of that CPK, when it has every one of them (Persona 5 Royal: its 30,646 shaders are in 10
+    KIWI: names ({rel: entry names}, the targeted scan's, cpk_map_entries): only those entries of that CPK, when it has every one of them (Persona 5 Royal: its 30,646 shaders are in 10
     GSC files of ALL_USEU.CPK, which the scan otherwise reads whole in 63 ranges, ~30 min of the phone's build); else every entry, as before. The targeted scan's tables are compared with
     the profile's afterwards (profile_differs), and a difference falls back to the full scan, so a shader outside these entries is never lost"""
     import cpk
@@ -1144,7 +1144,7 @@ def cpk_jobs(files, parts=64, names=None):   # PEANUTS: names= (the targeted sca
             if h != CPK: continue
             try:
                 es = cpk.files(p)
-                if names and names.get(r):   # PEANUTS: the map's entries only (see the doc above)
+                if names and names.get(r):   # KIWI: the map's entries only (see the doc above)
                     # a name is an entry, or a member path inside one ('<entry>/<member>': an archive in the CPK)
                     ent = {e[0] for e in es}
                     hit = {n: next((n[:i] for i in [len(n)] + [i for i in range(len(n) - 1, 0, -1) if n[i] == '/'] if n[:i] in ent), None) for n in names[r]}
@@ -1164,7 +1164,7 @@ def cpk_jobs(files, parts=64, names=None):   # PEANUTS: names= (the targeted sca
         if cur: jobs.append((p, r, tuple(cur)))
     return jobs, {p for p, _, _ in with_head}
 
-# PEANUTS: the targeted scan's CPK entries (cpk_jobs' names=): {rel of a .cpk of files: {entry names}} from the map's sources, '/<cpk>/<entry>#…' (cpk_shaders labels each
+# KIWI: the targeted scan's CPK entries (cpk_jobs' names=): {rel of a .cpk of files: {entry names}} from the map's sources, '/<cpk>/<entry>#…' (cpk_shaders labels each
 # shader '/<rel>/<entry name>' + its container), the entry being the source between the CPK's path and its first '#'
 def cpk_map_entries(files):
     cpks = {r for _, r in files if r.lower().endswith('.cpk')}
@@ -1184,7 +1184,7 @@ def cpk_shaders(path, rel, ents, out):
             print(f'[RED] /{rel}/{e[0]}: {x}; not scanned', flush=True); continue
         scan_blob(d, f'/{rel}/{e[0]}', out)
 
-# PEANUTS begin: Media.Vision's MVGL archives in their 64-bit layout (Digimon Story Time Stranger, 010062E01FE0C000: 176,835 entries in app_0.nx64.mvgl, 6.2 GB; mvgl.py).
+# KIWI begin: Media.Vision's MVGL archives in their 64-bit layout (Digimon Story Time Stranger, 010062E01FE0C000: 176,835 entries in app_0.nx64.mvgl, 6.2 GB; mvgl.py).
 # Read whole, the 6.2 GB archive failed on macOS (one read() of more than 2 GB: OSError EINVAL) and gave no shader. Its shaders are the archive's 'shad' entries (the archive's own type
 # field, not a file name): 28,354 vertex and 28,354 pixel shaders, each one LZ4 block holding an NX?S container (nxsh_shader)
 MVGL = b'MDB1'
@@ -1251,9 +1251,9 @@ def mvgl_shaders(path, rel, names, out):
             if d[:2] == b'NX' and d[3:4] == b'S': out.append(nxsh_shader(d, label))
             else: scan_blob(d, label, out)
     finally: a.f.close()
-# PEANUTS end
+# KIWI end
 
-# PEANUTS: TT Games' DAT archives (ttdat.py), LEGO CITY UNDERCOVER.
+# KIWI: TT Games' DAT archives (ttdat.py), LEGO CITY UNDERCOVER.
 TTDAT = 'TT Games DAT'   # job tag of a range of a DAT archive's files (ttdat_jobs)
 def ttdat_jobs(files, parts=64):
     """Every file of every TT Games DAT archive (found by its index, not its name) in ranges of about equal length: LEGO CITY UNDERCOVER's five, 14.7 GB of files, 61,000 of them RFPK-
@@ -1282,7 +1282,7 @@ def ttdat_shaders(path, rel, ents, out):
             except ValueError as x: print(f'[RED] /{rel}/{e[0]}: {x}; not scanned', flush=True); continue
             scan_blob(d, f'/{rel}/{e[0]}', out)
 
-# PEANUTS: Split Diablo III packages by byte range.
+# KIWI: Split Diablo III packages by byte range.
 D3CPK = b'D3CPK'   # job tag of a Diablo III package's byte range (d3cpk_jobs)
 def d3cpk_jobs(files, parts=64):
     """Diablo III's console packages (d3cpk.py; .cpk like CRI's, another format) in byte ranges of about equal length: Diablo III: Eternal Collection 2.7.7 has 37, 16 GB.
@@ -2387,7 +2387,7 @@ def raw_shaders(d, label, known=()):
     from, which lies right after the control section's own length (control +0x20, at 16-byte alignment) or right before it. Only a code area the code builds the address of is taken: both neighbours
     can look right, so the one whose address the code builds nearest to the control section's (within 1 KB) is taken: main+0x4a2c670 is a compute shader whose code is the 0x100 bytes before it (adds 0x20 apart,
     main+0x1548014 / +0x1548034); after it lies another vertex shader's code area, whose first 0x100 bytes pass the header and length checks, and that area is the vertex shader main+0x4a2d290 takes from
-    before itself (main+0x1548358 / +0x1548374, 0x324 bytes from the first). PEANUTS(upstream-candidate): where the code builds no address at all (FINAL FANTASY XII THE ZODIAC AGE's 7 offline programs, whose code area lies right before
+    before itself (main+0x1548358 / +0x1548374, 0x324 bytes from the first). KIWI(upstream-candidate): where the code builds no address at all (FINAL FANTASY XII THE ZODIAC AGE's 7 offline programs, whose code area lies right before
     the control section), the neighbour that passes the stage and length checks is taken, and only when exactly one of the two neighbours passes them. Control sections found at unaligned offsets (the rest of
     that game's programs, at main+0xfca50d and +0xfd1699, whose code areas lie 0x200 and 0x100 bytes before them) are taken only by that neighbour rule, and left out in silence when no neighbour passes, a
     control magic at an odd offset being very often just bytes. Compute code areas have no header (SDK 10), so the stage is
@@ -2399,22 +2399,22 @@ def raw_shaders(d, label, known=()):
         size, _, first, _ = glslc_layout(d, m.start())
         if (0 if first == 0xa8 else 0x760) < size <= len(d) - m.start(): skip.append((m.start(), m.start() + size))
     for m in re.finditer(b'BNSH\0\0\0\0', d): skip.append((m.start(), m.start() + struct.unpack_from('<I', d, m.start() + 0x1c)[0]))
-    nx = nxsh_in(d, label, skip)   # PEANUTS(upstream-candidate): Media.Vision's NX?S containers, read by their headers (Digimon Story Time Stranger: 202 in main)
+    nx = nxsh_in(d, label, skip)   # KIWI(upstream-candidate): Media.Vision's NX?S containers, read by their headers (Digimon Story Time Stranger: 202 in main)
     ctls = [c for m in re.finditer(re.escape(CTL_MAGIC), d) if not (c := m.start()) & 3 and not any(a <= c < b for a, b in skip) and d[c:c + struct.unpack_from('<I', d, c + 0x20)[0]] not in known]
-    # PEANUTS(upstream-candidate): the rest of FINAL FANTASY XII THE ZODIAC AGE's offline programs sit at offsets that are not 4-byte aligned (control 0xfca50d with its code area at 0xfca30d,
+    # KIWI(upstream-candidate): the rest of FINAL FANTASY XII THE ZODIAC AGE's offline programs sit at offsets that are not 4-byte aligned (control 0xfca50d with its code area at 0xfca30d,
     # control 0xfd1699 with its code area at 0xfd1599), which the aligned scan above never looks at. Such a match is collected with the same skip ranges and known filter and taken only by the
     # neighbour rule at the end: no data record points at an unaligned control section and the game's code builds the address of none, so the table lookup and the built-address evidence stay
     # with the aligned records. One with no valid neighbour is left out in silence, a control magic at an odd offset being very often just bytes. taken: the control sections and code areas of the
     # programs taken, so a match inside an already taken program does not take it a second time.
     raws = [c for m in re.finditer(re.escape(CTL_MAGIC), d) if (c := m.start()) & 3 and c + 0x708 <= len(d) and not any(a <= c < b for a, b in skip) and d[c:c + struct.unpack_from('<I', d, c + 0x20)[0]] not in known]
-    if not ctls and not raws: return nx   # PEANUTS(upstream-candidate): nx, was []
+    if not ctls and not raws: return nx   # KIWI(upstream-candidate): nx, was []
     rel, code_of, cset = rel_targets(d), {}, set(ctls)
     for s, c in rel.items():
         if c not in cset or c in code_of: continue
         code_len = struct.unpack_from('<I', d, c + 0x704)[0]
         if s - 8 in rel and struct.unpack_from('<I', d, s + 8)[0] == code_len:
             code_of[c] = rel[s - 8]
-        # PEANUTS(upstream-candidate): Tomodachi Life's offline compute records
+        # KIWI(upstream-candidate): Tomodachi Life's offline compute records
         # hold {control pointer, code pointer, reserved, u64 control length, u64 code length}.
         elif s + 40 <= len(d) and s + 8 in rel:
             control_len = struct.unpack_from('<I', d, c + 0x20)[0]
@@ -2422,7 +2422,7 @@ def raw_shaders(d, label, known=()):
             if struct.unpack_from('<QQQ', d, s + 16) == (0, control_len, code_len) and d[code:code + 4] == CS_MAGIC and code + code_len <= len(d):
                 code_of[c] = code
     built = adrp_targets(d, min(ctls) - 0x100000, max(ctls) + 0x100000) if any(c not in code_of for c in ctls) else {}
-    out, taken = [], []   # PEANUTS(upstream-candidate): taken: the control sections and code areas of the programs taken
+    out, taken = [], []   # KIWI(upstream-candidate): taken: the control sections and code areas of the programs taken
     for c in ctls:
         nctl, n = struct.unpack_from('<I', d, c + 0x20)[0], struct.unpack_from('<I', d, c + 0x704)[0]
         ctl, why = d[c:c + nctl], 'no code area: no data record points at one, and the code builds the address of none right after or right before it'
@@ -2431,7 +2431,7 @@ def raw_shaders(d, label, known=()):
         cand = [code_of[c]] if c in code_of else sorted((k for k in neigh if k in built and c in built and near(k) < 0x400), key=near)
         chosen = c in code_of or bool(cand)   # where the code area is comes from the code, not from which neighbour looks right
         if not cand:
-            # PEANUTS(upstream-candidate): FINAL FANTASY XII THE ZODIAC AGE's 7 offline programs build no address at all (no relocation slot points at them and
+            # KIWI(upstream-candidate): FINAL FANTASY XII THE ZODIAC AGE's 7 offline programs build no address at all (no relocation slot points at them and
             # no adrp + add builds one near them), so a control section with no built-address evidence keeps the neighbour that passes the stage and length checks.
             cand = [k for k in neigh if 0 <= k and k + n <= len(d) and CTL_MAGIC not in d[k:k + n]]
         found = []
@@ -2455,7 +2455,7 @@ def raw_shaders(d, label, known=()):
         if len(found) != 1: continue   # no neighbour passes, or both do: taken only when exactly one passes, as for an aligned control section, and left out in silence
         st, code, k = found[0]
         out.append((f'{label}#RAW@{c:#x}', st, ctl, code)); taken += [(c, c + nctl), (k, k + n)]
-    return nx + out   # PEANUTS(upstream-candidate): nx
+    return nx + out   # KIWI(upstream-candidate): nx
 
 ONEPACK = b'ONEPACK\0'
 def fb_field(d, t, i):
@@ -2478,14 +2478,14 @@ def fb_refs(d, t, i):   # the tables / strings a vector of offsets points at
 
 def fb_root(d, at=0): return at + struct.unpack_from('<I', d, at)[0]
 
-def trpfs_jobs(files, parts=64, targeted=False):   # PEANUTS: select Trinity packs for a known shader map
+def trpfs_jobs(files, parts=64, targeted=False):   # KIWI: select Trinity packs for a known shader map
     """Game Freak's Trinity engine (Pokémon Legends: Z-A): almost everything is in arc/data.trpfs, packs of files, with arc/data.trpfd as their index, both FlatBuffers. The descriptor's root table:
     0 file hashes [u64], 1 pack names [string], 2 file infos [{0 pack index u64}] (in file hash order), 3 pack infos [{0 pack size u64, 1 file count u64}]. The file system: 'ONEPACK\\0', u64 offset of its
     root table {0 pack name hashes [u64], 1 pack offsets [u64]}, each pack a table of its own at its offset. A pack is named through its first file's hash (its own name hash is not a plain FNV-1a of the
     descriptor's name). → ([(path, rel, ((pack offset, pack name), …)), …] in about equal sizes, the paths taken)"""
     from romfs import mmap
     jobs, taken = [], set()
-    sources = map_sources() if targeted else ()   # PEANUTS: the map is read once, not once per archive root
+    sources = map_sources() if targeted else ()   # KIWI: the map is read once, not once per archive root
     for p, r in files:
         if not p.endswith('.trpfs') or not os.path.exists(p[:-1] + 'd'): continue
         with open(p, 'rb') as f:
@@ -2502,7 +2502,7 @@ def trpfs_jobs(files, parts=64, targeted=False):   # PEANUTS: select Trinity pac
                 pr = fb_root(d, off); h0 = fb_vec(d, pr, 0)
                 if not h0[1] or struct.unpack_from('<Q', d, h0[0])[0] not in pack_of: red(f'{r}: the pack at {off:#x} has no file the descriptor lists')
                 i = pack_of[struct.unpack_from('<Q', d, h0[0])[0]]; packs.append((off, names[i], sizes[i]))
-        # PEANUTS begin: a Trinity source records the pack name after the archive path. Compare all result tables before accepting this subset.
+        # KIWI begin: a Trinity source records the pack name after the archive path. Compare all result tables before accepting this subset.
         if targeted:
             prefix = r + '#'
             wanted = {source[len(prefix):].split('#', 1)[0] for source in sources if source.startswith(prefix)}
@@ -2512,7 +2512,7 @@ def trpfs_jobs(files, parts=64, targeted=False):   # PEANUTS: select Trinity pac
                 suffixes = tuple({'.' + '.'.join(name.rsplit('.', 2)[-2:]) for name in wanted if name.count('.') >= 2 and name.endswith('.trpak')})
                 packs = [pack for pack in packs if pack[1] in wanted or pack[1].endswith(suffixes)]
                 print(f'targeted Trinity: /{r}: reading {len(packs):,} of {count:,} packs', flush=True)
-        # PEANUTS end
+        # KIWI end
         cur, size, step = [], 0, sum(s for _, _, s in packs) / parts
         for off, name, s in sorted(packs):
             cur.append((off, name)); size += s
@@ -2597,10 +2597,10 @@ def oodle_ask(comp, n):
     if _OODLE is None:
         import tempfile
         host, mods = os.environ.get('DM_OODLE_HOST'), os.environ.get('DM_OODLE_MODULES')
-        # PEANUTS begin: on the phone there is no host executable: the title's host library in a worker process, as for an Unreal game's shader archives (ue_ondevice.py DeviceOodle;
+        # KIWI begin: on the phone there is no host executable: the title's host library in a worker process, as for an Unreal game's shader archives (ue_ondevice.py DeviceOodle;
         # PackService sets DM_UE_HOST, DM_UE_HOST_LIB and DM_UE_MODULES for the split step). Pokemon Legends: Arceus's 678 GFPAK archives stopped the build there without it
         dev, lib, dmods = os.environ.get('DM_UE_HOST', ''), os.environ.get('DM_UE_HOST_LIB', ''), os.environ.get('DM_UE_MODULES', '')
-        # PEANUTS: DM_OODLE_OOZ=<helper> (opt-in, for a PC that has neither the Mac host nor the phone's library): a worker built from the open-source ooz decoder answers the
+        # KIWI: DM_OODLE_OOZ=<helper> (opt-in, for a PC that has neither the Mac host nor the phone's library): a worker built from the open-source ooz decoder answers the
         # same requests instead of the game's own decoder. It is not the game's code, so its output counts only once the split's tables are the profile's (every key hashes its shader's bytes)
         ooz = os.environ.get('DM_OODLE_OOZ', '')
         if ooz: argv = [ooz]
@@ -2611,7 +2611,7 @@ def oodle_ask(comp, n):
         else: argv = [host, mods]
         err = tempfile.TemporaryFile()
         _OODLE = (subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=err, env=dict(os.environ, DM_OODLE_SERVE='1')), err)
-        # PEANUTS end
+        # KIWI end
     p, err = _OODLE
     try:
         p.stdin.write(struct.pack('<QQ', len(comp), n)); p.stdin.write(comp); p.stdin.flush()
@@ -2626,8 +2626,8 @@ def oodle_said():   # what the host wrote so far
     return _OODLE[1].read().decode(errors='replace')
 
 def oodle_red(comp, n) -> NoReturn:
-    who = 'the ooz worker (DM_OODLE_OOZ; not the game\'s own decoder)' if os.environ.get('DM_OODLE_OOZ') else 'the game\'s own decoder (run by the app\'s host)'   # PEANUTS: the message names the decoder that failed; the host runs on a phone as on a Mac
-    red(f'{who} failed on a {len(comp)} → {n} byte stream; ---- host output ----\n' + oodle_said()[-3000:])   # PEANUTS: who
+    who = 'the ooz worker (DM_OODLE_OOZ; not the game\'s own decoder)' if os.environ.get('DM_OODLE_OOZ') else 'the game\'s own decoder (run by the app\'s host)'   # KIWI: the message names the decoder that failed; the host runs on a phone as on a Mac
+    red(f'{who} failed on a {len(comp)} → {n} byte stream; ---- host output ----\n' + oodle_said()[-3000:])   # KIWI: who
 
 def oodle(comp, n):
     s, _ = oodle_ask(comp, n)
@@ -2721,7 +2721,7 @@ def ue_legacy_jobs(files, parts=64, mains=()):
     for p, r in sorted(paks, key=lambda x: (x[1].endswith('_P.pak'), x[1])):   # patch paks last, so they replace; one view per pak folder (one per version given)
         try:   # all of a pak's names or none: a patch pak read halfway would still replace the base pak's files
             keys[p] = key_of(p); pk = uepak.Pak(p, keys[p])
-            view.update({(os.path.dirname(p), posixpath.normpath(pk.mount + name)): (p, r, name, pk.entry(name)['raw']) for name in pk.files})   # PEANUTS(upstream-candidate): posixpath, pak paths use '/' on every host
+            view.update({(os.path.dirname(p), posixpath.normpath(pk.mount + name)): (p, r, name, pk.entry(name)['raw']) for name in pk.files})   # KIWI(upstream-candidate): posixpath, pak paths use '/' on every host
         except (OSError, ValueError) as e: print(f'[RED] /{r}: the pak cannot be read ({e}); its shaders are left out', flush=True)
     chunks, taken, folders = {}, {p for p, _ in paks}, {os.path.dirname(p) for p, _ in paks}
     for p, r in sorted(((p, r) for p, r in files if p.endswith('.utoc') and os.path.dirname(p) in folders), key=lambda x: uepak.mount_order(x[0])):
@@ -2762,7 +2762,7 @@ def ue_legacy_shaders(path, rel, names, out, key=None):
     """Files of an Unreal pak with inline shaders (ue_legacy_jobs), each decoded block by block (Zlib and LZ4 in uepak.py; others with the game's own decoder, DRAGON QUEST XI S: LZ5) and scanned
     for the shader records the engine keeps inline; key: the AES key of a pak whose index and entries are encrypted (ue_legacy_jobs) → ue_packages's extra"""
     pk = _PAKS.get(path) or _PAKS.setdefault(path, uepak.Pak(path, key))
-    label = lambda name: re.sub(r"^(\.\./)+", "", posixpath.normpath(pk.mount + name))   # PEANUTS(upstream-candidate): posixpath: pak paths use '/' on every host
+    label = lambda name: re.sub(r"^(\.\./)+", "", posixpath.normpath(pk.mount + name))   # KIWI(upstream-candidate): posixpath: pak paths use '/' on every host
     return ue_packages(((f'/{rel}#{label(name)}', lambda name=name: pk.read(name, decode=oodle)) for name in names), out)
 
 def ue_io_shaders(path, rel, chunks, out, key=None):
@@ -2833,7 +2833,7 @@ def ue_inline_shaders(d, label, out):
         if why: red(f'{label}: shader at {at:#x} ({st}): {why}')
         out.append((f'{label}#UE{at:x}', st, bytes(ctl), bytes(code)))
 
-# PEANUTS begin: nxnative ARH2 / mixed Maxwell-NVN2 HCPS reader for Xenoblade X DE.
+# KIWI begin: nxnative ARH2 / mixed Maxwell-NVN2 HCPS reader for Xenoblade X DE.
 def arh_entries(d):
     """Monolith ARH1/ARH2 index → (path, ARD offset, stored size). The ARH1 XOR trie
     reconstructs full paths; the metadata table supplies the actual file bounds.
@@ -2882,10 +2882,10 @@ def arh_entries(d):
         if size: out.append((names.get(fid, f'#{fid}'), off, size + (48 if flags & 2 else 0)))
     return out
 
-# PEANUTS end
+# KIWI end
 
 
-# PEANUTS begin: nxnative ARH2 / mixed Maxwell-NVN2 HCPS reader for Xenoblade X DE.
+# KIWI begin: nxnative ARH2 / mixed Maxwell-NVN2 HCPS reader for Xenoblade X DE.
 def arh_jobs(files, parts=64):
     jobs, used = [], set()
     for path, rel in files:
@@ -2901,7 +2901,7 @@ def arh_jobs(files, parts=64):
         used.update((path, ard))
     return jobs, used
 
-# PEANUTS end
+# KIWI end
 
 
 def xbc_data(d, off):
@@ -2930,7 +2930,7 @@ def monolith_cmp_data(d, off):
     return data, off + 16 + size
 
 
-# PEANUTS begin: nxnative ARH2 / mixed Maxwell-NVN2 HCPS reader for Xenoblade X DE.
+# KIWI begin: nxnative ARH2 / mixed Maxwell-NVN2 HCPS reader for Xenoblade X DE.
 def hcps_shaders(d, base, label):
     """HCPS shader programs (Monolith's wishp, also embedded in models/map
     streams). SLCT gives the control/code ranges and variant descriptors; each
@@ -2982,7 +2982,7 @@ def hcps_shaders(d, base, label):
         if c != ce or k != ke: red(f'{label} HCPS SLCT {i}: unused control/code bytes')
     return out
 
-# PEANUTS end
+# KIWI end
 
 
 def slct_shaders(d, base, label):
@@ -3045,15 +3045,15 @@ def ungzip(d, label):
     return out
 
 
-# PEANUTS begin: Yaz0 in C (dm/peanuts/pack_worker/nxyaz0.c) where this Python has the module: the phone's Python home (lib-dynload), the PC builder's peanuts/.build/pymod
+# KIWI begin: Yaz0 in C (dm/kiwi/pack_worker/nxyaz0.c) where this Python has the module: the phone's Python home (lib-dynload), the PC builder's kiwi/.build/pymod
 try: import _nxyaz0
 except ImportError: _nxyaz0 = None
-# PEANUTS end
+# KIWI end
 
 def yaz0(s, label='Yaz0'):
     """Yaz0 decompression (Super Mario 3D World + Bowser's Fury: almost all of RomFS is .szs = SARC wrapped in Yaz0). Pure Python runs at about 20–45 MB/s per core, under a minute for the whole 4.7 GB RomFS in parallel, and needs no extra dependency.
     Group header bits: 1 = one literal byte; 0 = back-reference, 2 bytes {length high nibble, 12-bit distance} (distance + 1); length 0 reads one more byte + 0x12, else + 2. Overlapping copies are expanded by their period"""
-    if _nxyaz0 and (d := _nxyaz0.decode(s)) is not None: return d   # PEANUTS: the same bytes in C; None where the loop below stops with an error, which it then names
+    if _nxyaz0 and (d := _nxyaz0.decode(s)) is not None: return d   # KIWI: the same bytes in C; None where the loop below stops with an error, which it then names
     n = int.from_bytes(s[4:8], 'big'); out = bytearray(); si = 16
     try:
         while len(out) < n:
@@ -3097,7 +3097,7 @@ ZDICTS, _ZD = {}, {}       # zstd dictionaries by ID (given when the pool starts
 LARGE_FILE = int(os.environ.get('DM_SPLIT_LARGE', 256 << 20))   # bytes: a file read whole at least this large is read by one pool worker at a time (scan_file_in)
 LARGE_LOCK = None   # the pool's lock for such files; None in this process (InProcess runs one job at a time)
 
-# PEANUTS: on-device split support (see file header): the direct parameter, before upstream's large_lock
+# KIWI: on-device split support (see file header): the direct parameter, before upstream's large_lock
 def _pool_init(common, trees, zdicts={}, direct=None, large_lock=None):
     global COMMON, TREES, ZDICTS, DIRECT, LARGE_LOCK
     COMMON, TREES, ZDICTS, DIRECT, LARGE_LOCK = common, trees, zdicts, direct, large_lock
@@ -3160,7 +3160,7 @@ def unsized(d, where):
             dec = lz4.frame.decompress(f)
         elif did and did not in ZDICTS: dec = None
         else: dec = unzs_dict(f, did, where) if did else zstd_mod().decompress(f)
-    except (MemoryError, ImportError): raise   # PEANUTS (issue #120): not a property of the bytes; scan_file makes the file unreadable this once, which split_reuse.py never keeps
+    except (MemoryError, ImportError): raise   # KIWI (issue #120): not a property of the bytes; scan_file makes the file unreadable this once, which split_reuse.py never keeps
     except Exception as e: why = str(e) or type(e).__name__
     else:
         if dec is None: why = f'the frame needs zstd dictionary {did}, which Pack/ZsDic.pack.zs does not have'
@@ -3215,7 +3215,7 @@ def unity_compute(x, base, trees):
     Unity 2022.3 lists a kernel's variants in uniqueVariants; Unity 2020.3 keys them by keyword set in variantMap (AI: THE SOMNIUM FILES - nirvanA Initiative's bundles, whose type trees say so).
     Unity 2019.4 has no variant wrapper: each named kernel holds its code directly (Pokemon Brilliant Diamond's GPU skinning)."""
     import unityfs
-    out = []; empty = []   # PEANUTS(upstream-candidate): empty = the kernel variants without code (below)
+    out = []; empty = []   # KIWI(upstream-candidate): empty = the kernel variants without code (below)
     try:
         for cid, pid, o in unityfs.serialized_objects(x, COMMON, {unityfs.CLASS_COMPUTE_SHADER}, trees):
             for v in o['variants']:
@@ -3223,11 +3223,11 @@ def unity_compute(x, base, trees):
                     variants = k['uniqueVariants'] if 'uniqueVariants' in k else [p['second'] for p in k['variantMap']] if 'variantMap' in k else [k]
                     for i, u in enumerate(variants):
                         where = f'{base}#{o["m_Name"]}#{k["name"]}.{i}'
-                        # PEANUTS(upstream-candidate): a kernel variant with 0 bytes of code is no program (My Time at Sandrock's `shader` bundle: SkyboxCompute's
+                        # KIWI(upstream-candidate): a kernel variant with 0 bytes of code is no program (My Time at Sandrock's `shader` bundle: SkyboxCompute's
                         # CubemapFilteringSecondPassCS). unity_program raised on it, and the whole file went as unreadable, its 152 Shader objects with it
                         if not u['code']: empty.append(where); continue
                         out.extend((where, st, ctl, cd) for st, ctl, cd in unity_program(u['code'], where, 'cs'))
-        if empty: print(f'unity compute: {len(empty)} kernel variant(s) without code left out (first: {empty[0]})', flush=True)   # PEANUTS(upstream-candidate): counted, not silent
+        if empty: print(f'unity compute: {len(empty)} kernel variant(s) without code left out (first: {empty[0]})', flush=True)   # KIWI(upstream-candidate): counted, not silent
     except unityfs.NoTree as e:
         if not TREES: raise
         print(f'[RED] {base}: ComputeShader objects that no bundle lends a type tree to and unityfs.py has no layout for, their kernels are left out ({e})', flush=True)
@@ -3263,7 +3263,7 @@ def unity_shaders(d, label, out, trees):
     """Shaders and compute shaders in a UnityFS bundle or serialized file → out and legacy pass pairs; raises NoTree when no type tree is available"""
     import unityfs
     if COMMON is None: red(f'{label}: a Unity asset, but main has no Unity common string table')
-    pairs = set(); empty = []   # PEANUTS(upstream-candidate): empty = the subprograms without code (below)
+    pairs = set(); empty = []   # KIWI(upstream-candidate): empty = the subprograms without code (below)
     sers = unityfs.bundle_files(d) if d[:8] == b'UnityFS\0' else [('', d)]
     for node, x in sers:
         if not unityfs.is_serialized(x): continue
@@ -3273,7 +3273,7 @@ def unity_shaders(d, label, out, trees):
             legacy = {}
             for plat, k, sp in unityfs.shader_programs(o, unity_code_blobs(o)):
                 where = f'{label}{":" + node if node else ""}#{name}#var{plat}.{k}'
-                # PEANUTS(upstream-candidate): a blob entry of 0 bytes, or one whose program code is 0 bytes, is no program: left out and counted, as unity_compute
+                # KIWI(upstream-candidate): a blob entry of 0 bytes, or one whose program code is 0 bytes, is no program: left out and counted, as unity_compute
                 # does for a kernel without code. Reading it raised, and the whole file went as unreadable. None was met in a game's files yet
                 code = unityfs.subprogram(sp)[4] if sp else b''
                 if not code: empty.append(where); continue
@@ -3283,7 +3283,7 @@ def unity_shaders(d, label, out, trees):
             pairs |= unity_pass_pairs(o, legacy)
         out.extend(unity_compute(x, f'{label}{":" + node if node else ""}', trees))
         out.extend(unity_text_glslc(x, f'{label}{":" + node if node else ""}'))
-    if empty: print(f'unity shaders: {len(empty)} subprogram(s) without code left out (first: {empty[0]})', flush=True)   # PEANUTS(upstream-candidate): counted, not silent
+    if empty: print(f'unity shaders: {len(empty)} subprogram(s) without code left out (first: {empty[0]})', flush=True)   # KIWI(upstream-candidate): counted, not silent
     return pairs
 
 def unity_text_glslc(x, base):
@@ -3298,7 +3298,7 @@ def unity_text_glslc(x, base):
         if b'\x91\x68\x86\x19' in b: out += glslc_shaders(b, f'{base}#{name}', need=False)
     return out
 
-# PEANUTS(upstream-candidate): Level-5 NNDXDHSC v1 objects (Inazuma Eleven: Victory Road, GitHub PR #243)
+# KIWI(upstream-candidate): Level-5 NNDXDHSC v1 objects (Inazuma Eleven: Victory Road, GitHub PR #243)
 def nndx_shader(d, label):
     """Level-5 NNDXDHSC v1: binding tables, a single stage's code and control sections, then metadata."""
     version, tag = field(d, '<II', 8, label)
@@ -3319,7 +3319,7 @@ NEST = 16   # archives in archives scan_blob opens (SARC, PlatinumGames' DAT): r
             # that expands 9 times, which then added up to 18 times the file)
 def scan_blob(d, label, out, depth=0, left=None):
     if depth > NEST: red(f'{label}: archives nested more than {NEST} deep')
-    if d[:8] == b'NNDXDHSC': out.append(nndx_shader(d, label)); return   # PEANUTS(upstream-candidate): a Level-5 single-stage object
+    if d[:8] == b'NNDXDHSC': out.append(nndx_shader(d, label)); return   # KIWI(upstream-candidate): a Level-5 single-stage object
     if d[:4] == b'SHN!': out.extend(shn_shaders(d, label)); return
     if d[:8] == SUMO_MUX:
         members = list(sumo_members(d, label))
@@ -3395,7 +3395,7 @@ def pixel_input_cover(shaders):
         k = min(ins, key=lambda k: (-len(ins[k] & left), k)); cover.append(k); left -= ins[k]
     return cover
 
-# PEANUTS: Diablo III records contain one stage each.
+# KIWI: Diablo III records contain one stage each.
 SINGLE_STAGE = ('#GLSLC@', '#VIPER', '#UE', '#MTSPK@', '#MGFX@', '#NLG', '#PGSO', '#NNDX', '#RAW@', '#TFXO@', '#NEEDLE@', '#SNOWDROP@', '#PHYRE@', '#SUMO@', '#NVNSH@', '#D3@')   # sources whose every shader is a program of one stage: GLSLC outputs, Unreal's shader records, MT Framework's shader package (BNSH variations, Unity programs, MSHD and SDF pair theirs);
 # Unreal Engine 3's shader caches (ue3_shaders, '#UE3@'); MonoGame's effects, whose passes may name no vertex shader and keep the one bound (Celeste: 10 of its 13 effects draw through SpriteBatch's vertex shader, which is in main); Next Level Games'
 # archives (Luigi's Mansion 3 makes 5,317 programs of one stage each at boot); PlatinumGames' shader objects (Bayonetta 3: one stage each, pg_shader); control sections loose in main
@@ -3413,7 +3413,7 @@ def separable_pairs(keys):
 
 SMASH_ARC = struct.pack('<Q', 0xABCDEF9876543210)   # smash_arc.MAGIC (scan_file reads only the first bytes, without importing the reader)
 BND2 = b'bnd2'
-DRP = struct.pack('<I', 0x7F0E5359)   # drp.MAGIC, Crc32("DRPF") (scan_file reads only the first bytes, without importing the reader)   PEANUTS(upstream-candidate)
+DRP = struct.pack('<I', 0x7F0E5359)   # drp.MAGIC, Crc32("DRPF") (scan_file reads only the first bytes, without importing the reader)   KIWI(upstream-candidate)
 
 def bnd2_resources(d, label):
     """The resources of a Criterion Bundle 2 ('bnd2', Burnout Paradise's format; version 3 in Need for Speed: Hot Pursuit Remastered): → [(resource ID, type, block, data)].
@@ -3491,7 +3491,7 @@ def heaps_shaders(d, label):
     if not found: red(f'{label}: no GLSLC output in //BIN= comments')
     return found
 
-# PEANUTS(upstream-candidate): Alchemy's igArchive (iga_entries, iga_member, iga_shaders), first met on Crash Team Racing Nitro-Fueled
+# KIWI(upstream-candidate): Alchemy's igArchive (iga_entries, iga_member, iga_shaders), first met on Crash Team Racing Nitro-Fueled
 IGA = b'IGA\x1a'
 IGA_BLOCK = 0x8000
 
@@ -3663,16 +3663,16 @@ def scan_file(args):
     A file no reader can read (a format revision the reader does not know: its red line, or the exception it raised) is left out, and the split goes on: one such
     archive used to end the whole split with nothing written (PR #282: one of Mario Strikers: Battle League's 879 Next Level Games archives). main reports them.
     A file of DIRECT (DM_SPLIT_DIRECT) is read at its recorded containers (direct_file), whole when that cannot be done"""
-    # PEANUTS: on-device split support (see file header) — the DIRECT branch below
+    # KIWI: on-device split support (see file header) — the DIRECT branch below
     try:
-        if DIRECT and len(args) == 2 and (t := DIRECT.get(args[1])) and (r := direct_file(args, *t)) is not None: return r   # PEANUTS
+        if DIRECT and len(args) == 2 and (t := DIRECT.get(args[1])) and (r := direct_file(args, *t)) is not None: return r   # KIWI
         return scan_file_in(args)
     except (Exception, SystemExit) as e:   # red() is a SystemExit
         why = unreadable_why(e, args[1])
         print(f'[RED] {why} (its shaders are left out)', flush=True)
         return args[1], {}, set(), ('unreadable', why)
 
-# PEANUTS(upstream-candidate) begin: REDengine 3 shader cache readers, ported from nxnative a4c82979 (The Witcher 3)
+# KIWI(upstream-candidate) begin: REDengine 3 shader cache readers, ported from nxnative a4c82979 (The Witcher 3)
 RDHS, FZLC = b'RDHS', b'FZLC'
 
 def rdhs_shaders(path, label):
@@ -3726,7 +3726,7 @@ def fzlc_shaders(path, label):
         if len(p) != raw: red(f'{where} decompresses to {len(p)} bytes, its entry says {raw}')
         parts.append(p); at = end
     return glslc_shaders(b''.join(parts), label, need=False)
-# PEANUTS(upstream-candidate) end
+# KIWI(upstream-candidate) end
 
 def scan_file_in(args):
     path, rel = args[:2]
@@ -3734,14 +3734,14 @@ def scan_file_in(args):
     if ext in ('.data', '.patch', '.debug', '.nxpc') and os.path.exists(stem + '.dict'): return rel, {}, set(), {}   # read through its Next Level Games index (nlg_shaders)
     with open(path, 'rb') as f: head = f.read(16)
     found = Shaders(); trees = {}
-    if head[:12] == VFS3:   # PEANUTS: a Level-5 VFS3 archive (vfs3_members): its shader members, each checked against its extension
+    if head[:12] == VFS3:   # KIWI: a Level-5 VFS3 archive (vfs3_members): its shader members, each checked against its extension
         with open(path, 'rb') as f:
             for name, data in vfs3_members(f, rel):
                 label = f'/{rel}/{name}'; shaders = glslc_shaders(data, label)
                 if len(shaders) != 1 or shaders[0][1] != VFS3_STAGES[os.path.splitext(name)[1].lower()]: red(f'{label}: VFS3 shader stage mismatch')
                 found.extend(shaders)
         return rel, uniq_keys(found), var_pairs(found), trees
-    if len(args) > 2 and args[2][0] == b'ARH':   # PEANUTS: ARH1 and ARH2 share archive jobs
+    if len(args) > 2 and args[2][0] == b'ARH':   # KIWI: ARH1 and ARH2 share archive jobs
         arh_shaders(path, rel, args[2][1], found)
         return rel, uniq_keys(found), var_pairs(found), trees
     if head[:4] == NLG_DICT:
@@ -3774,17 +3774,17 @@ def scan_file_in(args):
     if len(args) > 2 and head[:4] == CRA:   # files of Camelot's archive (cra_jobs)
         cra_shaders(path, rel, args[2], found)
         return rel, uniq_keys(found), var_pairs(found), trees
-    # PEANUTS: Scan only the assigned Diablo III package range.
+    # KIWI: Scan only the assigned Diablo III package range.
     if len(args) > 2 and args[2][0] == D3CPK:   # a byte range of a Diablo III package (d3cpk_jobs)
         d3cpk_shaders(path, rel, args[2][1], args[2][2], found)
         return rel, uniq_keys(found), var_pairs(found), trees
-    if len(args) > 2 and args[2][0] == TTDAT:   # PEANUTS: files of a TT Games DAT archive (ttdat_jobs)
+    if len(args) > 2 and args[2][0] == TTDAT:   # KIWI: files of a TT Games DAT archive (ttdat_jobs)
         ttdat_shaders(path, rel, args[2][1], found)
         return rel, uniq_keys(found), var_pairs(found), trees
     if len(args) > 2 and head[:4] == CPK:   # entries of a CRI CPK (cpk_jobs)
         cpk_shaders(path, rel, args[2], found)
         return rel, uniq_keys(found), var_pairs(found), trees
-    if len(args) > 2 and head[:4] == MVGL and args[2][0] == MVGL:   # PEANUTS: 'shad' entries of a 64-bit MVGL archive (mvgl_jobs)
+    if len(args) > 2 and head[:4] == MVGL and args[2][0] == MVGL:   # KIWI: 'shad' entries of a 64-bit MVGL archive (mvgl_jobs)
         mvgl_shaders(path, rel, args[2][1], found)
         return rel, uniq_keys(found), var_pairs(found), trees
     if len(args) > 2 and head[:4] == KPKA:   # entries of an RE Engine PAK (kpka_jobs)
@@ -3793,7 +3793,7 @@ def scan_file_in(args):
     if len(args) > 2 and head[:8] == SMASH_ARC:   # files of Super Smash Bros. Ultimate's data.arc (smash_arc_jobs)
         smash_arc_shaders(path, rel, args[2], found)
         return rel, uniq_keys(found), var_pairs(found), trees
-    if head[:4] == DRP:   # a DRPF archive (New Pokémon Snap, drp.py): each entry decrypted and decoded, then scanned as a file of its own (the shaders are GLSLC outputs in its SSBH shader databases)   PEANUTS(upstream-candidate)
+    if head[:4] == DRP:   # a DRPF archive (New Pokémon Snap, drp.py): each entry decrypted and decoded, then scanned as a file of its own (the shaders are GLSLC outputs in its SSBH shader databases)   KIWI(upstream-candidate)
         from romfs import mmap
         import drp
         with open(path, 'rb') as f, mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as d:
@@ -3811,7 +3811,7 @@ def scan_file_in(args):
     if head[:4] == BND2:   # a Criterion Bundle 2 (Need for Speed: Hot Pursuit Remastered's SHADERS.BNDL): GLSLC outputs in its zlib resources (bnd2_shaders)
         found += bnd2_shaders(open(path, 'rb').read(), '/' + rel)
         return rel, uniq_keys(found), var_pairs(found), trees
-    if head[:4] == IGA:   # PEANUTS(upstream-candidate): an Alchemy igArchive (Crash Team Racing Nitro-Fueled's .pak files): GLSLC outputs in its LZMA files (iga_shaders)
+    if head[:4] == IGA:   # KIWI(upstream-candidate): an Alchemy igArchive (Crash Team Racing Nitro-Fueled's .pak files): GLSLC outputs in its LZMA files (iga_shaders)
         iga_shaders(path, rel, found)
         return rel, uniq_keys(found), var_pairs(found), trees
     if head[:3] == b'PAK':   # a Heaps PAK archive (Dead Cells): only its shader cache is read, not its 2 GB of other files (heaps_pak_files, heaps_shaders)
@@ -3853,7 +3853,7 @@ def scan_file_in(args):
                 if '.fx' in entry[0] or '/shaders/' in entry[0] or entry[0].endswith(('.vs.bin', '.ps.bin', '.fs.bin')):
                     found += phyre_shaders(vbf.read(f, entry), f'/{rel}/{entry[0]}')
         return rel, uniq_keys(found), var_pairs(found), trees
-    # PEANUTS(upstream-candidate) begin: REDengine 3 caches (nxnative a4c82979)
+    # KIWI(upstream-candidate) begin: REDengine 3 caches (nxnative a4c82979)
     if head[:4] == FZLC:   # REDengine 3's static shader cache (fzlc_shaders)
         found += fzlc_shaders(path, '/' + rel)
         return rel, uniq_keys(found), var_pairs(found), trees
@@ -3865,18 +3865,18 @@ def scan_file_in(args):
         if tail == RDHS:
             found += rdhs_shaders(path, '/' + rel)
             return rel, uniq_keys(found), var_pairs(found), trees
-    # PEANUTS(upstream-candidate) end
+    # KIWI(upstream-candidate) end
     # a file read whole: one of LARGE_FILE bytes or more is read by one worker at a time (LARGE_LOCK). Orbitals Deluxe Edition has a 6.4 GB IoStore container and
     # 0.1 to 0.9 GB videos; with every worker holding one, its full scan ran a 32 GB PC out of memory. Their shader markers occur in them by chance, so they are read
     large = head[:4] != ZSTD_MAGIC and LARGE_LOCK is not None and os.path.getsize(path) >= LARGE_FILE
-    if large and LARGE_LOCK is not None: LARGE_LOCK.acquire()   # PEANUTS(upstream-candidate): large already implies the lock exists
+    if large and LARGE_LOCK is not None: LARGE_LOCK.acquire()   # KIWI(upstream-candidate): large already implies the lock exists
     try: return scan_whole(path, rel, head, found, trees)
     finally:
-        if large and LARGE_LOCK is not None: LARGE_LOCK.release()   # PEANUTS(upstream-candidate): large already implies the lock exists
+        if large and LARGE_LOCK is not None: LARGE_LOCK.release()   # KIWI(upstream-candidate): large already implies the lock exists
 
 def scan_whole(path, rel, head, found, trees):   # scan_file_in for a file no archive reader took: read whole, decoded by its first bytes, then scanned
-    d, kind = plain_blob(path, rel, head)   # PEANUTS: on-device split support — plain_blob factored out below for direct_file's reuse (see file header)
-    if kind == 'shn':   # PEANUTS: upstream's SHN! branch, through plain_blob
+    d, kind = plain_blob(path, rel, head)   # KIWI: on-device split support — plain_blob factored out below for direct_file's reuse (see file header)
+    if kind == 'shn':   # KIWI: upstream's SHN! branch, through plain_blob
         found += shn_shaders(d, '/' + rel)
         return rel, uniq_keys(found), var_pairs(found), trees
     if kind == 'monolith':
@@ -3914,7 +3914,7 @@ def plain_blob(path, rel, head):
     if head[:4] == ZSTD_MAGIC: d = unzs(path)
     else:
         with open(path, 'rb') as f: d = f.read()
-    if d[:4] == b'SHN!': return d, 'shn'   # PEANUTS: upstream's shader archive of its own reader (shn_shaders), asked before the gzip probe as upstream's scan_whole asked
+    if d[:4] == b'SHN!': return d, 'shn'   # KIWI: upstream's shader archive of its own reader (shn_shaders), asked before the gzip probe as upstream's scan_whole asked
     if d[:3] == b'\x1f\x8b\x08': d = ungzip(d, '/' + rel); head = d[:16]
     if head[4:5] == b'\x78' and path.endswith('.gz') and (z := gust_gz(d)) is not None: d = z
     if d[:4] in (b'HCPS', b'xbc1', b'DRSM') or d[:8] == b'cmp\0zlib': return d, 'monolith'
@@ -3938,11 +3938,11 @@ DIRECT_FORMS = re.compile(r'#BNSH@(0x[0-9a-f]+)#var[0-9]+$|#BAHS@(0x[0-9a-f]+)$|
 
 def source_file(s, rels):
     """The RomFS file of a map source (without its leading '/'): the shortest prefix ending at a '/', '#' or ':' or the end that is a file of the dump (rels), or None"""
-    # PEANUTS: Recover the source package from the shader record.
+    # KIWI: Recover the source package from the shader record.
     if '#D3@' in s: s = s.split('#D3@', 1)[0].rsplit('@', 1)[0]   # d3cpk_shaders names the archive followed by the stream offset
     return next((s[:i] for i in [i for i, ch in enumerate(s) if ch in '/#:'] + [len(s)] if s[:i] in rels), None)   # ':' a Unity bundle's member (profile_files)
 
-# PEANUTS: on-device split support (see file header)
+# KIWI: on-device split support (see file header)
 def map_sources(keys=False):
     """The RomFS sources of the profile's shader_map.tsv, without their leading '/' (main's and the captures' are not RomFS files: NOT_ROMFS); with keys, {(source, key)}"""
     srcs = set()
@@ -3952,7 +3952,7 @@ def map_sources(keys=False):
             if len(c) > 4 and c[0].endswith('.bin') and c[4].startswith('/') and not c[4].startswith(NOT_ROMFS): srcs.add((c[4][1:], c[3]) if keys else c[4][1:])
     return srcs
 
-# PEANUTS: on-device split support (see file header)
+# KIWI: on-device split support (see file header)
 def direct_targets(files):
     """DM_SPLIT_DIRECT=1: {relative path: ([(member path, kind, offset)], (the map's keys of the file, sorted))} of the files among files ((path, rel) of the targeted scan's plain jobs) whose
     every map source is a recorded container (DIRECT_FORMS); kind 'BNSH' with the container's offset, 'BAHS' with 0 (the member is the BAHS file, parsed whole), 'IDRK' with the entry's data
@@ -3972,13 +3972,13 @@ def direct_targets(files):
         keys[r].add(k)
     return {r: (sorted(t), tuple(sorted(keys[r]))) for r, t in out.items() if r not in plain}
 
-# PEANUTS: on-device split support (see file header)
+# KIWI: on-device split support (see file header)
 def direct_file(args, targets, keys):
     """scan_file's result for a file of DIRECT: its recorded containers only; None when the file is to be scanned whole (another reader's head, a member or container not where the
     map says, a reader's error: the whole scan then says what is wrong, as before). keys: the map's keys of this file; a result without every one of them (a container that moved,
     a variation the reader files elsewhere) is dropped and the file scanned whole, so a mismatch costs that file's whole scan and never the tables' comparison"""
     path, rel = args
-    large = False   # PEANUTS: this read holds upstream's lock for large files (LARGE_LOCK, scan_file_in), as the whole scan's read of the same file does
+    large = False   # KIWI: this read holds upstream's lock for large files (LARGE_LOCK, scan_file_in), as the whole scan's read of the same file does
     try:
         with open(path, 'rb') as f: head = f.read(16)
         found = Shaders()
@@ -3990,8 +3990,8 @@ def direct_file(args, targets, keys):
         else:
             if any(k == 'IDRK' for _, k, _ in targets): return None
             if head[:4] in (BND2, SPKG, RFRM, b'BERG', MTARC, SCNE, b'BMSG', b'SRYK') or head[:3] == b'PAK' or head[:8] == GFPAK or ue3_package(head) or head[:4] == b'\0\0\1\0' and path.endswith('.gz'): return None
-            large = head[:4] != ZSTD_MAGIC and LARGE_LOCK is not None and os.path.getsize(path) >= LARGE_FILE   # PEANUTS (see large above)
-            if large and LARGE_LOCK is not None: LARGE_LOCK.acquire()   # PEANUTS(upstream-candidate): large already implies the lock exists
+            large = head[:4] != ZSTD_MAGIC and LARGE_LOCK is not None and os.path.getsize(path) >= LARGE_FILE   # KIWI (see large above)
+            if large and LARGE_LOCK is not None: LARGE_LOCK.acquire()   # KIWI(upstream-candidate): large already implies the lock exists
             d, kind = plain_blob(path, rel, head)
             if kind or d[:3] == b'XNB' or d[:8] == b'UnityFS\0' or (d[8:11] == b'\0\0\0' and __import__('unityfs').is_serialized(d)): return None
             if not direct_blob(d, '/' + rel, {m: [(k, o) for _, k, o in g] for m, g in __import__('itertools').groupby(targets, key=lambda t: t[0])}, found):
@@ -4005,7 +4005,7 @@ def direct_file(args, targets, keys):
         print(f'direct: /{rel}: {str(e).removeprefix("[RED] ")}; the file is scanned whole', flush=True)
         return None
     finally:
-        if large and LARGE_LOCK is not None: LARGE_LOCK.release()   # PEANUTS(upstream-candidate): large already implies the lock exists; release before a fallback whole scan
+        if large and LARGE_LOCK is not None: LARGE_LOCK.release()   # KIWI(upstream-candidate): large already implies the lock exists; release before a fallback whole scan
 
 def direct_blob(d, label, targets, found):
     """The recorded containers of a blob into found: targets = {member path: [(kind, offset)]}, '' the blob itself. A Yaz0 blob is decoded; the members are those of a SARC, taken in its
@@ -4090,7 +4090,7 @@ class InProcess:
         return f
     def map(self, fn, it): return map(fn, it)
 
-# PEANUTS: on-device split support (see file header): the direct parameter and DM_SPLIT_WORKER's pipe workers
+# KIWI: on-device split support (see file header): the direct parameter and DM_SPLIT_WORKER's pipe workers
 def pool(J, common, trees, zdicts, direct=None):
     """The scan's workers: J processes sharing one lock for the large files read whole (LARGE_LOCK), or this process when J is 1 (InProcess). DM_SPLIT_WORKER=<command>
     (the phone's split, PackService): the workers are processes of that command, which runs Python as `python3 -c` does, over pipes (split_pool.py: the phone's Python has
@@ -4226,19 +4226,19 @@ def scan_digest(argv, jobs, sources=None):
         with open(p, 'rb') as f: h.update(hashlib.sha256(f.read()).digest())
     return h.hexdigest()
 
-def pn_split():   # PEANUTS: dm/peanuts/reuse/split_reuse.py (issue #120): the scan results of unchanged game files, kept across builds; None on a computer (no PN_REUSE_DIR) or with PN_REUSE=0
+def pn_split():   # KIWI: dm/kiwi/reuse/split_reuse.py (issue #120): the scan results of unchanged game files, kept across builds; None on a computer (no PN_REUSE_DIR) or with PN_REUSE=0
     if os.environ.get('PN_REUSE') == '0' or not os.environ.get('PN_REUSE_DIR'): return None
-    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../peanuts/reuse'))
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../kiwi/reuse'))
     import split_reuse
     return split_reuse
 
-def pooled(ex, jobs, total, start=0, chunk=1, cache=None, pn=None):   # PEANUTS: pn (split_reuse.Context)
+def pooled(ex, jobs, total, start=0, chunk=1, cache=None, pn=None):   # KIWI: pn (split_reuse.Context)
     """scan_file over jobs in the pool, the results in job order, with a 'progress: <done>/<total>' line at most twice a second (the NSP script shows it as
     the stage's count). The count is of the jobs finished in any order: counted in order it would stall behind one slow archive range while the others finish.
     start is the index of the first job among all the split's jobs (the count's start and ScanCache's keys); batches the cache holds whole are not scanned again"""
     cache = cache or ScanCache(None)
-    if pn: pn.fill(cache, jobs, start, chunk)   # PEANUTS: kept results of unchanged files into the cache (split_reuse.py)
-    batches = pn.batches(jobs, start, chunk, cache) if pn and not pn.off else [(start + i, jobs[i:i + chunk]) for i in range(0, len(jobs), chunk)]   # PEANUTS: pn: each kept job a batch of its own
+    if pn: pn.fill(cache, jobs, start, chunk)   # KIWI: kept results of unchanged files into the cache (split_reuse.py)
+    batches = pn.batches(jobs, start, chunk, cache) if pn and not pn.off else [(start + i, jobs[i:i + chunk]) for i in range(0, len(jobs), chunk)]   # KIWI: pn: each kept job a batch of its own
     kept = {first: r for first, b in batches if (r := cache.cached(first, len(b))) is not None}
     done, shown = start + sum(len(r) for r in kept.values()), 0.0
     if kept: print(f'progress: {done}/{total}', flush=True); shown = time.monotonic()
@@ -4261,12 +4261,12 @@ def pooled(ex, jobs, total, start=0, chunk=1, cache=None, pn=None):   # PEANUTS:
     finally:
         AT = None
         cache.flush()   # also on an interrupt (KeyboardInterrupt): what finished is kept
-    out = [r for first, _ in batches for r in kept[first]]   # PEANUTS: named, for pn below
-    if pn: pn.store(jobs, out, start)   # PEANUTS: the new results kept; split_reuse.Stale when a file scanned to check differs from its kept result
+    out = [r for first, _ in batches for r in kept[first]]   # KIWI: named, for pn below
+    if pn: pn.store(jobs, out, start)   # KIWI: the new results kept; split_reuse.Stale when a file scanned to check differs from its kept result
     return out
 
 
-# PEANUTS begin: a list argument (RomFS, main, DLC) whose paths may hold a comma. The lists were split at every ',', so one game file named with a comma
+# KIWI begin: a list argument (RomFS, main, DLC) whose paths may hold a comma. The lists were split at every ',', so one game file named with a comma
 # ("Yoru, Tomosu [0100C2901153C000].nup", or a folder above it) became two paths that do not exist and the split stopped with FileNotFoundError.
 LIST_SEP = '\x1f'   # ASCII unit separator: not a character of a Windows file name, and not one anybody types into a POSIX one
 
@@ -4277,17 +4277,17 @@ def path_list(arg):
     try: there = os.path.exists(arg)
     except ValueError: there = False   # a list whose first part names a file that is no .nup
     return [arg] if there else arg.split(',')
-# PEANUTS end
+# KIWI end
 
 
 def main():
     romfs_l, main_l, pkg, mapout, factsout = sys.argv[1:6]
     pairsout = sys.argv[6] if len(sys.argv) > 6 else None
     psopairsout = sys.argv[7] if len(sys.argv) > 7 else None   # pso_pairs.tsv: supplemental BAHS program variations and legacy Unity pass-input covers
-    dlc_v = path_list(sys.argv[8]) if len(sys.argv) > 8 and sys.argv[8] else []   # extra content has no ExeFS; each root is the extracted DLC index (PEANUTS: path_list, was split(','))
+    dlc_v = path_list(sys.argv[8]) if len(sys.argv) > 8 and sys.argv[8] else []   # extra content has no ExeFS; each root is the extracted DLC index (KIWI: path_list, was split(','))
     # Several versions (base game + update): the RomFS and main arguments are comma-separated and paired one to one; the output is their union (keys are content hashes, shaders shared by versions appear once).
     # The first version's source column is unchanged; later versions are prefixed with their workspace directory name (e.g. v327680): /v327680/Shader/…, main@v327680. They sort after the first version, so existing rows keep their package indices.
-    romfs_v, main_v = [nup.default_romfs(r) for r in path_list(romfs_l)], path_list(main_l)   # PEANUTS: path_list (was split(',')): a path may hold a comma
+    romfs_v, main_v = [nup.default_romfs(r) for r in path_list(romfs_l)], path_list(main_l)   # KIWI: path_list (was split(',')): a path may hold a comma
     dlc_v = [nup.default_romfs(r) for r in dlc_v]
     if len(romfs_v) != len(main_v): red(f'{len(romfs_v)} RomFS and {len(main_v)} main: they must pair one to one')
     files, results, common, dumps, nros = [], [], None, [], []
@@ -4295,7 +4295,7 @@ def main():
         tag = os.path.basename(os.path.dirname(os.path.abspath(romfs))) if i else ''
         stage('listing the game\'s files')
         files += sorted(((os.path.join(dp, f), (tag + '/' if tag else '') + posix_rel(os.path.join(dp, f), romfs)) for dp, _, fs in os.walk(romfs) for f in fs), key=lambda t: t[1])   # by the '/' path: the same order on every system
-        stage('reading the game\'s code')  # PEANUTS: build text in the player's words (0.1.8)
+        stage('reading the game\'s code')  # KIWI: build text in the player's words (0.1.8)
         img = nso_image(mainnso)
         stage('looking for shaders in the game\'s code')
         if not i:
@@ -4323,11 +4323,11 @@ def main():
         dumps += nvn_dumps(os.environ.get('DM_NVN_SHDUMP_DIR') or os.path.join(os.path.dirname(os.path.abspath(romfs)), 'nvn_shdump'))
         # Unreal Engine shader code archives decoded on the Mac (uepak.py): <version dir>/ue_shaders, or DM_UE_SHADERS; needed when the RomFS has Unreal paks
         ued = os.environ.get('DM_UE_SHADERS') or os.path.join(os.path.dirname(os.path.abspath(romfs)), 'ue_shaders')
-        names = sorted(f for f in os.listdir(ued) if f.endswith('.ushaderbytecode') and not f.startswith('._')) if os.path.isdir(ued) else []   # PEANUTS(upstream-candidate): AppleDouble metadata, not decoded shader archives
+        names = sorted(f for f in os.listdir(ued) if f.endswith('.ushaderbytecode') and not f.startswith('._')) if os.path.isdir(ued) else []   # KIWI(upstream-candidate): AppleDouble metadata, not decoded shader archives
         if not names:
-            # PEANUTS: test for the archive itself. IoStore can hold a library beside a pak containing only other assets.
+            # KIWI: test for the archive itself. IoStore can hold a library beside a pak containing only other assets.
             try: needs_archives = uepak.unreal_paks(romfs, inline=False, mains=[mainnso]) or uepak.io_shader_tocs(romfs)
-            except ImportError as e: red(f'the RomFS has Unreal paks whose index is encrypted, and this Python has no AES to read it with ({e}): the Peanuts builder makes the module (peanuts-build, peanuts/docs/BUILDER.md); pack_android.py run by hand needs its folder in PYTHONPATH')
+            except ImportError as e: red(f'the RomFS has Unreal paks whose index is encrypted, and this Python has no AES to read it with ({e}): the Kiwi builder makes the module (kiwi-build, kiwi/docs/BUILDER.md); pack_android.py run by hand needs its folder in PYTHONPATH')
             if needs_archives and os.environ.get('DM_UE_DECODE'):
                 import ue_ondevice
                 ued = ue_ondevice.decode(romfs, mainnso, os.environ['DM_UE_DECODE'])
@@ -4348,20 +4348,20 @@ def main():
     targeted = os.environ.get('DM_SPLIT_TARGETED') == '1'
     out = None
     if targeted:
-        version = single_shader_version(main_v)   # PEANUTS: a profile can combine several builds while Prepare splits just one
-        want, why = profile_files(files, main_v, version)   # PEANUTS: use the active version's unprefixed RomFS paths
-        if rd:   # PEANUTS: on-device split support (see file header) — the direct, the targeted and the full scan keep their results apart, so a scan the one before fell back to resumes as that scan
+        version = single_shader_version(main_v)   # KIWI: a profile can combine several builds while Prepare splits just one
+        want, why = profile_files(files, main_v, version)   # KIWI: use the active version's unprefixed RomFS paths
+        if rd:   # KIWI: on-device split support (see file header) — the direct, the targeted and the full scan keep their results apart, so a scan the one before fell back to resumes as that scan
             os.makedirs(rd, exist_ok=True)
             for f in os.listdir(rd):
-                if f not in ('direct', 'targeted', 'full', 'direct.failed', 'targeted.failed'): _remove(os.path.join(rd, f))   # an older split's results, kept in the folder itself (direct/*.failed: PEANUTS)
+                if f not in ('direct', 'targeted', 'full', 'direct.failed', 'targeted.failed'): _remove(os.path.join(rd, f))   # an older split's results, kept in the folder itself (direct/*.failed: KIWI)
         if want is not None:
             big, todo = scan_jobs(files, want, main_v, nros)
             dg = scan_digest(inputs, big + todo + mains)
-            if not (rd and os.path.isfile(tf := os.path.join(rd, 'targeted.failed')) and open(tf).read().strip() == dg):   # PEANUTS: not on a rerun that an earlier run's targeted.failed sends to the full scan, as before the modes loop
+            if not (rd and os.path.isfile(tf := os.path.join(rd, 'targeted.failed')) and open(tf).read().strip() == dg):   # KIWI: not on a rerun that an earlier run's targeted.failed sends to the full scan, as before the modes loop
                 print(f'targeted split: {len(want):,} of {len(files):,} RomFS files hold the shaders of the profile\'s shader_map.tsv (main build {", ".join(cast(str, build_id(m)) for m in main_v)}); only these are scanned', flush=True)
-            # PEANUTS: on-device split support (see file header) — the direct scan first (DM_SPLIT_DIRECT: the recorded containers of each file, direct_targets), the targeted
+            # KIWI: on-device split support (see file header) — the direct scan first (DM_SPLIT_DIRECT: the recorded containers of each file, direct_targets), the targeted
             # scan of the whole files when its tables differ; each keeps its own results and its own 'failed' digest (ScanCache's digest with the containers, as the results hold other shaders)
-            modes: list[tuple[str, dict | None, str]] = [('targeted', None, dg)]   # PEANUTS(upstream-candidate): direct mode carries its container table
+            modes: list[tuple[str, dict | None, str]] = [('targeted', None, dg)]   # KIWI(upstream-candidate): direct mode carries its container table
             if os.environ.get('DM_SPLIT_DIRECT') == '1' and (dt := direct_targets(todo)):
                 modes.insert(0, ('direct', dt, hashlib.sha256((dg + repr(sorted(dt.items()))).encode()).hexdigest()))
             for mode, direct, mdg in modes:
@@ -4372,11 +4372,11 @@ def main():
                 try:
                     out = split_tables(list(results), big, todo, dumps, J, common, zdicts, ScanCache(os.path.join(rd, mode), mdg) if rd else None, targeted=True, direct=direct)
                     stage('comparing the shaders found with the app\'s list')
-                    why = profile_differs(out, pairsout, psopairsout, version)   # PEANUTS: compare with the profile's active version
+                    why = profile_differs(out, pairsout, psopairsout, version)   # KIWI: compare with the profile's active version
                 except Fallback as e: why = str(e)
-                if not why:   # PEANUTS: a single version can reorder the union profile's records and relocate their sources
-                    agreement = f'its tables match the profile for {version}' if version else "its tables are the profile's, byte for byte"   # PEANUTS
-                    print(f'{mode} split: {agreement}', flush=True); break   # PEANUTS
+                if not why:   # KIWI: a single version can reorder the union profile's records and relocate their sources
+                    agreement = f'its tables match the profile for {version}' if version else "its tables are the profile's, byte for byte"   # KIWI
+                    print(f'{mode} split: {agreement}', flush=True); break   # KIWI
                 out = None; why = f'the {mode} scan ' + why
                 if failed:
                     with open(failed, 'w') as f: f.write(mdg + '\n')
@@ -4391,7 +4391,7 @@ def main():
         out = split_tables(list(results), big, todo, dumps, J, common, zdicts, ScanCache(cd, scan_digest(inputs, big + todo + mains)) if cd else None)
     stage('saving the shaders found')
     write_outputs(out, pkg, mapout, factsout, pairsout, psopairsout)
-    if d := os.environ.get('DM_SPLIT_DIFF_DIR'):   # PEANUTS: the tables written, kept as final.<name> (a profile regenerated from a device's full scan: the build deletes its own copies)
+    if d := os.environ.get('DM_SPLIT_DIFF_DIR'):   # KIWI: the tables written, kept as final.<name> (a profile regenerated from a device's full scan: the build deletes its own copies)
         import shutil
         os.makedirs(d, exist_ok=True)
         for p in (mapout, factsout, pairsout, psopairsout):
@@ -4406,7 +4406,7 @@ def build_id(path):
 
 NOT_ROMFS = ('/glslc_capture/', '/ue_shaders/', '/nvn_shdump')   # map sources that are no RomFS file (main's have no leading '/'): main() reads them on every run
 
-# PEANUTS begin: the source prefixes of a multi-version profile name versions of the dump, not its folders.
+# KIWI begin: the source prefixes of a multi-version profile name versions of the dump, not its folders.
 def single_shader_version(mains):
     versions = GAME.words('shader_versions', '')
     if len(mains) != 1 or len(versions) < 2:
@@ -4419,7 +4419,7 @@ def single_shader_version(mains):
 def profile_source_version(source):
     m = re.match(r'(?:/|main@)(v[0-9]+)(?:/|#|$)', source)
     if not m and source.startswith('main#'):
-        # PEANUTS: Breath of the Wild's combined map appends the version to the variation label.
+        # KIWI: Breath of the Wild's combined map appends the version to the variation label.
         m = re.search(r'@(v[0-9]+)$', source)
     return m[1] if m else None
 
@@ -4451,7 +4451,7 @@ def optional_in_other_versions(others):
             if m and m[1] in others:
                 keys.add(key)
     return keys
-# PEANUTS end
+# KIWI end
 
 
 def profile_files(files, main_v, version=None):
@@ -4462,7 +4462,7 @@ def profile_files(files, main_v, version=None):
     targeted scan is not taken)"""
     m = GAME.table('shader_map.tsv')
     if not os.path.isfile(m): return None, 'the profile has no shader_map.tsv'
-    # PEANUTS: an executable can be registered for rewriting without its RomFS having contributed to the shader map.
+    # KIWI: an executable can be registered for rewriting without its RomFS having contributed to the shader map.
     builds = GAME.builds()
     versions = set(GAME.words('shader_versions', ''))
     known = {b['main'] for b in builds.values() if 'main' in b}
@@ -4471,7 +4471,7 @@ def profile_files(files, main_v, version=None):
         b = build_id(p)
         if b not in known: return None, f'main\'s build {b} is not one the profile was made from ({", ".join(sorted(known)) or "it has no build rows"})'
         if b in unprofiled: return None, f'main\'s build {b} belongs to a version outside the profile\'s shader_versions'
-    # PEANUTS begin: resolve the active version's paths without treating a missing required shader as optional.
+    # KIWI begin: resolve the active version's paths without treating a missing required shader as optional.
     other_versions = versions - {version} if version else set()
     optional = optional_in_other_versions(other_versions)
     required_sources = {}
@@ -4491,13 +4491,13 @@ def profile_files(files, main_v, version=None):
                 continue
             return None, f'the profile\'s shader_map.tsv names {source}, and the dump has no such file'
         want.add(r)
-    # PEANUTS end
+    # KIWI end
     # the files that hold only copies of shaders found earlier name no row's source, but their variations can pair them anew (Donkey Kong Bananza: 42 of its 15,576
     # pairs): the profile's shader_files.tsv (a full split's, DM_SPLIT_FILES) lists every file a shader was found in. One it names that the dump lacks is passed over:
     # the comparison with the profile's tables decides
     fl = GAME.table('shader_files.tsv')
     if os.path.isfile(fl):
-        with open(fl, encoding='utf-8') as f: want |= {r for ln in f if not ln.startswith('#') and (r := source_for_version('/' + ln.rstrip('\n'), version)[1:]) in rels}   # PEANUTS: the full split's file list uses the map's version prefixes
+        with open(fl, encoding='utf-8') as f: want |= {r for ln in f if not ln.startswith('#') and (r := source_for_version('/' + ln.rstrip('\n'), version)[1:]) in rels}   # KIWI: the full split's file list uses the map's version prefixes
     return want, None
 
 def profile_differs(t, pairsout, psopairsout, version=None):
@@ -4506,7 +4506,7 @@ def profile_differs(t, pairsout, psopairsout, version=None):
     shader_files.tsv lists it, the targeted scan leaves it out, and this comparison sends such a dump to the full scan. A table the profile does not have is not compared.
     A registered build may lack keys of the map (shader_optional.tsv: Mario Kart World 1.8.0 as update 917504 lacks one agl compute program). The targeted scan reads the
     file each such key's row names, so a key it did not find is not in the dump: the profile's tables less those keys (absent_tables) are what a full scan of it makes"""
-    # PEANUTS: most profiles have no optional keys. Only read their map for comparison below.
+    # KIWI: most profiles have no optional keys. Only read their map for comparison below.
     absent = set()
     optional = optional_keys()
     other_versions = set(GAME.words('shader_versions')) - {version} if version else set()
@@ -4521,24 +4521,24 @@ def profile_differs(t, pairsout, psopairsout, version=None):
         p = GAME.table(name)
         if text is None or not os.path.isfile(p): continue
         with open(p, encoding='utf-8', newline='') as f: want = absent_tables(name, f.read(), absent)
-        if version and name in ('shader_pairs.tsv', 'pso_pairs.tsv'):   # PEANUTS: another build can pair two keys that are both present here
+        if version and name in ('shader_pairs.tsv', 'pso_pairs.tsv'):   # KIWI: another build can pair two keys that are both present here
             optional_pairs = GAME.table(name.removesuffix('.tsv') + '_optional.tsv')
             if os.path.isfile(optional_pairs):
                 with open(optional_pairs, encoding='utf-8') as f:
                     may_lack = {ln.rstrip('\n').split('\t', 1)[1] for ln in f if ln.startswith(version + '\t')}
                 missing = may_lack.difference(tables_data(text))
                 want = ''.join(ln for ln in want.splitlines(keepends=True) if ln.rstrip('\r\n') not in missing)
-        compare = version_map_rows if version and name == 'shader_map.tsv' else tables_data   # PEANUTS: compare records by key even if this version's source order differs
+        compare = version_map_rows if version and name == 'shader_map.tsv' else tables_data   # KIWI: compare records by key even if this version's source order differs
         # the comment lines are left out: they name the game and the split's wording at the time, which a newer split or a renamed profile changes
         # (Orbitals Deluxe Edition: its map's first line named the title ID, the split now writes the game's name, and every file was scanned in full)
-        if compare(want) != compare(text):   # PEANUTS: exact table comparison except a union map's record locations
-            if d := os.environ.get('DM_SPLIT_DIFF_DIR'):   # PEANUTS: the targeted table and the profile's as compared, to see why a title falls back to the full scan
+        if compare(want) != compare(text):   # KIWI: exact table comparison except a union map's record locations
+            if d := os.environ.get('DM_SPLIT_DIFF_DIR'):   # KIWI: the targeted table and the profile's as compared, to see why a title falls back to the full scan
                 os.makedirs(d, exist_ok=True)
-                with open(os.path.join(d, 'targeted.' + name), 'w', encoding='utf-8', newline='') as f: f.write(text)   # PEANUTS
-                with open(os.path.join(d, 'profile.' + name), 'w', encoding='utf-8', newline='') as f: f.write(want)   # PEANUTS
+                with open(os.path.join(d, 'targeted.' + name), 'w', encoding='utf-8', newline='') as f: f.write(text)   # KIWI
+                with open(os.path.join(d, 'profile.' + name), 'w', encoding='utf-8', newline='') as f: f.write(want)   # KIWI
             return f'made a {name} that differs from the profile\'s'
     if absent:
-        kinds = 'the other listed builds' if version else 'shader_optional.tsv'   # PEANUTS: a multi-version profile also records version tags in its map
+        kinds = 'the other listed builds' if version else 'shader_optional.tsv'   # KIWI: a multi-version profile also records version tags in its map
         print(f'targeted split: compared with the profile\'s tables less the {len(absent)} shader(s) of {kinds} this dump does not have ({", ".join(sorted(absent)[:3])})', flush=True)
     return None
 
@@ -4551,7 +4551,7 @@ def optional_keys():
     if not os.path.isfile(p): return set()
     with open(p, encoding='utf-8') as f: return {ln.split('\t')[0] for ln in f.read().splitlines() if ln and not ln.startswith('#')}
 
-# PEANUTS: profile_differs collects the absent keys once for all four tables.
+# KIWI: profile_differs collects the absent keys once for all four tables.
 def absent_tables(name, text, absent):
     """A profile table as the split of a dump without the keys absent writes it: their rows left out, and in shader_map.tsv the later rows of each package
     renumbered (split_tables counts a package's rows as it writes them). The comment and header lines stay"""
@@ -4572,51 +4572,51 @@ def scan_jobs(files, want=None, mains=(), nros=()):
     want, only the jobs of those files are kept, in the full scan's order. nros: the game's runtime NROs (runtime_nros), where Camelot's archive keeps its file table"""
     big = [j for p, r in files for j in (linkdata_jobs(p, r) or [])]   # Three Houses' 6.9 GB DATA1.bin: one job per range of entries, not one read of the whole file
     pak_jobs, paks = kpka_jobs(files)   # Monster Hunter Rise's PAKs: the newest copy of each path, in ranges of entries
-    tr_jobs, trp = trpfs_jobs(files, targeted=want is not None)   # PEANUTS: Pokémon Legends: Z-A's Trinity packs (data.trpfs and its index data.trpfd), decoded by the game's own Oodle in the Mac host
+    tr_jobs, trp = trpfs_jobs(files, targeted=want is not None)   # KIWI: Pokémon Legends: Z-A's Trinity packs (data.trpfs and its index data.trpfd), decoded by the game's own Oodle in the Mac host
     ue_jobs, uep = ue_legacy_jobs(files, mains=mains)   # Unreal paks with inline shaders: DRAGON QUEST XI S's legacy ones (the game's own LZ5 in the Mac host), OCTOPATH TRAVELER II's (Zlib)
     bd_jobs, bdts = bdt_jobs(files)   # Dark Souls Remastered's dvdbnd archives: the entries of each .bdt by its .bhd5 index, in ranges
     arc_jobs, arcs = smash_arc_jobs(files)   # Super Smash Bros. Ultimate's data.arc: its current files, in ranges
     pz_jobs, pkzs = pkz_jobs(files)   # Bayonetta 3's PKZ archives, Oodle Kraken decoded by the game's own decoder in the Mac host
-    ck_jobs, cpks = cpk_jobs(files, names=cpk_map_entries(files) if want is not None else None)   # Bayonetta 2's CRI CPK archives (CRILAYLA entries); PEANUTS: targeted, the map's entries only
+    ck_jobs, cpks = cpk_jobs(files, names=cpk_map_entries(files) if want is not None else None)   # Bayonetta 2's CRI CPK archives (CRILAYLA entries); KIWI: targeted, the map's entries only
     # Portal's game.zip (Deflate members), Mario Tennis Fever's CRA archive, and Kirby Air Riders' PDAT archives. Each is found by its first bytes, so this opens each
     # file it is given: only the wanted ones, since none of them needs another file (Mario Kart World's 206,326 RomFS files took 29 s here on a Mac and minutes on a
     # Windows PC before the targeted scan had printed anything)
     by_head = files if want is None else [f for f in files if f[1] in want]
-    # PEANUTS: Plan parallel jobs for selected Diablo III packages.
+    # KIWI: Plan parallel jobs for selected Diablo III packages.
     d3_jobs, d3s = d3cpk_jobs(by_head)
     cr_jobs, cras = cra_jobs(by_head, nros=nros)
     zp_jobs, zips = zip_jobs(by_head)
     ah_jobs, arhs = arh_jobs(files)   # Monolith's ARH1/ARD archives and embedded XBC1/HCPS programs
     fb_jobs, fbs = frostbite_jobs(files)   # EA SPORTS FC 27's Frostbite bundles, Oodle Leviathan decoded by the game's own decoder in the Mac host
     pd_jobs, pdats = pdat_jobs(by_head)
-    mv_jobs, mvgls = mvgl_jobs(by_head)   # PEANUTS: Digimon Story Time Stranger's 64-bit MVGL archives
-    tt_jobs, tts = ttdat_jobs(by_head)   # PEANUTS: LEGO CITY UNDERCOVER's TT Games DAT archives
-    # PEANUTS: Schedule package ranges alongside other split jobs.
-    big += pak_jobs + tr_jobs + ue_jobs + bd_jobs + arc_jobs + pz_jobs + ck_jobs + d3_jobs + cr_jobs + zp_jobs + ah_jobs + fb_jobs + pd_jobs + mv_jobs + tt_jobs   # PEANUTS: + mv_jobs, + tt_jobs
-    files = [(p, r) for p, r in files if not linkdata_jobs(p, r) and p not in paks and p not in trp and p not in uep and p not in bdts and p not in arcs and p not in pkzs and p not in cpks and p not in d3s and p not in cras and p not in zips and p not in arhs and p not in fbs and p not in pdats and p not in mvgls and p not in tts]   # PEANUTS: and mvgls, and tts
+    mv_jobs, mvgls = mvgl_jobs(by_head)   # KIWI: Digimon Story Time Stranger's 64-bit MVGL archives
+    tt_jobs, tts = ttdat_jobs(by_head)   # KIWI: LEGO CITY UNDERCOVER's TT Games DAT archives
+    # KIWI: Schedule package ranges alongside other split jobs.
+    big += pak_jobs + tr_jobs + ue_jobs + bd_jobs + arc_jobs + pz_jobs + ck_jobs + d3_jobs + cr_jobs + zp_jobs + ah_jobs + fb_jobs + pd_jobs + mv_jobs + tt_jobs   # KIWI: + mv_jobs, + tt_jobs
+    files = [(p, r) for p, r in files if not linkdata_jobs(p, r) and p not in paks and p not in trp and p not in uep and p not in bdts and p not in arcs and p not in pkzs and p not in cpks and p not in d3s and p not in cras and p not in zips and p not in arhs and p not in fbs and p not in pdats and p not in mvgls and p not in tts]   # KIWI: and mvgls, and tts
     if want is not None: big, files = [j for j in big if j[1] in want], [f for f in files if f[1] in want]
     return big, files
 
-def split_tables(results, big, files, dumps, J, common, zdicts, cache, targeted=False, direct=None):   # PEANUTS: direct= on-device split support (see file header)
+def split_tables(results, big, files, dumps, J, common, zdicts, cache, targeted=False, direct=None):   # KIWI: direct= on-device split support (see file header)
     """Scans the jobs (results: main's, which come first) → the split's outputs, the tables as text: {'keys', 'order', 'rows', 'map', 'facts', 'pairs', 'pso', 'files', 'npairs', 'bad', 'summary'}.
     targeted: Fallback when a Unity serialized file wants a type tree, which a bundle the scan left out may lend. direct: the files read at their recorded containers (direct_targets, DIRECT)"""
     keys = {}
     # First pass: every file; Unity bundles carry type trees, and the Shader trees are collected on the way. Second pass: Unity serialized files without type trees are scanned again with the borrowed trees
-    pnm = pn_split()   # PEANUTS: split_reuse.py (issue #120): the plain files' kept results
-    pn = pnm.Context(common, zdicts, direct, KEEP, digest_sources(), ResultUnpickler) if pnm else None   # PEANUTS
-    with pool(J, common, {}, zdicts, direct) as ex:   # PEANUTS: direct param above
+    pnm = pn_split()   # KIWI: split_reuse.py (issue #120): the plain files' kept results
+    pn = pnm.Context(common, zdicts, direct, KEEP, digest_sources(), ResultUnpickler) if pnm else None   # KIWI
+    with pool(J, common, {}, zdicts, direct) as ex:   # KIWI: direct param above
         n = len(big) + len(files)
-        results += pooled(ex, big, n, cache=cache)   # PEANUTS begin: the files with pn; when a file scanned to check differs, all of them scanned again
+        results += pooled(ex, big, n, cache=cache)   # KIWI begin: the files with pn; when a file scanned to check differs, all of them scanned again
         try: results += pooled(ex, files, n, len(big), chunk=16, cache=cache, pn=pn)
         except Exception as e:
             if not (pnm and isinstance(e, pnm.Stale)): raise
-            pn.forget(cache); results += pooled(ex, files, n, len(big), chunk=16, cache=cache)   # PEANUTS end
+            pn.forget(cache); results += pooled(ex, files, n, len(big), chunk=16, cache=cache)   # KIWI end
     stage('sorting the shaders found')
     trees, defer = {}, []
     for rel, uniq, pr, extra in results:
         if extra == 'defer': defer.append(rel)
         elif isinstance(extra, dict): trees.update(extra)
-    # PEANUTS: targeted, the second pass is tried too (Fire Emblem Engage's unity default resources borrow a tree the targeted bundles or KNOWN_TREES hold: the targeted scan was
+    # KIWI: targeted, the second pass is tried too (Fire Emblem Engage's unity default resources borrow a tree the targeted bundles or KNOWN_TREES hold: the targeted scan was
     # abandoned for all 206,874 files); only a file still without a tree falls back, and the tables are compared with the profile's afterwards as always (profile_differs)
     if defer:
         # a hash no bundle supplied takes the layout unityfs.py has for it (KNOWN_TREES); only here, so files a bundle lends a tree to keep their place in the tables (Ace Attorney's built-ins)
@@ -4626,14 +4626,14 @@ def split_tables(results, big, files, dumps, J, common, zdicts, cache, targeted=
         with pool(J, common, trees, zdicts) as ex: again = ([scan_file((byrel[r], r)) for r in defer] if isinstance(ex, InProcess) else   # workers' large results through a file (scan_batch_spilled)
                      [x for v in ex.map(scan_batch_spilled, [[(byrel[r], r)] for r in defer]) for x in unspill(v)])
         for rel, uniq, pr, extra in again:
-            if extra == 'defer' and targeted: raise Fallback(f'found Unity serialized files without type trees ({rel}), whose trees may come from files it left out')   # PEANUTS: targeted (above)
+            if extra == 'defer' and targeted: raise Fallback(f'found Unity serialized files without type trees ({rel}), whose trees may come from files it left out')   # KIWI: targeted (above)
             if extra == 'defer': red(f'{rel}: Unity serialized file without type trees, and no bundle has a Shader type tree of the same hash to borrow')
         results = [r for r in results if r[3] != 'defer'] + again
     if dumps:
         have = {k for _, uniq, _, _ in results for k in uniq}
         dumps = [d for d in dumps if skey(d[2], d[3]) not in have]
         results.append(('nvn_shdump', last_entries(dumps), var_pairs(dumps), {}))
-    bad = [extra[1] for *_, extra in results if isinstance(extra, tuple) for _ in range(extra[2] if len(extra) > 2 else 1)]   # pyright: ignore[reportGeneralTypeIssues]  # PEANUTS: scan_file/ue_packages emit only ('unreadable', reason[, count]) tuples
+    bad = [extra[1] for *_, extra in results if isinstance(extra, tuple) for _ in range(extra[2] if len(extra) > 2 else 1)]   # pyright: ignore[reportGeneralTypeIssues]  # KIWI: scan_file/ue_packages emit only ('unreadable', reason[, count]) tuples
     scanned = {r for _, r, *_ in big + files}
     holding = list(dict.fromkeys(rel for rel, uniq, pr, _ in results if (uniq or pr) and rel in scanned))   # the files any shader was found in (DM_SPLIT_FILES), in scan order
     per_src = collections.Counter(); pairs = set()

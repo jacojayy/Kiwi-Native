@@ -19,8 +19,8 @@ REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO / 'scripts'))
 import pack_android  # noqa: E402
 
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android/RewriteKey.java'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/RewriteKeyJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative/RewriteKey.java'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/RewriteKeyJvmTest.java'
 GAME = '0100000000000000'
 
 
@@ -36,7 +36,7 @@ def key_with(tree, files, src, gdir, game_tsv=None, v1=False):   # the key over 
 def java_keys(t, tree, mod, pack_game=None):   # RewriteKey.keys on the JVM (RewriteKeyJvmTest)
     classes = t / 'classes'
     if not classes.is_dir(): subprocess.run(['javac', '-Xlint:all', '-Werror', '-d', str(classes), str(SRC), str(TEST)], check=True, capture_output=True, text=True)
-    r = subprocess.run(['java', *([f'-Dpack.game={pack_game}'] if pack_game else []), '-cp', str(classes), 'dev.nxnative.android.RewriteKeyJvmTest', str(tree), str(mod),
+    r = subprocess.run(['java', *([f'-Dpack.game={pack_game}'] if pack_game else []), '-cp', str(classes), 'hernandez.kiwinative.RewriteKeyJvmTest', str(tree), str(mod),
                         f'dm/games/{GAME}/', 'main', *pack_android.REWRITER], capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
     return r.stdout.split('\n')[:-1]
@@ -170,7 +170,7 @@ class Folder(unittest.TestCase):
         d = REPO / 'dm/tools/rewriter_equiv'
         for p in d.iterdir():
             m = re.fullmatch(r'(.+)\.([0-9a-f]{7,40})', p.name)
-            assert m is not None, f'{p.name}: not <REWRITER file>.<commit>'   # PEANUTS(upstream-candidate): require filename parts.
+            assert m is not None, f'{p.name}: not <REWRITER file>.<commit>'   # KIWI(upstream-candidate): require filename parts.
             self.assertIn(m.group(1), pack_android.REWRITER, p.name)
             self.assertNotEqual(p.read_bytes(), (REPO / 'dm/tools' / m.group(1)).read_bytes(), f'{p.name} is the current file')
             r = subprocess.run(['git', '-C', str(REPO), 'show', f'{m.group(2)}:dm/tools/{m.group(1)}'], capture_output=True)

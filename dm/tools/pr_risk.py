@@ -67,7 +67,7 @@ def parse(diff):
         elif l.startswith('Binary files ') and cur: added[cur].append((0, '(binary file)'))
         elif l.startswith('@@'):
             m = re.match(r'@@ -\S+ \+(\d+)', l); n = int(m.group(1)) if m else 0
-        elif l.startswith(('+++', '---')): continue   # PEANUTS(upstream-candidate): one prefix check.
+        elif l.startswith(('+++', '---')): continue   # KIWI(upstream-candidate): one prefix check.
         elif l.startswith('+') and cur is not None: added[cur].append((n, l[1:])); n += 1
         elif l.startswith(' '): n += 1
     return added, paths
@@ -117,7 +117,7 @@ def main(argv):
         if r.returncode: print(r.stderr.strip() or 'git diff failed', file=sys.stderr); return 2
         diff = r.stdout
     else:
-        # PEANUTS(upstream-candidate): keep usage available when Python strips module docs.
+        # KIWI(upstream-candidate): keep usage available when Python strips module docs.
         usage = __doc__.split('Usage:')[1].split('Exit')[0].strip() if __doc__ else 'pr_risk.py <base> <head> | --diff <file>'
         print(usage, file=sys.stderr); return 2
     fs = findings(diff)

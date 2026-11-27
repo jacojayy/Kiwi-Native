@@ -4,7 +4,7 @@
     python3 scripts/issue_digest.py <issue number> [<issue number> ...] [--since COMMENT_ID] [--json]
     python3 scripts/issue_digest.py --open                          (open issues, one line each, with how many logs each has)
 
-Reads the public API only (no login, nothing is written to Forgejo). The logs are kept in $BN_ISSUES_DIR/<number>/ (default: <system temp>/bananative-issues),
+Reads the public API only (no login, nothing is written to Forgejo). The logs are kept in $BN_ISSUES_DIR/<number>/ (default: <system temp>/kiwinative-issues),
 never in this repository: digests show line numbers, and the raw log there is the place to read around one. Logs attached as .log, .txt or .zip (a bug report) are
 fetched; the launcher's own .digest.txt attachments are kept beside them; other attachments (videos, pictures) are listed, not fetched.
 Each log's digest is dm/tools/log_digest.py's (scripts/log_digest.py), with its graphics section.
@@ -24,11 +24,11 @@ import log_digest  # noqa: E402
 
 FORGEJO = os.environ.get('BN_FORGEJO', 'https://git.eden-emu.dev').rstrip('/')
 REPO = os.environ.get('BN_FORGEJO_REPO', 'moceure/BananaNative')
-OUT = Path(os.environ.get('BN_ISSUES_DIR') or Path(tempfile.gettempdir()) / 'bananative-issues')
+OUT = Path(os.environ.get('BN_ISSUES_DIR') or Path(tempfile.gettempdir()) / 'kiwinative-issues')
 FETCH_EXT = ('.log', '.txt', '.zip')
 MAX_BYTES = 64 << 20
 LOG_HINT = re.compile(r'^\[(nxlaunch|dm)\] ', re.M)
-UA = {'User-Agent': 'bananative-issue-digest', 'Accept': 'application/json'}
+UA = {'User-Agent': 'kiwinative-issue-digest', 'Accept': 'application/json'}
 
 
 def get(url, raw=False):
@@ -41,7 +41,7 @@ def get(url, raw=False):
 def api(path): return get(f'{FORGEJO}/api/v1/repos/{REPO}/{path}')
 
 
-BOT_MARK = '<!-- bananative-issue-digest -->'   # dm/tools/issue_digest_comment.py's own comment: left out, it holds digests, not logs
+BOT_MARK = '<!-- kiwinative-issue-digest -->'   # dm/tools/issue_digest_comment.py's own comment: left out, it holds digests, not logs
 
 
 def comments(n):
@@ -60,7 +60,7 @@ LOG_START = re.compile(r'^(```[\w-]*)?\[?(nxlaunch|dm)\] ')
 LOG_END = re.compile(r'^(### |</?details>|<summary>|```\s*$)')
 
 
-def split_body(text: str | None, where, d, logs):   # PEANUTS(upstream-candidate): issue text is optional prose, not a literal-only string.
+def split_body(text: str | None, where, d, logs):   # KIWI(upstream-candidate): issue text is optional prose, not a literal-only string.
     """The text with each pasted log (a run of [nxlaunch] / [dm] lines, fenced or not, up to a heading, </details> or a closing fence) saved to a file and
     replaced by a pointer"""
     lines, out, i = (text or '').replace('\r\n', '\n').split('\n'), [], 0

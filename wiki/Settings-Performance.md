@@ -32,7 +32,7 @@ Not every game shows every row. A row appears only when the game's profile has t
 - **A game on the DLSS stand-in** (Fire Emblem: Fortune's Weave, Star Fox) has its own Upscaler list instead: **GSR 2 (smooth images)**, **FSR 1 (sharp, fast)**, **Bilinear (fastest, softest)**, **FSR 3.1 (sharp, steady)**, with **Motion clarity** and a sharpness row where the mode has them. Fire Emblem: Fortune's Weave recommends FSR 3.1 on any phone.
 
 ### CRT filter
-<!-- PEANUTS: the CRT filter (CrtFilter) -->
+<!-- KIWI: the CRT filter (CrtFilter) -->
 - **What it does:** draws the picture as a CRT shows it. The choices:
   - Off
   - Scanlines

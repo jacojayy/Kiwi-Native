@@ -1,4 +1,4 @@
-"""The launcher runs on Android 12 (API 31/32): no Java call that exists only from API 33 without a version check (PEANUTS: Android 12 support; after
+"""The launcher runs on Android 12 (API 31/32): no Java call that exists only from API 33 without a version check (KIWI: Android 12 support; after
 upstream v0.3.41's test of the same name, which checks its -PnxMinSdk=31 build. Here minSdk 31 is the default build's).
 
 - A source scan that needs no SDK, for the calls that crash there (NoSuchMethodError) or need a guard. A line with a `SDK_INT` check on it or within the three
@@ -68,9 +68,9 @@ class Api31(unittest.TestCase):
         self.assertIn('targetSdk 35', s)
 
     def test_internal_receivers(self):
-        """Below API 33 no receiver takes broadcasts from other apps: every registerReceiver with a receiver goes through dev.peanuts.InternalBroadcast,
+        """Below API 33 no receiver takes broadcasts from other apps: every registerReceiver with a receiver goes through hernandez.kiwinative.kiwi.InternalBroadcast,
         whose Android 12 call is the 4-argument one with the app's signature-level permission (never the plain 2-argument call); from API 33 the flag as before"""
-        ib = (SRC / 'main/java/dev/peanuts/InternalBroadcast.java').read_text(encoding='utf-8')
+        ib = (SRC / 'main/java/hernandez/kiwinative/kiwi/InternalBroadcast.java').read_text(encoding='utf-8')
         self.assertIn('if (Build.VERSION.SDK_INT >= 33) return c.registerReceiver(r, f, Context.RECEIVER_NOT_EXPORTED);', ib)
         self.assertIn('return c.registerReceiver(r, f, permission(c), null);', ib)
         self.assertIn('public static final String SUFFIX = ".permission.INTERNAL_BROADCAST";', ib)
@@ -83,12 +83,12 @@ class Api31(unittest.TestCase):
                 for m in re.finditer(r'(?<!un)registerReceiver\(\s*([^,\s)]+)', code):
                     if m.group(1) == 'null':   # a sticky read with no receiver
                         continue
-                    bad.append(f'{f.relative_to(SRC)}:{n}: register through dev.peanuts.InternalBroadcast.register')
+                    bad.append(f'{f.relative_to(SRC)}:{n}: register through hernandez.kiwinative.kiwi.InternalBroadcast.register')
         self.assertEqual(bad, [], '\n'.join(bad))
-        for rel, count in (('main/java/dev/nxnative/android/Updater.java', 1), ('ondevice/java/dev/nxnative/android/PackService.java', 1),
-                           ('main/java/dev/peanuts/build/BuildService.java', 1), ('main/java/dev/peanuts/ctl/GameLink.java', 1),
-                           ('main/java/dev/peanuts/ui/BottomScreen.java', 2)):
-            self.assertEqual((SRC / rel).read_text(encoding='utf-8').count('dev.peanuts.InternalBroadcast.register('), count, rel)
+        for rel, count in (('main/java/hernandez/kiwinative/Updater.java', 1), ('ondevice/java/hernandez/kiwinative/PackService.java', 1),
+                           ('main/java/hernandez/kiwinative/kiwi/build/BuildService.java', 1), ('main/java/hernandez/kiwinative/kiwi/ctl/GameLink.java', 1),
+                           ('main/java/hernandez/kiwinative/kiwi/ui/BottomScreen.java', 2)):
+            self.assertEqual((SRC / rel).read_text(encoding='utf-8').count('hernandez.kiwinative.kiwi.InternalBroadcast.register('), count, rel)
 
     def test_internal_permission_signature(self):
         """The permission is declared signature-level and requested, named after the application ID (the dev build and the release each their own)"""
@@ -102,22 +102,22 @@ class Api31(unittest.TestCase):
 
     def test_internal_senders(self):
         """The in-app senders of those broadcasts name this package (sent as this app, they hold the permission); the installer's PendingIntent too"""
-        for rel, needle in (('main/java/dev/peanuts/Companion.java', 'new android.content.Intent(STATE).setPackage(c.getPackageName())'),
-                            ('main/java/dev/peanuts/ui/AppScreens.java', 'new Intent(STATE).setPackage(a.getPackageName())'),
-                            ('main/java/dev/peanuts/ctl/Ctl.java', 'new Intent(GameLive.ACTION).setPackage(app.getPackageName())'),
-                            ('main/java/dev/nxnative/android/Updater.java', 'new Intent(app.getPackageName() + ACTION).setPackage(app.getPackageName())')):
+        for rel, needle in (('main/java/hernandez/kiwinative/kiwi/Companion.java', 'new android.content.Intent(STATE).setPackage(c.getPackageName())'),
+                            ('main/java/hernandez/kiwinative/kiwi/ui/AppScreens.java', 'new Intent(STATE).setPackage(a.getPackageName())'),
+                            ('main/java/hernandez/kiwinative/kiwi/ctl/Ctl.java', 'new Intent(GameLive.ACTION).setPackage(app.getPackageName())'),
+                            ('main/java/hernandez/kiwinative/Updater.java', 'new Intent(app.getPackageName() + ACTION).setPackage(app.getPackageName())')):
             self.assertIn(needle, (SRC / rel).read_text(encoding='utf-8'), rel)
 
     def test_streams_guard(self):
         """Each helper makes the platform call from API 33 (no other path runs there)"""
-        s = (SRC / 'main/java/dev/nxnative/android/Streams.java').read_text(encoding='utf-8')
+        s = (SRC / 'main/java/hernandez/kiwinative/Streams.java').read_text(encoding='utf-8')
         for call in ('if (SDK >= 33) return in.readAllBytes();', 'if (SDK >= 33) return in.readNBytes(max);', 'if (SDK >= 33) return in.readNBytes(b, off, len);'):
             self.assertIn(call, s)
         self.assertIn('Class.forName("android.os.Build$VERSION").getField("SDK_INT")', s)
 
     @unittest.skipUnless(shutil.which('javac') and shutil.which('java'), 'no JDK')
     def test_streams_android12_paths(self):
-        test = r'''package dev.nxnative.android;
+        test = r'''package hernandez.kiwinative;
 import java.io.*;
 import java.util.Arrays;
 public final class StreamsApi31JvmTest {
@@ -148,10 +148,10 @@ public final class StreamsApi31JvmTest {
         with tempfile.TemporaryDirectory() as d:
             t = Path(d) / 'StreamsApi31JvmTest.java'
             t.write_text(test, encoding='utf-8')
-            r = subprocess.run(['javac', '-Xlint:all', '-Werror', '-d', str(Path(d) / 'classes'), str(SRC / 'main/java/dev/nxnative/android/Streams.java'), str(t)],
+            r = subprocess.run(['javac', '-Xlint:all', '-Werror', '-d', str(Path(d) / 'classes'), str(SRC / 'main/java/hernandez/kiwinative/Streams.java'), str(t)],
                                capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-            r = subprocess.run(['java', '-cp', str(Path(d) / 'classes'), 'dev.nxnative.android.StreamsApi31JvmTest'], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', str(Path(d) / 'classes'), 'hernandez.kiwinative.StreamsApi31JvmTest'], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertIn('OK', r.stdout)
 
@@ -162,7 +162,7 @@ public final class StreamsApi31JvmTest {
         report = APP / 'build/reports/lint-results-debug.xml'
         if report.exists():
             report.unlink()
-        r = subprocess.run(['./gradlew', 'lintDebug', '-PnxApp=peanuts', '-PnxGenericHost=true', '-PnxPackEngine=fake', '--no-daemon', '-q'],
+        r = subprocess.run(['./gradlew', 'lintDebug', '-PnxApp=kiwi', '-PnxGenericHost=true', '-PnxPackEngine=fake', '--no-daemon', '-q'],
                            cwd=APP, capture_output=True, text=True, timeout=1800)
         self.assertEqual(r.returncode, 0, r.stdout[-3000:] + r.stderr[-3000:])
         self.assertTrue(report.exists(), 'lint wrote no report')

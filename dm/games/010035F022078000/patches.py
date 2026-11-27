@@ -1,4 +1,4 @@
-# PEANUTS: DRAGON BALL: Sparking! ZERO (010035F022078000): 60 fps patch for base 1.0.0 (v0), keyed by NSO build ID.
+# KIWI: DRAGON BALL: Sparking! ZERO (010035F022078000): 60 fps patch for base 1.0.0 (v0), keyed by NSO build ID.
 CUTS = {
   # v0 1.0.0 main: bypass UEngine::bUseFixedFrameRate (bit 6 of [GEngine+0x9c4]) in UEngine::UpdateTimeAndHandleMaxTickRate
   # and in all 6 Spike Chunsoft fixed-frame-rate checks so both engine tick and battle timing take the 60.0f (1/60s) path.

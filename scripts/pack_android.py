@@ -30,7 +30,7 @@
 # unfinished: the launcher refuses it, the next run rewrites it). Libraries of other versions in the pack's shaders/ are kept.
 # --code-only rewrites the modules and stops (pack.tsv, game.tsv and the shaders untouched); --keep-code packs without rewriting (the phone's two steps).
 # Usage: pack_android.py <game folder | .nup file> [--version N] [--out DIR] [-j N] [--shader-cache DIR] [--shader-pkg DIR] [--shader-python PY] [-J N] [--no-shaders] [--code-only | --keep-code] [--in-process]   (exit 1 on error)
-import argparse, errno, hashlib, os, runpy, shutil, signal, struct, subprocess, sys, tempfile, time   # PEANUTS: struct (cross_module), tempfile (shader selection); PEANUTS(upstream-candidate): errno (copy_time, #495)
+import argparse, errno, hashlib, os, runpy, shutil, signal, struct, subprocess, sys, tempfile, time   # KIWI: struct (cross_module), tempfile (shader selection); KIWI(upstream-candidate): errno (copy_time, #495)
 from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / 'scripts')); sys.path.insert(0, str(REPO / 'dm/games'))
@@ -65,7 +65,7 @@ def stage(text, every=0.0):
     print(f'stage: {text}', flush=True)
 
 
-# PEANUTS(upstream-candidate) begin: copy_time, a copy's modification time without copystat, kept where the storage refuses it (#495)
+# KIWI(upstream-candidate) begin: copy_time, a copy's modification time without copystat, kept where the storage refuses it (#495)
 def copy_time(src, dst):
     """dst takes src's modification time, by which a later pack sees that its copy is current (pack_shaders: the same size and time). Only the time: the
     permission bits and flags shutil.copystat would also copy mean nothing on shared storage. A microSD card or a USB drive on Android refuses to set a file's
@@ -76,19 +76,19 @@ def copy_time(src, dst):
     except OSError as e:
         if e.errno not in (errno.EPERM, errno.EACCES, errno.ENOTSUP, errno.ENOSYS): raise
         print(f'{dst}: this storage does not keep a copied file\'s time ({errno.errorcode.get(e.errno, e.errno)}); a later pack copies it again', flush=True)
-# PEANUTS(upstream-candidate) end
+# KIWI(upstream-candidate) end
 
 
 def copy_counted(src, dst, what):
     """A copy in 8 MiB pieces with 'stage: <what>: <n> of <m> MB' at most twice a second, and src's time where the storage keeps it (copy_time): the shader
-    library (700 MB for Ocarina of Time) to shared storage"""   # PEANUTS(upstream-candidate): src's time by copy_time (#495)
+    library (700 MB for Ocarina of Time) to shared storage"""   # KIWI(upstream-candidate): src's time by copy_time (#495)
     total = os.path.getsize(src); done = 0
     stage(f'{what}: 0 of {total >> 20:,} MB')
     with open(src, 'rb') as i, open(dst, 'wb') as o:
         while b := i.read(8 << 20):
             o.write(b); done += len(b)
             stage(f'{what}: {done >> 20:,} of {total >> 20:,} MB', 0.5)
-    copy_time(src, dst)   # PEANUTS(upstream-candidate): not shutil.copystat, which stops on a microSD card (#495)
+    copy_time(src, dst)   # KIWI(upstream-candidate): not shutil.copystat, which stops on a microSD card (#495)
 
 
 def child_env(**kw):
@@ -102,14 +102,14 @@ def child_env(**kw):
     return dict(env, **kw)
 
 
-# PEANUTS begin: the phone's packer settings (android/app PackService) that change what a pack holds, so a pack made here is the one the Thor makes; a value
+# KIWI begin: the phone's packer settings (android/app PackService) that change what a pack holds, so a pack made here is the one the Thor makes; a value
 # already in the environment wins (as the phone's ondevice/env.txt does). The phone's worker settings (DM_SPLIT_WORKER, DMSH_VK_WORKER) are left out: they stand in
 # for the process pools a computer's Python already has
-def peanuts_env(step):
+def kiwi_env(step):
     """step 'split': DM_SPLIT_DIRECT=1 (the targeted split reads a file's recorded containers only); 'shaders': DMSH_VK_ZSTD_LEVEL=6 (the phone's level)"""
     kw = dict(DM_SPLIT_DIRECT='1') if step == 'split' else dict(DMSH_VK_ZSTD_LEVEL='6')
-    # PEANUTS: a desktop checkout can build the locked translator. The phone has its own native one.
-    helper = REPO / 'peanuts/scripts'
+    # KIWI: a desktop checkout can build the locked translator. The phone has its own native one.
+    helper = REPO / 'kiwi/scripts'
     if step == 'shaders' and 'XLATE' not in os.environ and (helper / 'prepare_pc_translator.py').is_file():
         sys.path.insert(0, str(helper))
         import prepare_pc_translator
@@ -118,11 +118,11 @@ def peanuts_env(step):
         except (OSError, RuntimeError, subprocess.SubprocessError) as error:
             raise Error(f'desktop translator: {error}') from error
     return {k: v for k, v in kw.items() if k not in os.environ}
-# PEANUTS end
+# KIWI end
 
 
 def windows_shader_workers(py, J):
-    """PEANUTS(upstream-candidate): on Windows, vk_android_build.py's worker processes (DMSH_VK_WORKER, DMSH_VK_WORKERS = J) run through vk_android_win.py, which puts
+    """KIWI(upstream-candidate): on Windows, vk_android_build.py's worker processes (DMSH_VK_WORKER, DMSH_VK_WORKERS = J) run through vk_android_win.py, which puts
     the Windows adaptations into each worker. vk_android_build.py's threads share one interpreter, and the Python half of each shader holds its GIL: Minecraft
     Dungeons II's 15,826 shaders took 41 minutes there with the CPU at 25-50 % for J=8. Its other ways off the GIL do not run on Windows (DMSH_VK_PROCS needs the
     translator as a .so). The library is byte-identical to the threads' build (split_pool.PipePool: the parent still writes it). A value in the environment wins"""
@@ -145,7 +145,7 @@ def windows_job():
         _fields_ = [('Basic', Basic), ('Io', ctypes.c_uint64 * 6), ('ProcessMemoryLimit', ctypes.c_size_t), ('JobMemoryLimit', ctypes.c_size_t),
                     ('PeakProcessMemoryUsed', ctypes.c_size_t), ('PeakJobMemoryUsed', ctypes.c_size_t)]
     try:
-        k = ctypes.WinDLL('kernel32', use_last_error=True)   # pyright: ignore[reportAttributeAccessIssue]  # PEANUTS: Windows-only API absent from Darwin stubs.
+        k = ctypes.WinDLL('kernel32', use_last_error=True)   # pyright: ignore[reportAttributeAccessIssue]  # KIWI: Windows-only API absent from Darwin stubs.
         k.CreateJobObjectW.restype, k.CreateJobObjectW.argtypes = wintypes.HANDLE, [ctypes.c_void_p, wintypes.LPCWSTR]
         k.SetInformationJobObject.restype, k.SetInformationJobObject.argtypes = wintypes.BOOL, [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
         k.AssignProcessToJobObject.restype, k.AssignProcessToJobObject.argtypes = wintypes.BOOL, [wintypes.HANDLE, wintypes.HANDLE]
@@ -153,7 +153,7 @@ def windows_job():
         job = k.CreateJobObjectW(None, None)   # not inheritable: this process holds the only handle, which closes when it ends
         info = Extended(); info.Basic.LimitFlags = 0x2000   # JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
         if not job or not k.SetInformationJobObject(job, 9, ctypes.byref(info), ctypes.sizeof(info)) or not k.AssignProcessToJobObject(job, k.GetCurrentProcess()):   # 9: JobObjectExtendedLimitInformation
-            print(f'the tools this packer starts are not in a job (Windows error {ctypes.get_last_error()}): a stop by TerminateProcess leaves them running', flush=True)   # pyright: ignore[reportAttributeAccessIssue]  # PEANUTS: Windows-only API absent from Darwin stubs.
+            print(f'the tools this packer starts are not in a job (Windows error {ctypes.get_last_error()}): a stop by TerminateProcess leaves them running', flush=True)   # pyright: ignore[reportAttributeAccessIssue]  # KIWI: Windows-only API absent from Darwin stubs.
             return None
         return job   # kept open for this process's life
     except (OSError, AttributeError) as e:
@@ -232,14 +232,14 @@ def rewrite_keys(src, g, pack=None):
     return out
 
 
-def upgrade_keys(srcs, out, g, xmod=None):   # PEANUTS: xmod, as rewrite's
+def upgrade_keys(srcs, out, g, xmod=None):   # KIWI: xmod, as rewrite's
     """Each module's key that counts as current (rewrite_keys with the pack's game.tsv) but is not rewrite_key's is written as rewrite_key's (by rename), so the
     pack stays current when its copy of game.tsv is replaced. Other keys are left as they are"""
     for m, src in srcs.items():
         kf = out / f'{m}.android.key'
         if not kf.is_file(): continue
         have, keys = kf.read_text().strip(), rewrite_keys(src, g, out)
-        if xmod and m in xmod: keys = xmod_keys(keys, xmod[m])   # PEANUTS
+        if xmod and m in xmod: keys = xmod_keys(keys, xmod[m])   # KIWI
         if have in keys and have != keys[0]:
             tmp = out / f'{m}.android.key.tmp'; write_lf(tmp, keys[0] + '\n'); os.replace(tmp, kf)
             print(f'  {m}: key brought to the current formula (same rewrite)')
@@ -308,7 +308,7 @@ def collect_nros(exe, romfs, work, in_process=False):
         shutil.rmtree(work / 'android-nro.partial', ignore_errors=True)   # left by a version that renamed the folder into place
         if coll.exists(): shutil.rmtree(coll)
         coll.mkdir()
-        stage('finding the rest of the game\'s code')  # PEANUTS: build text in the player's words (0.1.8)
+        stage('finding the rest of the game\'s code')  # KIWI: build text in the player's words (0.1.8)
         args, log = [str(romfs), str(coll), '--exefs', str(exe)], work / 'nro_collect.log'
         if in_process: rc = run_in_process(REPO / 'dm/tools/nro_collect.py', args, {'DM_NRO_COLLECT_J': '1'}, log)
         else:
@@ -369,7 +369,7 @@ def optional_keys(g):
     return {l.split('\t')[0] for l in f.read_text().splitlines() if l and not l.startswith('#')} if f.is_file() else set()
 
 
-# PEANUTS begin: a profile whose shader tables are the union of several versions of the game (game.tsv shader_versions, dm/games/README.md), packed from a dump
+# KIWI begin: a profile whose shader tables are the union of several versions of the game (game.tsv shader_versions, dm/games/README.md), packed from a dump
 # of one of them. scripts/build_ipa_from_nsp.py derives a profile with that version's own tables then; a pack needs less: the map's rows say which shaders only
 # another version has. shader_split.py prefixes the source of a shader that first appears in a later version with that version (/v1507328/Common/..., main@v1507328;
 # the first version's rows carry none), so a dump of one listed version may lack exactly the rows tagged with the other listed versions, and they join the keys
@@ -402,24 +402,24 @@ def other_version_keys(g, ver):
 def may_lack(g, ver=None, other=None):
     """The keys a dump of version ver may lack: shader_optional.tsv's, and the other listed versions' own (other_version_keys, or the caller's already read set)"""
     return optional_keys(g) | (other_version_keys(g, ver) if other is None else other)
-# PEANUTS end
+# KIWI end
 
 
-def absent_optional(g, pkg, ver=None):   # PEANUTS: ver, the dump's version (may_lack)
+def absent_optional(g, pkg, ver=None):   # KIWI: ver, the dump's version (may_lack)
     """The keys a split's <package>/_absent.tsv lists (split_shaders), when every one is in the profile's shader_optional.tsv; else (none, or a list naming other keys) empty"""
     f = pkg / '_absent.tsv'
     keys = {l for l in f.read_text().splitlines() if l} if f.is_file() else set()
-    return keys if keys and keys <= may_lack(g, ver) else set()   # PEANUTS: may_lack (was optional_keys): also the shaders only another listed version has
+    return keys if keys and keys <= may_lack(g, ver) else set()   # KIWI: may_lack (was optional_keys): also the shaders only another listed version has
 
 
-# PEANUTS begin: code mods (DESIGN-MODS.md "ExeFS binary patch (IPS/IPS32)"/"Code injection"), the modded variant build dev.peanuts.build.ModdedBuild
+# KIWI begin: code mods (DESIGN-MODS.md "ExeFS binary patch (IPS/IPS32)"/"Code injection"), the modded variant build hernandez.kiwinative.kiwi.build.ModdedBuild
 # drives through --modules/--mod-exefs/--mod-patches below. A normal (unmodded) pack passes none of these three flags, so this block never runs for it.
 def merge_mod_modules(mods, srcs, modules_override, mod_exefs):
     """mods/srcs (dump_modules()'s own list and the exefs-path dict) with a modded build's overrides folded in: modules_override (None, or the
-    variant's full module list, the profile's with any module a mod adds in the console's order - dev.peanuts.build.ModBuild.Plan.modules) replaces mods when given;
+    variant's full module list, the profile's with any module a mod adds in the console's order - hernandez.kiwinative.kiwi.build.ModBuild.Plan.modules) replaces mods when given;
     mod_exefs ({module name: source path}, --mod-exefs NAME=PATH) replaces or adds that module's source file. Returns (mods, srcs); never mutates
     its arguments. An added module not in mod_exefs is left for the caller's usual "missing" check to catch (a plan that adds a module always
-    supplies its source, dev.peanuts.build.ModBuild.compose only adds a name when some mod's exefs/ has that file)."""
+    supplies its source, hernandez.kiwinative.kiwi.build.ModBuild.compose only adds a name when some mod's exefs/ has that file)."""
     out_mods = list(modules_override) if modules_override is not None else list(mods)
     out_srcs = dict(srcs)
     sys.path.insert(0, str(REPO / 'dm/tools'))
@@ -464,9 +464,9 @@ def apply_mod_patches(name, src, patch_dirs, out, changed=None):
 
 
 def mod_memory_rows(title_id):
-    """Whether a build with code mods of this title has memory numbers of its own (dm/peanuts/profile/mod_memory.tsv: rows of <title ID> <key> <value>, which
+    """Whether a build with code mods of this title has memory numbers of its own (dm/kiwi/profile/mod_memory.tsv: rows of <title ID> <key> <value>, which
     gen_runtime_profile.py profile-modules reads). main() then writes the variant its own profile.bin whatever its mods do, a patch as well as an added module"""
-    f = REPO / 'dm/peanuts/profile/mod_memory.tsv'
+    f = REPO / 'dm/kiwi/profile/mod_memory.tsv'
     if not f.is_file(): return False
     rows = (line.split('#', 1)[0].split() for line in f.read_text(encoding='utf-8').splitlines())
     return any(len(c) == 3 and c[0].upper() == title_id.upper() for c in rows)
@@ -515,7 +515,7 @@ def xmod_keys(keys, layout):
     the rewriter reads such a module's relocations with (not one of REWRITER: no other module's key depends on it)"""
     b = layout.read_bytes() + b'\0' + (REPO / 'dm/tools/xmod.py').read_bytes()
     return [hashlib.sha256(k.encode() + b'\0' + XMOD_KEY.encode() + b'\0' + b).hexdigest() + ' target=android xmod' for k in keys]
-# PEANUTS end
+# KIWI end
 
 
 def nso_zbic(path):   # whether the module's segments are ZBIC (NSO flag bit 7, system 22.0.0 on), which nso.py needs a decoder for (nso.zbic_decoder)
@@ -523,7 +523,7 @@ def nso_zbic(path):   # whether the module's segments are ZBIC (NSO flag bit 7, 
     return b[:4] == b'NSO0' and bool(int.from_bytes(b[0xc:0x10], 'little') & 0x80)
 
 
-# PEANUTS begin: the app's heat pause holds the rewrite where it is (PackService.hold, GitHub #803). It ended the tool at each pause, and the code step began
+# KIWI begin: the app's heat pause holds the rewrite where it is (PackService.hold, GitHub #803). It ended the tool at each pause, and the code step began
 # again from 0 on the next start: 74 times in 4 hours on an AYN Odin 3 on its charger
 def held():
     """Whether the app holds the step now: its PN_HOLD_FILE is there"""
@@ -538,14 +538,14 @@ def wait_while_held(out=None):
     while held(): time.sleep(0.5)
     if out: print('  going on from where it was held', file=out, flush=True)
     return True
-# PEANUTS end
+# KIWI end
 
 
 class ProgressTee:
     """A tool's output stream in run_in_process: everything to the file f; its "progress <done> <total> ..." lines also to out (this script's own output, the
     step log Prepare reads), as "progress <n> 1000 code" with the tool's fraction placed in [base, base + width) of the step's 1000
-    PEANUTS: hold: the tool runs in this thread (run_in_process), so a hold (held) waits here, at its next progress line (#803)"""
-    def __init__(self, f, out, base, width, hold=False): self.f, self.out, self.base, self.width, self.part, self.hold = f, out, base, width, '', hold   # PEANUTS: hold
+    KIWI: hold: the tool runs in this thread (run_in_process), so a hold (held) waits here, at its next progress line (#803)"""
+    def __init__(self, f, out, base, width, hold=False): self.f, self.out, self.base, self.width, self.part, self.hold = f, out, base, width, '', hold   # KIWI: hold
     def write(self, s):
         self.f.write(s)
         self.part += s
@@ -554,7 +554,7 @@ class ProgressTee:
             w = line.split()
             if len(w) >= 3 and w[0] == 'progress' and w[1].isdigit() and w[2].isdigit() and int(w[2]):
                 print(f'progress {self.base + self.width * min(int(w[1]), int(w[2])) // int(w[2])} 1000 code', file=self.out, flush=True)
-                if self.hold: wait_while_held(self.out)   # PEANUTS: #803
+                if self.hold: wait_while_held(self.out)   # KIWI: #803
         return len(s)
     def flush(self): self.f.flush()
     def isatty(self): return False
@@ -564,7 +564,7 @@ def run_in_process(script, args, env, log, progress=None):
     """script run as `python3 script args` would run it, in this process: its sys.argv, env added to os.environ, stdout and stderr to the file log;
     everything put back after it (the modules it imported from outside the standard library are dropped, so the next run starts afresh). → its exit code.
     progress: (base, width) to pass the tool's progress lines on to this script's output (ProgressTee)
-    PEANUTS: the tool sees DM_IN_PROCESS=1. One that would run itself again with more variables (patch_nso.py's DM_PATCH_FRONT, an os.execve the app's process does not allow)
+    KIWI: the tool sees DM_IN_PROCESS=1. One that would run itself again with more variables (patch_nso.py's DM_PATCH_FRONT, an os.execve the app's process does not allow)
     ends with sys.exit({'rerun_env': {...}}) instead; it is run again with them, after the first run is undone (its memory freed), its output appended to the same log"""
     extra = {}
     for attempt in range(3):
@@ -574,18 +574,18 @@ def run_in_process(script, args, env, log, progress=None):
     return 1
 
 
-def _run_in_process_once(script, args, env, log, progress, mode):   # PEANUTS: run_in_process's single run → (exit code, the rerun variables the tool asked for or None)
+def _run_in_process_once(script, args, env, log, progress, mode):   # KIWI: run_in_process's single run → (exit code, the rerun variables the tool asked for or None)
     saved = (sys.argv, list(sys.path), dict(os.environ), set(sys.modules), sys.stdout, sys.stderr, os.getcwd())
     code, rerun = 0, None
     with open(log, mode, buffering=1, encoding='utf-8', errors='backslashreplace') as f:
-        sys.stdout = sys.stderr = ProgressTee(f, saved[4], *progress, hold=True) if progress else f   # PEANUTS: hold (#803)
+        sys.stdout = sys.stderr = ProgressTee(f, saved[4], *progress, hold=True) if progress else f   # KIWI: hold (#803)
         try:
             os.environ.update(env); sys.argv = [str(script)] + [str(a) for a in args]; sys.path.insert(0, str(Path(script).parent))
             runpy.run_path(str(script), run_name='__main__')
         except SystemExit as e:
             if e.code is None: code = 0
             elif isinstance(e.code, int): code = e.code
-            elif isinstance(e.code, dict) and isinstance(e.code.get('rerun_env'), dict):   # PEANUTS: the rerun the tool asks for
+            elif isinstance(e.code, dict) and isinstance(e.code.get('rerun_env'), dict):   # KIWI: the rerun the tool asks for
                 rerun = {str(k): str(v) for k, v in e.code['rerun_env'].items()}
             else: print(e.code, file=f); code = 1
         except BaseException:
@@ -597,10 +597,10 @@ def _run_in_process_once(script, args, env, log, progress, mode):   # PEANUTS: r
             std = os.path.realpath(sys.base_prefix) + os.sep
             for m in set(sys.modules) - mods:
                 if not os.path.realpath(getattr(sys.modules.get(m), '__file__', None) or '').startswith(std): sys.modules.pop(m, None)
-    return code, rerun   # PEANUTS
+    return code, rerun   # KIWI
 
 
-# PEANUTS begin: the phone's rewrite on its fast cores (issue #120, peanuts/docs/INCREMENTAL-BUILD.md "The rewrite on the fast cores")
+# KIWI begin: the phone's rewrite on its fast cores (issue #120, kiwi/docs/INCREMENTAL-BUILD.md "The rewrite on the fast cores")
 REWRITE_RERUN = 75                 # the worker's exit when its tool asked to be run again: the variables are on its last line, after RERUN_LINE
 RERUN_LINE = 'pn-rewrite-rerun '   # (a tool's own exit 75, or such a line alone, is not a rerun)
 REWRITE_BOOT = ('import json, runpy, sys\n'
@@ -657,16 +657,16 @@ def _rewrite_worker_once(cmd, script, args, env, log, progress, mode):   # pn_re
         reader = threading.Thread(target=pump, name='pn-rewrite-log', daemon=True)
         try:
             reader.start()
-            stopped = False   # PEANUTS: the worker and its forks stopped for the app's heat pause (held, #803): SIGSTOP, then SIGCONT, so it goes on where it was
+            stopped = False   # KIWI: the worker and its forks stopped for the app's heat pause (held, #803): SIGSTOP, then SIGCONT, so it goes on where it was
             while reader.is_alive():
                 reader.join(0.5)
-                # PEANUTS begin
+                # KIWI begin
                 if held() != stopped:
                     stopped = not stopped
                     try: os.killpg(p.pid, signal.SIGSTOP if stopped else signal.SIGCONT)
                     except OSError: pass
                     print('  held where it is (the phone is too hot): it goes on from here' if stopped else '  going on from where it was held', flush=True)
-                # PEANUTS end
+                # KIWI end
             if failed: raise failed[0]
             code = p.wait()
             if code != REWRITE_RERUN or not last[0].startswith(RERUN_LINE): return code, None
@@ -682,7 +682,7 @@ def _rewrite_worker_once(cmd, script, args, env, log, progress, mode):   # pn_re
         finally:
             try: p.stdout.close()
             except OSError: pass
-# PEANUTS end
+# KIWI end
 
 
 def staging(out, m):   # where a module is rewritten before it goes into the pack (inside it: same file system, so the swap is renames)
@@ -695,7 +695,7 @@ def swap_in(out, m, key):
     a module without its key is one the launcher refuses (PackCheck) and the next run rewrites"""
     st = staging(out, m)
     for f in sorted(st.iterdir()):
-        if f.exists() or f.is_symlink(): os.replace(f, out / f.name)   # PEANUTS(upstream-candidate): an AppleDouble ._<name> on an exFAT/FAT drive goes with its file (split_shaders)
+        if f.exists() or f.is_symlink(): os.replace(f, out / f.name)   # KIWI(upstream-candidate): an AppleDouble ._<name> on an exFAT/FAT drive goes with its file (split_shaders)
     st.rmdir()
     tmp = out / f'{m}.android.key.tmp'; write_lf(tmp, key + '\n'); os.replace(tmp, out / f'{m}.android.key')
 
@@ -709,9 +709,9 @@ def rewriter_src(src, out, m):
     f = d / src.name; f.write_bytes(src.read_bytes()); return f
 
 
-def write_orig(src, out, m):   # PEANUTS
+def write_orig(src, out, m):   # KIWI
     """<m>.orig.bin for a pack that has none: the bytes the module's file has at the runs of <m>.changed.tsv, in the table's order, as patch_nso.py writes them with a
-    rewrite (the companion host reads them: dm/peanuts/peanuts.c rt_orig). The table must be of this file's build. Returns the bytes written"""
+    rewrite (the companion host reads them: dm/kiwi/kiwi.c rt_orig). The table must be of this file's build. Returns the bytes written"""
     sys.path.insert(0, str(REPO / 'dm/tools'))
     import nso
     mod = nso.read(str(rewriter_src(src, out, m)))
@@ -728,8 +728,8 @@ def write_orig(src, out, m):   # PEANUTS
     return len(buf)
 
 
-def pn_reuse():   # PEANUTS: dm/peanuts/reuse/rewrite_reuse.py (issue #120)
-    sys.path.insert(0, str(REPO / 'dm/peanuts/reuse'))
+def pn_reuse():   # KIWI: dm/kiwi/reuse/rewrite_reuse.py (issue #120)
+    sys.path.insert(0, str(REPO / 'dm/kiwi/reuse'))
     import rewrite_reuse
     return rewrite_reuse
 
@@ -738,16 +738,16 @@ def rewrite(py, srcs, out, jobs, g, in_process=False, xmod=None):
     """patch_nso.py --target android on each module into out (each its own <module>.* files); a module whose key file matches is kept. Each module is
     rewritten into a staging folder and swapped in when it is complete (swap_in), so a run stopped part way never leaves new code with old tables.
     in_process: each in this process (run_in_process) with one worker, one module after the other.
-    PEANUTS: xmod = {module: layout file} (cross_module, a build with code mods): those modules are rewritten with --xmod and keyed with the file (xmod_keys)"""
+    KIWI: xmod = {module: layout file} (cross_module, a build with code mods): those modules are rewritten with --xmod and keyed with the file (xmod_keys)"""
     env = child_env(DM_GAME=g.id, DM_REWRITE_J=str(max(1, (os.cpu_count() or 4) // max(1, len(srcs)))))
     todo = {}
-    xmod = xmod or {}; xargs = lambda m: ['--xmod', str(xmod[m])] if m in xmod else []   # PEANUTS
+    xmod = xmod or {}; xargs = lambda m: ['--xmod', str(xmod[m])] if m in xmod else []   # KIWI
     for m, src in srcs.items():
         keys = rewrite_keys(src, g, out)
-        if m in xmod: keys = xmod_keys(keys, xmod[m])   # PEANUTS
+        if m in xmod: keys = xmod_keys(keys, xmod[m])   # KIWI
         key = keys[0]; kf = out / f'{m}.android.key'
         if (out / f'{m}.patched.bin').is_file() and kf.is_file() and (have := kf.read_text().strip()) in keys:   # the current rewriter's key, an equivalent one's (EQUIV), an earlier formula's
-            # PEANUTS: a main kept from the rewriter before main.orig.bin (EQUIV: its pack counts as up to date) gets the file here, from the game's own file and the
+            # KIWI: a main kept from the rewriter before main.orig.bin (EQUIV: its pack counts as up to date) gets the file here, from the game's own file and the
             # pack's main.changed.tsv (write_orig: seconds, where a rewrite of Octopath Traveler 0's 111 MB of code for it took the phone 25 minutes); rewritten only if that fails
             ok = True
             if m == 'main' and (out / 'main.changed.tsv').is_file() and not (out / 'main.orig.bin').is_file():
@@ -756,7 +756,7 @@ def rewrite(py, srcs, out, jobs, g, in_process=False, xmod=None):
             if ok:
                 if have != key: tmp = out / f'{m}.android.key.tmp'; write_lf(tmp, key + '\n'); os.replace(tmp, kf)   # the same rewrite: its key as rewrite_key's (upgrade_keys)
                 print(f'  {m}: unchanged, kept'); continue
-        if m not in xmod and (pn_reuse().keep(m, src, out, g, key, REWRITER) or pn_reuse().restore(m, src, out, g, key, REWRITER)): continue   # PEANUTS: the key moved, the module's part of it did not; or the pack has none and the app's copy of its last rewrite is it (issue #120, dm/peanuts/reuse/rewrite_reuse.py)
+        if m not in xmod and (pn_reuse().keep(m, src, out, g, key, REWRITER) or pn_reuse().restore(m, src, out, g, key, REWRITER)): continue   # KIWI: the key moved, the module's part of it did not; or the pack has none and the app's copy of its last rewrite is it (issue #120, dm/kiwi/reuse/rewrite_reuse.py)
         todo[m] = (src, key)
     for m in todo: (out / f'{m}.android.key').unlink(missing_ok=True)   # every module to rewrite is unfinished from here on: no mix of old and new modules passes
     if in_process:
@@ -772,12 +772,12 @@ def rewrite(py, srcs, out, jobs, g, in_process=False, xmod=None):
         for n, (m, (src, key)) in enumerate(todo.items(), 1):
             kf = out / f'{m}.android.key'; kf.unlink(missing_ok=True)
             shutil.rmtree(staging(out, m), ignore_errors=True)
-            stage(f'part {n} of {len(todo)}')  # PEANUTS: build text in the player's words (0.1.8)
+            stage(f'part {n} of {len(todo)}')  # KIWI: build text in the player's words (0.1.8)
             print(f'  {m}: rewriting {src} (in process)', flush=True)
             t0 = time.monotonic()
             width = 1000 * size[m] // total
-            rc = pn_rewrite_worker(REPO / 'dm/tools/patch_nso.py', [str(files[m]), staging(out, m), m, '--target', 'android', *xargs(m)], {'DM_GAME': g.id}, out / f'rewrite_{m}.log', (base, width))   # PEANUTS: on the fast cores (issue #120)
-            if rc is None: rc = run_in_process(REPO / 'dm/tools/patch_nso.py', [str(files[m]), staging(out, m), m, '--target', 'android', *xargs(m)], {'DM_GAME': g.id, 'DM_REWRITE_J': '1'}, out / f'rewrite_{m}.log', (base, width))   # PEANUTS: xargs; pn_rewrite_worker
+            rc = pn_rewrite_worker(REPO / 'dm/tools/patch_nso.py', [str(files[m]), staging(out, m), m, '--target', 'android', *xargs(m)], {'DM_GAME': g.id}, out / f'rewrite_{m}.log', (base, width))   # KIWI: on the fast cores (issue #120)
+            if rc is None: rc = run_in_process(REPO / 'dm/tools/patch_nso.py', [str(files[m]), staging(out, m), m, '--target', 'android', *xargs(m)], {'DM_GAME': g.id, 'DM_REWRITE_J': '1'}, out / f'rewrite_{m}.log', (base, width))   # KIWI: xargs; pn_rewrite_worker
             if rc:
                 tail = (out / f'rewrite_{m}.log').read_text(errors='replace').splitlines()[-20:]
                 raise Error(f'patch_nso.py exit code {rc} on {m}:\n' + '\n'.join(tail))
@@ -786,7 +786,7 @@ def rewrite(py, srcs, out, jobs, g, in_process=False, xmod=None):
             print(f'  {m}: done ({time.monotonic() - t0:.1f} s)', flush=True)
         if todo: print('progress 1000 1000 code', flush=True)
         return
-    # PEANUTS(upstream-candidate): each module's rewrite workers by its share of the code to rewrite, not the threads split evenly: main is most of a game's code
+    # KIWI(upstream-candidate): each module's rewrite workers by its share of the code to rewrite, not the threads split evenly: main is most of a game's code
     # (LEGO 2K Drive: 98 of 106 MB), and an even split gave it 2 of 8 threads while sdk and subsdk0, done in seconds, held the rest
     files = {m: rewriter_src(todo[m][0], out, m) for m in todo}
     sizes = {m: max(1, os.path.getsize(files[m])) for m in todo}
@@ -799,7 +799,7 @@ def rewrite(py, srcs, out, jobs, g, in_process=False, xmod=None):
                 m = pending.pop(0); kf = out / f'{m}.android.key'; kf.unlink(missing_ok=True); shutil.rmtree(staging(out, m), ignore_errors=True)
                 print(f'  {m}: rewriting {todo[m][0]}', flush=True)
                 log = open(out / f'rewrite_{m}.log', 'w')
-                procs[m] = (subprocess.Popen([py, str(REPO / 'dm/tools/patch_nso.py'), str(files[m]), str(staging(out, m)), m, '--target', 'android', *xargs(m)], env=dict(env, DM_REWRITE_J=str(share[m])), stdout=log, stderr=subprocess.STDOUT), log)   # PEANUTS: xargs
+                procs[m] = (subprocess.Popen([py, str(REPO / 'dm/tools/patch_nso.py'), str(files[m]), str(staging(out, m)), m, '--target', 'android', *xargs(m)], env=dict(env, DM_REWRITE_J=str(share[m])), stdout=log, stderr=subprocess.STDOUT), log)   # KIWI: xargs
             for m in list(procs):
                 p, log = procs[m]
                 if p.poll() is None: continue
@@ -821,7 +821,7 @@ def variants(g):
     return [(v[0], (v[1] if len(v) > 1 and v[1] else 'main').replace(',', ' ').split()) for v in g.values('variant') if v and v[0]]
 
 
-def rewrite_variants(py, srcs, out, g, in_process=False, modded=()):   # PEANUTS: modded
+def rewrite_variants(py, srcs, out, g, in_process=False, modded=()):   # KIWI: modded
     """Each variant row's modules rewritten again with DM_PATCH_VARIANT=<name> (patch_nso.py VARIANT_CUTS: a game's native 4:3 mod) into out/<name>/,
     keyed '<the module's rewrite_key> variant=<name>' (the launcher's PackCheck checks it the same way); a module whose key matches is kept. Both versions
     stay in the pack, so the launcher's Game settings › Aspect ratio switches between them without another Prepare: the host loads a module from
@@ -839,12 +839,12 @@ def rewrite_variants(py, srcs, out, g, in_process=False, modded=()):   # PEANUTS
             t0, src, log = time.monotonic(), rewriter_src(srcs[m], out, m), vout / f'rewrite_{m}.log'
             args = [str(src), str(staging(vout, m)), m, '--target', 'android']
             if in_process:
-                rc = pn_rewrite_worker(REPO / 'dm/tools/patch_nso.py', args, {'DM_GAME': g.id, 'DM_PATCH_VARIANT': v}, log)   # PEANUTS: on the fast cores, as the module's first rewrite (issue #120)
+                rc = pn_rewrite_worker(REPO / 'dm/tools/patch_nso.py', args, {'DM_GAME': g.id, 'DM_PATCH_VARIANT': v}, log)   # KIWI: on the fast cores, as the module's first rewrite (issue #120)
                 if rc is None: rc = run_in_process(REPO / 'dm/tools/patch_nso.py', args, {'DM_GAME': g.id, 'DM_REWRITE_J': '1', 'DM_PATCH_VARIANT': v}, log)
             else:
                 with open(log, 'w') as f:
                     rc = subprocess.call([py, str(REPO / 'dm/tools/patch_nso.py'), *args], env=child_env(DM_GAME=g.id, DM_PATCH_VARIANT=v), stdout=f, stderr=subprocess.STDOUT)
-            if rc and rc > 0 and m in modded:   # PEANUTS: a build with code mods (a worker the system killed, rc < 0, is an error as any other): the variant's cuts assert the game's own bytes, which a mod changed (Animal Crossing: New Horizons'
+            if rc and rc > 0 and m in modded:   # KIWI: a build with code mods (a worker the system killed, rc < 0, is an error as any other): the variant's cuts assert the game's own bytes, which a mod changed (Animal Crossing: New Horizons'
                 # 60 fps speed fix imported as a mod beside its built-in variant). That build has no variant of its own; the pack is made all the same
                 print(f'  variant {v}: not made, a mod changes {m} (patch_nso.py exit code {rc}: {" / ".join(log.read_text(errors="replace").splitlines()[-2:])})', flush=True)
                 shutil.rmtree(vout, ignore_errors=True); break
@@ -898,7 +898,7 @@ def library_current(lib_dir, g):
     return (lib_dir / VK_LIB).is_file() and st.get('game') == g.id and st.get('inputs') == dmsh_chain.inputs(g)
 
 
-# PEANUTS: the split package a library was built from (#670). The library's own stamp (inputs.tsv) names the profile's inputs only, so a package that changed
+# KIWI: the split package a library was built from (#670). The library's own stamp (inputs.tsv) names the profile's inputs only, so a package that changed
 # under the same profile (shaders captured from a run added to it, a split of another dump) left a library that was called current and packed without them.
 # The package's digest goes in a file beside the library in the cache (not in the library, whose files are the chain's), and a library is taken only with it.
 PKG_STAMP = '.package'   # <cache>/<library name>.package
@@ -953,25 +953,25 @@ def selected_keys(profile_dir):
     return vk_android_delta.selection(seen.read_text(encoding='utf-8'), keys)
 
 
-# PEANUTS begin: the check of a split whose Oodle streams the ooz worker decoded (DM_OODLE_OOZ, dm/third_party/ooz/README.md)
+# KIWI begin: the check of a split whose Oodle streams the ooz worker decoded (DM_OODLE_OOZ, dm/third_party/ooz/README.md)
 def ooz_split_checked(ooz, g, tmp, ver=None):
     """An Oodle stream carries no checksum, and the ooz decoder is not the game's own: a shader's key (the hash of its bytes, shader_split.py skey) is the only
     check there is. So the split in <tmp> counts only when its keys are exactly the profile's, but for the keys shader_optional.tsv gives to another build; one
     key missing or one key more stops the pack, and nothing of that split is used. (vk_android_build.py then hashes every record against its key again.)"""
     want, have = map_keys(g.dir / 'shader_map.tsv'), map_keys(tmp / 'shader_map.tsv')
-    lost, more = sorted((want - have) - may_lack(g, ver)), sorted(have - want)   # PEANUTS: load the optional-key tables once per split
+    lost, more = sorted((want - have) - may_lack(g, ver)), sorted(have - want)   # KIWI: load the optional-key tables once per split
     if lost or more:
         eg = lambda ks: f' (e.g. {", ".join(ks[:3])})' if ks else ''
         raise Error(f'the shaders decoded with the ooz Oodle decoder ({ooz}, DM_OODLE_OOZ) are not the profile\'s: {len(lost)} of the {len(want)} keys in its shader_map.tsv '
                     f'are missing{eg(lost)} and {len(more)} are not in it{eg(more)}. Either the game files are of another version than the profile\'s, or the ooz decoder '
-                    f'decoded a stream wrongly; its output is not used. Build this game with Build in the Peanuts app on the device, which decodes with the game\'s own '
+                    f'decoded a stream wrongly; its output is not used. Build this game with Build in the Kiwi app on the device, which decodes with the game\'s own '
                     f'code (the split is in {tmp})')
     print(f'shaders: decoded with the ooz worker ({ooz}); checked: the split has all {len(want & have):,} of the profile\'s shader keys'
           + (f' it can have ({len(want - have)} belong to another build)' if want - have else '') + ' and no other', flush=True)
-# PEANUTS end
+# KIWI end
 
 
-# PEANUTS begin: what a split that lacks shaders of the profile's map says. The map's rows name the file each shader comes from; shaders whose files the game
+# KIWI begin: what a split that lacks shaders of the profile's map says. The map's rows name the file each shader comes from; shaders whose files the game
 # files do not have, in a dump without add-on content, may be DLC that was not imported, which "another version or incomplete" did not say (2026-11-15). No game
 # is known to need this: the case it was written for, Mario Kart 8 Deluxe's 135 of 29,785, was the shaders of another listed version (may_lack above, checked
 # first), not DLC. So add-on content is named, as one possible reason and no more, only when nothing else is known to explain the missing shaders: the profile's
@@ -998,15 +998,15 @@ def lacking_shaders(g, rd, hard, total, dlc, tmp, multi=False):
     if gone and len(gone) == len(hard) and dlc == 0 and not multi:
         return (f'{lack}: all of them come from files the game files do not have (e.g. {src[gone[0]]}), and the game was imported without add-on content. '
                 f'The dump is incomplete; one possible reason (not seen with any game yet) is that these files belong to add-on content (DLC) that was not part '
-                f'of the import. If you have DLC for this game, give its file to the builder too (peanuts-build: add the DLC .nsp to the command line, with '
+                f'of the import. If you have DLC for this game, give its file to the builder too (kiwi-build: add the DLC .nsp to the command line, with '
                 f'--force-nup when the .nup is there already; a dump folder: its dlc/ folder), then build again (the split is in {tmp})')
     what = f', {len(gone)} of them from files the game files do not have (e.g. {src[gone[0]]})' if gone else ''
     maybe = ('' if dlc is not None else '; when the game has add-on content (DLC), it may not have been part of the import')
     return (f'{lack}{what}: the dump is of another version or incomplete, and the profile\'s shader library cannot be built from it{maybe} (the split is in {tmp})')
-# PEANUTS end
+# KIWI end
 
 
-# PEANUTS begin: a split that reads no shader at all. It made a pack with an empty shader library, which cannot draw (Farming Simulator's provisional profile,
+# KIWI begin: a split that reads no shader at all. It made a pack with an empty shader library, which cannot draw (Farming Simulator's provisional profile,
 # 2026-11-15: its shaders are in a file shader_split.py has no reader for, and its map has no rows, so nothing was "lacking"). A game that draws through the
 # Vulkan or OpenGL layer has no NVN shaders for the split to find, and its profile says so
 def no_nvn_shaders(g):
@@ -1033,7 +1033,7 @@ def require_shaders(g):
         raise Error(f'the profile {g.id} has no shader in its shader_map.tsv, and does not say that the game has none: its shader library would be empty, and the game '
                     f'could not draw. The game keeps its shaders in a form shader_split.py does not read yet (the profile\'s README.md says where, when that is known). '
                     f'--no-shaders packs the code alone')
-# PEANUTS end
+# KIWI end
 
 
 def collected_nros(work):
@@ -1053,8 +1053,8 @@ def split_shaders(a, g, vdir, pkg, parts=None, aoc=(), nros=None):   # parts: th
     tmp = pkg.with_name(pkg.name + '.tmp'); shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir(parents=True)
     print(f'shaders: splitting the shaders out of {rd} into {pkg} with {py} (a few minutes)', flush=True)
     env = child_env(DM_GAME=g.id, DM_SPLIT_TARGETED='1', **({'DM_NRO_DIR': str(nros)} if nros else {}))   # as the phone: only the files the profile's map names, when the build is the profile's and the tables come out the same
-    env.update(peanuts_env('split'))   # PEANUTS: as the phone's split (PackService): the direct scan
-    # PEANUTS: DM_OODLE_OOZ (the PC builder's worker from the open-source ooz decoder, dm/third_party/ooz) decodes in place of the game's own decoder, so its
+    env.update(kiwi_env('split'))   # KIWI: as the phone's split (PackService): the direct scan
+    # KIWI: DM_OODLE_OOZ (the PC builder's worker from the open-source ooz decoder, dm/third_party/ooz) decodes in place of the game's own decoder, so its
     # split counts only against a profile's map (ooz_split_checked below); a game without one is not split with it at all
     if (ooz := env.get('DM_OODLE_OOZ')) and not (g.dir / 'shader_map.tsv').is_file():
         raise Error(f'DM_OODLE_OOZ is set ({ooz}), and the profile {g.id} has no shader_map.tsv to check the ooz decoder\'s output against: this game\'s shaders are not decoded with it')
@@ -1062,18 +1062,18 @@ def split_shaders(a, g, vdir, pkg, parts=None, aoc=(), nros=None):   # parts: th
     r = subprocess.run([py, str(SPLIT), str(rd), str(ed / 'main'), str(tmp / 'pkg'),
                         *[str(tmp / f) for f in ('shader_map.tsv', 'shader_facts.tsv', 'shader_pairs.tsv', 'pso_pairs.tsv')], *([','.join(map(str, aoc))] if aoc else [])], env=env)
     if r.returncode: raise Error(f'shader_split.py exit code {r.returncode}')
-    if not map_keys(tmp / 'shader_map.tsv') and not no_nvn_shaders(g): raise Error(empty_split(g, rd, tmp))   # PEANUTS: no shader read is a failure, not an empty library
-    ver = getattr(a, 'pack_ver', None)   # PEANUTS: the dump's version (main), for the shaders only another listed version has (may_lack)
-    if ooz: ooz_split_checked(ooz, g, tmp, ver)   # PEANUTS: the ooz decoder's output is taken only when the split's keys are the profile's
-    want: set[str] = set(); have: set[str] = set()   # PEANUTS(upstream-candidate): no profile table means no absent keys.
+    if not map_keys(tmp / 'shader_map.tsv') and not no_nvn_shaders(g): raise Error(empty_split(g, rd, tmp))   # KIWI: no shader read is a failure, not an empty library
+    ver = getattr(a, 'pack_ver', None)   # KIWI: the dump's version (main), for the shaders only another listed version has (may_lack)
+    if ooz: ooz_split_checked(ooz, g, tmp, ver)   # KIWI: the ooz decoder's output is taken only when the split's keys are the profile's
+    want: set[str] = set(); have: set[str] = set()   # KIWI(upstream-candidate): no profile table means no absent keys.
     if (g.dir / 'shader_map.tsv').is_file():
         want, have = map_keys(g.dir / 'shader_map.tsv'), map_keys(tmp / 'shader_map.tsv')
         missing = sorted(want - have)
-        other = other_version_keys(g, ver)   # PEANUTS: read the profile's version table once, even when thousands of keys differ
-        if hard := sorted(set(missing) - may_lack(g, ver, other)):   # PEANUTS: keys from other listed versions may be absent
-            raise Error(lacking_shaders(g, rd, hard, len(want), getattr(a, 'dlc_count', None), tmp, shader_versions(g) != [f'v{ver}']))   # PEANUTS: names DLC that was not imported as a possible reason, only for tables of this one version
-        # PEANUTS: the one plain line for a dump of one of the versions the tables are the union of (the phone's: PackService.splitMatchesProfile)
-        if theirs := set(missing) & other:   # PEANUTS: reuse the same version table
+        other = other_version_keys(g, ver)   # KIWI: read the profile's version table once, even when thousands of keys differ
+        if hard := sorted(set(missing) - may_lack(g, ver, other)):   # KIWI: keys from other listed versions may be absent
+            raise Error(lacking_shaders(g, rd, hard, len(want), getattr(a, 'dlc_count', None), tmp, shader_versions(g) != [f'v{ver}']))   # KIWI: names DLC that was not imported as a possible reason, only for tables of this one version
+        # KIWI: the one plain line for a dump of one of the versions the tables are the union of (the phone's: PackService.splitMatchesProfile)
+        if theirs := set(missing) & other:   # KIWI: reuse the same version table
             print(f'shaders: {len(theirs):,} of {len(want):,} shaders in this app\'s table belong to other versions of the game ({", ".join(other_versions(g, ver))}): not needed for v{ver}', flush=True)
         for f in ('shader_map.tsv', 'shader_facts.tsv', 'shader_pairs.tsv'):
             if (g.dir / f).is_file() and table_lines(g.dir / f) != table_lines(tmp / f):   # the comment lines name the game and the split's wording at the time
@@ -1084,12 +1084,12 @@ def split_shaders(a, g, vdir, pkg, parts=None, aoc=(), nros=None):   # parts: th
         (pkg / '_absent.tsv').write_text(''.join(k + '\n' for k in absent))
         print(f'shaders: {len(absent)} of the profile\'s {len(want)} shaders are not in this dump (they belong to another registered build of the game, shader_optional.tsv): listed in {pkg.name}/_absent.tsv')
     for f in list(tmp.iterdir()):
-        if f.exists() or f.is_symlink(): f.replace(pkg.with_name(f.name))   # PEANUTS(upstream-candidate): macOS on an exFAT/FAT drive moves a file's AppleDouble ._<name> with it, so the listing's ._ entry is gone by its turn
+        if f.exists() or f.is_symlink(): f.replace(pkg.with_name(f.name))   # KIWI(upstream-candidate): macOS on an exFAT/FAT drive moves a file's AppleDouble ._<name> with it, so the listing's ._ entry is gone by its turn
     tmp.rmdir()
 
 
 def shader_work(a, work):
-    """PEANUTS(upstream-candidate): the folder of the library build's temporary files. Beside the library cache when --shader-cache names one, as <work>/android-shaders/work
+    """KIWI(upstream-candidate): the folder of the library build's temporary files. Beside the library cache when --shader-cache names one, as <work>/android-shaders/work
     is beside the default cache: with --out and --shader-cache elsewhere (a .nup on a drive the pack is not made on) nothing is made beside the game any more.
     Before, a pack with both still made <title ID>-work/android-shaders/work beside the .nup"""
     return a.shader_cache.resolve().parent / 'work' if a.shader_cache else work / 'android-shaders' / 'work'
@@ -1098,30 +1098,30 @@ def shader_work(a, work):
 def pack_shaders(a, g, work, out, vdir, parts=None, aoc=()):
     """shaders/v-<V>/ in the pack: an up-to-date library from the cache (built there first when it is missing or stale, from the shader package, split from the dump
     first when there is none and --shader-pkg names none). → the library path in the pack, or None"""
-    require_shaders(g)   # PEANUTS: an empty map without the profile's word for it is no library to pack
+    require_shaders(g)   # KIWI: an empty map without the profile's word for it is no library to pack
     v = vk_chain(); name = VK_PREFIX + v
     cache = (a.shader_cache or work / 'android-shaders' / 'lib').resolve(); lib = cache / name
     dst = out / 'shaders' / name
-    stage('checking the saved shaders')  # PEANUTS: build text in the player's words (0.1.8)
+    stage('checking the saved shaders')  # KIWI: build text in the player's words (0.1.8)
     pkg = (a.shader_pkg or work / 'android-shaders' / 'pkg').resolve()
     current = library_current(lib, g)
-    if current and not package_current(lib, pkg):   # PEANUTS: the profile's inputs are the same, the package is not (#670)
+    if current and not package_current(lib, pkg):   # KIWI: the profile's inputs are the same, the package is not (#670)
         print(f'shaders: {lib} was built from another shader package than {pkg}: building it again', flush=True); current = False
     if not current:
         if a.in_process: raise Error(f'no current shader library {lib}: --in-process does not build one yet (vk_android_build.py starts the translator and spirv-val as programs); --no-shaders packs without')
         if not pkg.is_dir(): split_shaders(a, g, vdir, pkg, parts, aoc, collected_nros(work))   # also into a --shader-pkg folder that is not there yet
         py = shader_python(a.shader_python)
         print(f'shaders: building the Vulkan library {lib} from {pkg} with {py} (J={a.J}; about 10 minutes on DKB)', flush=True)
-        swork = shader_work(a, work); swork.mkdir(parents=True, exist_ok=True)   # PEANUTS(upstream-candidate): beside a --shader-cache folder (shader_work)
+        swork = shader_work(a, work); swork.mkdir(parents=True, exist_ok=True)   # KIWI(upstream-candidate): beside a --shader-cache folder (shader_work)
         env = child_env(DM_GAME=g.id, J=str(a.J), WORK=str(swork))
-        env.update(peanuts_env('shaders'))   # PEANUTS: as the phone's shaders step (PackService): zstd 6
-        env.update(windows_shader_workers(py, a.J))   # PEANUTS(upstream-candidate): Windows, the shaders in worker processes
+        env.update(kiwi_env('shaders'))   # KIWI: as the phone's shaders step (PackService): zstd 6
+        env.update(windows_shader_workers(py, a.J))   # KIWI(upstream-candidate): Windows, the shaders in worker processes
         keys = selected_keys(g.dir)   # a profile with a selected set (shader_seen.tsv): only its shaders, as the phone builds them (PackService, ShaderLibs.selection)
         if keys is not None:
-            if not keys: raise Error('the profile\'s shader_seen.tsv names none of the shaders of its shader_map.tsv')   # PEANUTS(upstream-candidate): no substitutions.
+            if not keys: raise Error('the profile\'s shader_seen.tsv names none of the shaders of its shader_map.tsv')   # KIWI(upstream-candidate): no substitutions.
             print(f'shaders: the profile selects {len(keys):,} shaders (shader_seen.tsv) and the pixel shaders paired with them, as the phone builds', flush=True)
         absent = absent_optional(g, pkg, getattr(a, 'pack_ver', None))
-        # PEANUTS: pass the validated keys to each child, so pair expansion cannot restore them.
+        # KIWI: pass the validated keys to each child, so pair expansion cannot restore them.
         with tempfile.TemporaryDirectory(prefix='selection-', dir=swork) as selection_dir:
             env.pop('DMSH_VK_ABSENT_FILE', None)
             if absent:
@@ -1132,12 +1132,12 @@ def pack_shaders(a, g, work, out, vdir, parts=None, aoc=()):
             args = []
             if keys:   # on Windows a file the wrapper reads (vk_android_win.py "@<file>"): thousands of keys pass a command line's 32,767 characters there
                 if WINDOWS:
-                    kf = Path(selection_dir) / 'keys.txt'; write_lf(kf, ''.join(k + '\n' for k in keys)); args = ['@' + str(kf)]   # PEANUTS: private to this child; removed after it exits
+                    kf = Path(selection_dir) / 'keys.txt'; write_lf(kf, ''.join(k + '\n' for k in keys)); args = ['@' + str(kf)]   # KIWI: private to this child; removed after it exits
                 else: args = keys
-            r = subprocess.run([py, str(VK_BUILD_WIN if WINDOWS or sys.platform.startswith('linux') else VK_BUILD), '--target', 'vulkan', str(pkg), str(cache), *args], env=env)   # PEANUTS: on Linux too, for the translator's start (the repository's apphost is the Mac's; vk_android_win.py starts the dlls with dotnet)
+            r = subprocess.run([py, str(VK_BUILD_WIN if WINDOWS or sys.platform.startswith('linux') else VK_BUILD), '--target', 'vulkan', str(pkg), str(cache), *args], env=env)   # KIWI: on Linux too, for the translator's start (the repository's apphost is the Mac's; vk_android_win.py starts the dlls with dotnet)
         if r.returncode: raise Error(f'vk_android_build.py exit code {r.returncode} (a package that lacks the profile\'s shaders stops it: delete {pkg} and the split runs again)')
         if not library_current(lib, g): raise Error(f'vk_android_build.py finished but {lib} is not a full library of {g.id} with the current inputs')
-        if pkg.is_dir(): write_lf(package_stamp(lib), package_digest(pkg) + '\n')   # PEANUTS: the package it was built from (#670)
+        if pkg.is_dir(): write_lf(package_stamp(lib), package_digest(pkg) + '\n')   # KIWI: the package it was built from (#670)
     else: print(f'shaders: {lib} is current (game {g.id}, inputs {dmsh_chain.inputs(g)})')
     dst.mkdir(parents=True, exist_ok=True)
     if not (lib / dmsh_chain.STAMP).is_file():   # a library copied without its stamp: written from its header (library_current took it from there)
@@ -1147,8 +1147,8 @@ def pack_shaders(a, g, work, out, vdir, parts=None, aoc=()):
         s_, d_ = lib / f, dst / f
         if d_.is_file() and d_.stat().st_size == s_.stat().st_size and d_.stat().st_mtime_ns == s_.stat().st_mtime_ns: continue
         tmp = d_.with_name(f + '.partial')
-        if f == VK_LIB: copy_counted(s_, tmp, 'copying the shaders into the build')  # PEANUTS: build text in the player's words (0.1.8)
-        else: shutil.copyfile(s_, tmp); copy_time(s_, tmp)   # PEANUTS(upstream-candidate): not copy2, whose copystat stops on a microSD card (copy_time, #495)
+        if f == VK_LIB: copy_counted(s_, tmp, 'copying the shaders into the build')  # KIWI: build text in the player's words (0.1.8)
+        else: shutil.copyfile(s_, tmp); copy_time(s_, tmp)   # KIWI(upstream-candidate): not copy2, whose copystat stops on a microSD card (copy_time, #495)
         os.replace(tmp, d_)   # replace: Windows' rename does not take an existing name
     others = sorted(o.name for o in (out / 'shaders').iterdir() if o.name != name and o.name.startswith(VK_PREFIX) and o.is_dir())
     if others:   # kept: another APK (the test and the play app, an older build) may load one of them from this pack; delete by hand to save the space
@@ -1163,7 +1163,7 @@ def scene_overlays(g, romfs, out):
     d = out / 'scene_res'
     if not g.values('scene_scale_palette'):
         shutil.rmtree(d, ignore_errors=True); return []
-    stage('saving the resolution settings for each scene')  # PEANUTS: build text in the player's words (0.1.8)
+    stage('saving the resolution settings for each scene')  # KIWI: build text in the player's words (0.1.8)
     sys.path.insert(0, str(REPO / 'dm/tools'))
     import scene_res
     try:
@@ -1181,7 +1181,7 @@ def scene_overlays(g, romfs, out):
     return [(m[0], f'scene_res/{m[0]}') for m in made]
 
 
-# PEANUTS begin: a variant's own game data and the pack.tsv rows of complete variants (Animal Crossing: New Horizons' 60 fps speed fix, dm/games/01006F8002326000/speedfix60)
+# KIWI begin: a variant's own game data and the pack.tsv rows of complete variants (Animal Crossing: New Horizons' 60 fps speed fix, dm/games/01006F8002326000/speedfix60)
 def variant_cut_builds(g):
     """{(variant, build ID)} of the profile's patches.py VARIANT_CUTS (the builds each variant has cuts for: patch_nso.py rewrites any other build without them)"""
     pp = g.dir / 'patches.py'
@@ -1218,7 +1218,7 @@ def variant_overlays(g, romfs, out, ids):
         print(f'  variant {v}: {len(made)} game files made from yours ({", ".join(made)})', flush=True)
         out_rows.append((v, f'{v}/romfs'))
     return out_rows
-# PEANUTS end
+# KIWI end
 
 
 def work_dir(out, app):
@@ -1268,20 +1268,20 @@ def main():
     ap.add_argument('--keep-code', action='store_true', help='do not rewrite: the pack\'s modules must be there with their key files (the phone\'s pack step)')
     ap.add_argument('--made-by', help='who makes this pack, written as its made_by row (the phone\'s pack step: "app <version>"; the launcher then updates the pack\'s code by itself when only the tools changed)')
     ap.add_argument('--in-process', action='store_true', help='run the rewriter in this process, no subprocesses (the phone\'s packer); the shader library must be current or left out')
-    # PEANUTS begin: code mods (DESIGN-MODS.md), a modded variant build (dev.peanuts.build.ModdedBuild composes these from ModBuild.Plan). None given: this
+    # KIWI begin: code mods (DESIGN-MODS.md), a modded variant build (hernandez.kiwinative.kiwi.build.ModdedBuild composes these from ModBuild.Plan). None given: this
     # function behaves exactly as before - no mod ever changes a normal pack's modules, sources or build.
     ap.add_argument('--modules', help='the modded build\'s full module list, comma-separated, profile order first then any module a mod adds '
-                     '(dev.peanuts.build.ModBuild.Plan.modules); default: the dump\'s own modules, unchanged')
+                     '(hernandez.kiwinative.kiwi.build.ModBuild.Plan.modules); default: the dump\'s own modules, unchanged')
     ap.add_argument('--mod-exefs', action='append', default=[], metavar='NAME=PATH',
                      help='a mod\'s exefs/NAME as that module\'s source, replacing the dump\'s own file or adding a module the dump does not have; repeatable')
     ap.add_argument('--mod-patches', action='append', default=[], metavar='NAME=DIR',
                      help='a mod\'s exefs_patches/NAME directory, applied (dm/tools/patch_ips.py) to NAME\'s image before the rewrite; repeatable')
-    # PEANUTS end
+    # KIWI end
     a = ap.parse_args()
     if WINDOWS:
-        for s in (sys.stdout, sys.stderr): s.reconfigure(encoding='utf-8', errors='backslashreplace')   # as the tools' output (child_env): one encoding for the reader   # pyright: ignore[reportAttributeAccessIssue]  # PEANUTS: standard streams use TextIOWrapper.reconfigure.
+        for s in (sys.stdout, sys.stderr): s.reconfigure(encoding='utf-8', errors='backslashreplace')   # as the tools' output (child_env): one encoding for the reader   # pyright: ignore[reportAttributeAccessIssue]  # KIWI: standard streams use TextIOWrapper.reconfigure.
         if not a.in_process: _job = windows_job()   # noqa: F841  (held until the process ends)
-        signal.signal(signal.SIGBREAK, signal.default_int_handler)   # CTRL_BREAK_EVENT (a GUI that shares a console): stop as on Ctrl-C, the tools stopped in the finally blocks   # pyright: ignore[reportAttributeAccessIssue]  # PEANUTS: Windows-only API absent from Darwin stubs.
+        signal.signal(signal.SIGBREAK, signal.default_int_handler)   # CTRL_BREAK_EVENT (a GUI that shares a console): stop as on Ctrl-C, the tools stopped in the finally blocks   # pyright: ignore[reportAttributeAccessIssue]  # KIWI: Windows-only API absent from Darwin stubs.
     folder = a.game.resolve()
     try:
         try: import capstone, lz4.block   # noqa: F401  (patch_nso.py needs both; checked here so a missing one fails before any work)
@@ -1289,7 +1289,7 @@ def main():
         if capstone.cs_version()[0] != 5: raise Error(f'Capstone {capstone.__version__}: the rewriter needs Capstone 5')
         app, vers, dlc = pack_dump.scan(folder)
         app0, conorig = app, None
-        vdir = folder   # PEANUTS(upstream-candidate): both version branches replace this before use; keep the path's type explicit
+        vdir = folder   # KIWI(upstream-candidate): both version branches replace this before use; keep the path's type explicit
         if a.program:   # program n > 0: its package program/<n> stands where a version folder would; program 0's newest RomFS is its "conorig"
             if pack_dump.nup.is_nup(folder): raise Error(f'--program {a.program}: {folder} is a .nup, which holds program 0 only; pack from the dump folder (updates/<version>/program/{a.program}/)')
             found = pack_dump.program_dir(folder, a.program)
@@ -1307,8 +1307,8 @@ def main():
         for tid, p in sorted(dlc.items()):   # the add-on's content meta record: the game version it needs (pack_dump.dlc_required_version)
             if (need := pack_dump.dlc_required_version(p)) > ver:
                 print(f'[RED] DLC {tid:016X} needs game version {need} or later (its content meta record); this pack is version {ver}: the game may not use it', flush=True)
-        a.dlc_count = len(dlc)   # PEANUTS: for split_shaders' message (lacking_shaders): a dump without add-on content whose missing shaders come from files it does not have
-        a.pack_ver = ver   # PEANUTS: the version packed, for the shaders only another version of the profile's shader_versions has (may_lack)
+        a.dlc_count = len(dlc)   # KIWI: for split_shaders' message (lacking_shaders): a dump without add-on content whose missing shaders come from files it does not have
+        a.pack_ver = ver   # KIWI: the version packed, for the shaders only another version of the profile's shader_versions has (may_lack)
         if a.program: exe, romfs = vdir / 'exefs', vdir / 'romfs'
         else:
             vdir = pack_dump.version_dir(folder, vers, ver)
@@ -1321,7 +1321,7 @@ def main():
         try: out.relative_to(REPO); raise Error(f'{out} is inside the repository: packs never go there')
         except ValueError: pass
         out.mkdir(parents=True, exist_ok=True)
-        # PEANUTS begin: code mods (DESIGN-MODS.md) - a modded variant build's module overrides, applied before the usual missing/ZBIC checks so they see
+        # KIWI begin: code mods (DESIGN-MODS.md) - a modded variant build's module overrides, applied before the usual missing/ZBIC checks so they see
         # the mod's own files, not the stock dump's. Stock call sites (no --modules/--mod-exefs/--mod-patches) are unaffected: mod_exefs/mod_patches_by_name
         # are then both empty and modules_override is None, so merge_mod_modules returns (mods, srcs) unchanged.
         mod_exefs = {}
@@ -1346,7 +1346,7 @@ def main():
             srcs[name] = apply_mod_patches(name, srcs[name], dirs, out, patched.setdefault(name, []))
         # the patches go onto the module before anything reads it for the rewrite, and the branches between modules are worked out from the patched code
         xmod_files = cross_module(mods, srcs, set(mod_exefs), patched, out) if mod_exefs or mod_patches_by_name else {}
-        # PEANUTS end
+        # KIWI end
         if missing := [m for m in mods if not srcs[m].is_file()]: raise Error(f'{exe}: no {", ".join(missing)} (the profile\'s modules are {" ".join(mods)})')
         if not a.keep_code and (zb := [m for m in mods if nso_zbic(srcs[m])]):
             sys.path.insert(0, str(REPO / 'dm/tools')); import nso   # its ZBIC decoder, checked here so a missing one fails before any work
@@ -1355,9 +1355,9 @@ def main():
             if not ok: raise Error(f'{" ".join(zb)}: ZBIC-compressed (system 22.0.0+), and {sys.executable} has no decoder: {nso.ZBIC_MISSING} (android/README.md)')
         work = work_dir(out, app)
         ids = {m: nso_build_id(srcs[m]) for m in mods}
-        # PEANUTS begin: code mods (DESIGN-MODS.md) - a modded build adding a module past the profile's own game.tsv row gets its own profile.bin (the
-        # generic host's per-title data, dm/peanuts/profile/gen_runtime_profile.py) written beside the pack, read instead of the APK asset
-        # (dev.peanuts.build.GenericProfile.envLines(Context,String,File) when <packDir>/profile.bin exists). A plain replace-only mod (mods unchanged
+        # KIWI begin: code mods (DESIGN-MODS.md) - a modded build adding a module past the profile's own game.tsv row gets its own profile.bin (the
+        # generic host's per-title data, dm/kiwi/profile/gen_runtime_profile.py) written beside the pack, read instead of the APK asset
+        # (hernandez.kiwinative.kiwi.build.GenericProfile.envLines(Context,String,File) when <packDir>/profile.bin exists). A plain replace-only mod (mods unchanged
         # from the dump's own list) needs none of this: the shipped per-title asset already lists every module the mod replaces.
         # The same for a variant of a title that has memory numbers for its builds with mods (mod_memory.tsv, which profile-modules reads), whatever its mods
         # do: only a build that adds a module was given them. A variant that needs no profile of its own keeps none that an earlier build of it left.
@@ -1365,7 +1365,7 @@ def main():
         own_profile = mods != dump_modules(g, exe) or modded and mod_memory_rows(f'{app:016X}')
         if modded and not own_profile: (out / 'profile.bin').unlink(missing_ok=True)
         if own_profile:
-            gen = REPO / 'dm/peanuts/profile/gen_runtime_profile.py'
+            gen = REPO / 'dm/kiwi/profile/gen_runtime_profile.py'
             profile_bin, gen_log = out / 'profile.bin', out / 'rewrite_profile.log'
             gen_args = ['profile-modules', f'{app:016X}', str(profile_bin), ','.join(mods)]
             if a.in_process: rc = run_in_process(gen, gen_args, {}, gen_log)
@@ -1373,11 +1373,11 @@ def main():
                 with open(gen_log, 'w') as f: rc = subprocess.call([sys.executable, str(gen), *gen_args], stdout=f, stderr=subprocess.STDOUT)
             if rc: raise Error(f'gen_runtime_profile.py profile-modules failed (exit {rc}); see {gen_log}')
             print(f'mod: wrote {profile_bin} with modules {" ".join(mods)} (the generic host\'s profile for this variant)', flush=True)
-        # PEANUTS end
+        # KIWI end
         print(f'{app:016X} {g.get("name", "?")} version {ver}: {vdir}', flush=True)
         for m, known in unregistered(g, ids).items(): print(f'[RED] {m} build {ids[m]} is none of the profile\'s builds ({", ".join(known)}): build-gated cuts do not apply')
         if a.keep_code:
-            stage('checking the converted code')  # PEANUTS: build text in the player's words (0.1.8)
+            stage('checking the converted code')  # KIWI: build text in the player's words (0.1.8)
             # each module needs its rewritten code and, written last by the rewrite, its key: a module without the key is a rewrite that did not finish (or one from before keys)
             gaps = [f'{m} ({" and ".join(f for f in (f"{m}.patched.bin", f"{m}.android.key") if not (out / f).is_file())} missing)'
                     for m in mods if not (out / f'{m}.patched.bin').is_file() or not (out / f'{m}.android.key').is_file()]
@@ -1388,32 +1388,32 @@ def main():
             work = folder.parent / f'{app:016X}-work'
             nros = collect_nros(exe, romfs, work, a.in_process)
             try:
-                rewrite(sys.executable, srcs | nros, out, max(1, a.j), g, a.in_process, xmod_files)   # PEANUTS: xmod_files
-                for _m, _src in (srcs | nros).items():   # PEANUTS: what each module was made from, for the next build's rewrite_reuse.keep (issue #120)
+                rewrite(sys.executable, srcs | nros, out, max(1, a.j), g, a.in_process, xmod_files)   # KIWI: xmod_files
+                for _m, _src in (srcs | nros).items():   # KIWI: what each module was made from, for the next build's rewrite_reuse.keep (issue #120)
                     if _m not in (xmod_files or {}): pn_reuse().record(_m, _src, out, g, REWRITER)
-                rewrite_variants(sys.executable, srcs, out, g, a.in_process, set(mod_exefs) | set(patched))   # game.tsv variant rows (a native 4:3 mod) into <pack>/<variant>/; PEANUTS: none of a mod's modules
+                rewrite_variants(sys.executable, srcs, out, g, a.in_process, set(mod_exefs) | set(patched))   # game.tsv variant rows (a native 4:3 mod) into <pack>/<variant>/; KIWI: none of a mod's modules
             finally: shutil.rmtree(out / '.nup-src', ignore_errors=True)   # the module copies a NUP game's rewrite read (rewriter_src)
             place_nros(work / 'android-nro' if nros else None, out)
         if a.code_only: print(f'done: the modules in {out} (--code-only: pack.tsv and the shaders unchanged)'); return
         if a.keep_code:
             coll = collected_nros(folder.parent / f'{app:016X}-work')   # the collected NROs the keys were made from, when this machine collected them
-            upgrade_keys(srcs | {n: coll / f'{n}.nro' for n in pack_nros(out) if coll and (coll / f'{n}.nro').is_file()}, out, g, xmod_files)   # PEANUTS: xmod_files. Before the copy below replaces the game.tsv an earlier key was made with (a rewrite run did it in rewrite)
+            upgrade_keys(srcs | {n: coll / f'{n}.nro' for n in pack_nros(out) if coll and (coll / f'{n}.nro').is_file()}, out, g, xmod_files)   # KIWI: xmod_files. Before the copy below replaces the game.tsv an earlier key was made with (a rewrite run did it in rewrite)
         shutil.copyfile(g.dir / 'game.tsv', out / 'game.tsv')
         place_cheats(g, out)
         # a program n > 0 splits program 0's RomFS (its conorig) and the add-ons with its own main: its own RomFS holds no shaders (Wonder's program 1: one text file)
         shaders = None if a.no_shaders else pack_shaders(a, g, work, out, vdir, (conorig, exe) if a.program else (romfs, exe), list(dlc.values()) if a.program else ())
         scenes = scene_overlays(g, romfs, out)
-        ready = variant_overlays(g, romfs, out, ids)   # PEANUTS: complete variants and their game data (pack.tsv variant rows)
+        ready = variant_overlays(g, romfs, out, ids)   # KIWI: complete variants and their game data (pack.tsv variant rows)
         top = folder.parent if pack_dump.nup.is_nup(folder) else folder   # a NUP file's paths are `<name>.nup:<package>/...`, relative to its folder
         rel = lambda p: p.relative_to(top).as_posix()
         rows = [('format', str(FORMAT)), ('title_id', f'{app:016X}'), ('name', g.get('name', '')), ('version', str(ver)), ('target', 'android'),
-                # PEANUTS: a module a mod supplies is listed as mod_build, not build: the launcher compares every build row with the game's own file of that name
+                # KIWI: a module a mod supplies is listed as mod_build, not build: the launcher compares every build row with the game's own file of that name
                 # (BuildCheck.build), which an added module does not have and a replaced one differs from, and would refuse to start the pack
                 ('modules', ' '.join(mods)), *[('mod_build' if m in mod_exefs else 'build', f'{m}={ids[m]}') for m in mods], ('romfs', rel(romfs)),
                 *[('aoc', f'{pack_dump.dlc_index(tid, app)}\t{rel(p)}') for tid, p in sorted(dlc.items())],
                 # program n > 0: which program it is, the application (its save and add-ons), and each program index's RomFS (DM_ROMFS_PROGRAM_<i>: 0 is the game's, "conorig")
                 *([('program', str(a.program)), ('application', f'{app0:016X}'), ('romfs_program', f'0\t{rel(conorig)}'), ('romfs_program', f'{a.program}\t{rel(romfs)}')] if a.program else []),
-                *([('shaders', shaders.relative_to(out).as_posix())] if shaders else []), *[('scene_res', f'{n}\t{p}') for n, p in scenes], *[('variant', f'{v}\t{p}') for v, p in ready], ('packer', commit()), *([('made_by', a.made_by)] if a.made_by else [])]   # PEANUTS: variant rows
+                *([('shaders', shaders.relative_to(out).as_posix())] if shaders else []), *[('scene_res', f'{n}\t{p}') for n, p in scenes], *[('variant', f'{v}\t{p}') for v, p in ready], ('packer', commit()), *([('made_by', a.made_by)] if a.made_by else [])]   # KIWI: variant rows
         stage('listing the build\'s files')
         tmp = out / 'pack.tsv.partial'
         write_lf(tmp, ''.join(f'{k}\t{v}\n' for k, v in rows)); os.replace(tmp, out / 'pack.tsv')

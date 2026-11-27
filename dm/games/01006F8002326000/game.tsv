@@ -24,7 +24,7 @@ build	v2228224	3.0.3	main=ff1d1c05670db6021c85b624a710b963	subsdk0=6c6ceace7be94
 package	v2228224
 shader_versions	v2228224
 
-# ---- Frame rate (PEANUTS: a 60 fps choice with tmouh's "ACNH 60 FPS + SpeedFix" v1.4.5, CC BY-NC 4.0: speedfix60/NOTICE.md, README.md "60 fps") ----
+# ---- Frame rate (KIWI: a 60 fps choice with tmouh's "ACNH 60 FPS + SpeedFix" v1.4.5, CC BY-NC 4.0: speedfix60/NOTICE.md, README.md "60 fps") ----
 # Android's Frame rate cap offers Game owned (the game's own 30, the game as it is) and 60 fps, 60 by default since 0.1.8 (fps_limit_present with no fps_limit; Game owned before). 60 starts the
 # variant 60 at the next start: main rewritten a second time with the speed fix's rows (patches.py VARIANT_CUTS from speedfix60/main.tsv, main build ff1d1c05 only), the
 # mod's four changed game files made by the pack step from the player's own 3.0.3 files (variant_romfs: speedfix60/romfs.tsv into <pack>/60/romfs/, first in

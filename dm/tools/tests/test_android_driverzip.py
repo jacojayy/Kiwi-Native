@@ -9,8 +9,8 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/DriverZipJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/DriverZipJvmTest.java'
 
 
 @unittest.skipUnless(shutil.which('javac') and shutil.which('java'), 'no JDK')
@@ -18,10 +18,10 @@ class DriverZipJvm(unittest.TestCase):
     def test_install(self):
         with tempfile.TemporaryDirectory() as d:
             d = Path(d)
-            r = subprocess.run(['javac', '-Xlint:all,-try', '-Werror', '-d', str(d / 'classes'), str(SRC / 'DriverZip.java'), str(SRC / 'Streams.java'), str(TEST)], capture_output=True, text=True)   # PEANUTS: Streams.java (Android 12: the stream helpers)
+            r = subprocess.run(['javac', '-Xlint:all,-try', '-Werror', '-d', str(d / 'classes'), str(SRC / 'DriverZip.java'), str(SRC / 'Streams.java'), str(TEST)], capture_output=True, text=True)   # KIWI: Streams.java (Android 12: the stream helpers)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             (d / 'run').mkdir()
-            r = subprocess.run(['java', '-cp', str(d / 'classes'), 'dev.nxnative.android.DriverZipJvmTest', str(d / 'run')], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', str(d / 'classes'), 'hernandez.kiwinative.DriverZipJvmTest', str(d / 'run')], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertTrue(r.stdout.startswith('ok '), r.stdout)
 

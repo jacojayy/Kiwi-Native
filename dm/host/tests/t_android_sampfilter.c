@@ -1,4 +1,4 @@
-// PEANUTS: Yoshi's registered 1x1 RGBA8_UINT volume and filterable material images share a sampler.
+// KIWI: Yoshi's registered 1x1 RGBA8_UINT volume and filterable material images share a sampler.
 #include <assert.h>
 #include <stdio.h>
 #include "../../gfx/vk_android/vka_sampfilter.h"

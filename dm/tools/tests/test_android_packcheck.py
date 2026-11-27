@@ -23,8 +23,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import test_nup  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/PackCheckJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/PackCheckJvmTest.java'
 HAVE_JDK = bool(shutil.which('javac') and shutil.which('java'))
 try:
     from compression import zstd as pyzstd
@@ -66,7 +66,7 @@ class Jvm(unittest.TestCase):
     def tearDownClass(cls): cls.td.cleanup()
 
     def java(self, *args, xmx=None):
-        cmd = ['java'] + ([f'-Xmx{xmx}', '-XX:+UseSerialGC'] if xmx else []) + ['-cp', str(self.t / 'classes'), 'dev.nxnative.android.PackCheckJvmTest', *map(str, args)]
+        cmd = ['java'] + ([f'-Xmx{xmx}', '-XX:+UseSerialGC'] if xmx else []) + ['-cp', str(self.t / 'classes'), 'hernandez.kiwinative.PackCheckJvmTest', *map(str, args)]
         r = subprocess.run(cmd, capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stdout[-2000:] + r.stderr[-3000:])
         self.assertRegex(r.stdout, r'ok \d+')
@@ -115,11 +115,11 @@ class Jvm(unittest.TestCase):
             elif k == 2: data += rnd.randbytes(rnd.randint(1, 400))
             else: data += b'the quick brown fox %d ' % rnd.randint(0, 50) * rnd.randint(1, 40)
         data = bytes(data[:3_000_000])
-        assert pyzstd is not None   # PEANUTS(upstream-candidate): this fixture is skipped without zstd.
+        assert pyzstd is not None   # KIWI(upstream-candidate): this fixture is skipped without zstd.
         P = pyzstd.CompressionParameter
         for name, opts in {'l1': {P.compression_level: 1}, 'l3': {P.compression_level: 3}, 'l19': {P.compression_level: 19}, 'l3-wlog10': {P.compression_level: 3, P.window_log: 10},
                            'l19-wlog10': {P.compression_level: 19, P.window_log: 10}, 'l1-wlog14-nocheck': {P.compression_level: 1, P.window_log: 14, P.checksum_flag: 0}}.items():
-            # PEANUTS(upstream-candidate): the compression API takes integer option keys.
+            # KIWI(upstream-candidate): the compression API takes integer option keys.
             (f / f'{name}.zst').write_bytes(pyzstd.compress(data, options={int(k): v for k, v in opts.items()})); (f / f'{name}.raw').write_bytes(data)
         (f / 'small.zst').write_bytes(pyzstd.compress(b'tiny single segment frame ' * 5)); (f / 'small.raw').write_bytes(b'tiny single segment frame ' * 5)
         self.java('frames', f, xmx='64m')

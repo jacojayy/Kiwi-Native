@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The kiwi's silhouette for the themed (monochrome) launcher icon, as ic_kiwi_mono.xml: only the alpha counts -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetLeft="21%" android:insetTop="21%" android:insetRight="21%" android:insetBottom="21%">
+    <bitmap android:src="@drawable/kiwi_sprite_mono" android:filter="false" />
+</inset>

@@ -45,7 +45,7 @@ int main(void) {
     CHECK(o.x == ew - bw && o.y == 0, "top right: %d,%d", o.x, o.y);
     vko_place(1, ew, eh, ew, eh, VKO_BOTTOM_LEFT, bw, bh, tw, th, 0, &o);
     CHECK(o.x == 0 && o.y == eh - bh, "bottom left: %d,%d", o.x, o.y);
-    // PEANUTS begin: the centred blocks (VKO_TOP_CENTER, VKO_BOTTOM_CENTER) map through every turn as the corners do, and sit in the middle of their edge
+    // KIWI begin: the centred blocks (VKO_TOP_CENTER, VKO_BOTTOM_CENTER) map through every turn as the corners do, and sit in the middle of their edge
     for (int pi = 0; pi < 4; pi++) for (int ci = 0; ci < 2; ci++) {
         int pre = pres[pi], corner = ci ? VKO_BOTTOM_CENTER : VKO_TOP_CENTER, quarter = pre == VKO_ROT90 || pre == VKO_ROT270, W = quarter ? eh : ew, H = quarter ? ew : eh;
         vko_draw c;
@@ -66,7 +66,7 @@ int main(void) {
     CHECK(o.x == (ew - bw) / 2 && o.y == 0, "top centre: %d,%d", o.x, o.y);
     vko_place(1, ew, eh, ew, eh, VKO_BOTTOM_CENTER, bw, bh, tw, th, 0, &o);
     CHECK(o.x == (ew - bw) / 2 && o.y == eh - bh, "bottom centre: %d,%d", o.x, o.y);
-    // PEANUTS end
+    // KIWI end
     // a block wider or taller than the display is cut to it; empty blocks draw nothing
     CHECK(vko_place(1, 100, 50, 100, 50, VKO_TOP_RIGHT, 300, 80, 320, 96, 0, &o) && o.x == 0 && o.w == 100 && o.h == 50, "cut to the display: %d %dx%d", o.x, o.w, o.h);
     CHECK(fabs(o.pc[0] - 100.0 / 320) < 1e-6 && fabs(o.pc[3] - 50.0 / 96) < 1e-6, "cut: the texture's part");

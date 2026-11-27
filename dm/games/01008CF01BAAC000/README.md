@@ -15,7 +15,7 @@ Playable on the Mac: title movie and logo, file selection, the opening autosave 
 | `sys_resource 0` | `game.tsv` | NPDM META +0x14 is zero: virtual address memory is disabled |
 | `pad_layout full` | `game.tsv` | the right stick rotates the camera |
 | `depth_mode zero` | `game.tsv` | the game selects near-zero depth; offline pipeline bases must use the same vertex entry |
-| `fps_target 60` <!-- PEANUTS --> | `game.tsv` | the game's frame governor (static manager `main+0x34bd4b0`, enable byte `+0x3e4`) drops to 30 fps after one frame over 1/60 s and, measuring wall time at interval 2, never returns; the host turns it off at 60 or holds it at 30 (`hle_fpslock.c`, the "Grezzo frame governor enable" row) |
+| `fps_target 60` <!-- KIWI --> | `game.tsv` | the game's frame governor (static manager `main+0x34bd4b0`, enable byte `+0x3e4`) drops to 30 fps after one frame over 1/60 s and, measuring wall time at interval 2, never returns; the host turns it off at 60 or holds it at 30 (`hle_fpslock.c`, the "Grezzo frame governor enable" row) |
 
 No game-specific rewriter cuts, SDK cuts or host branches are needed for the tested route. Only update 1.1.0 is registered; the base build has not been brought up.
 
@@ -34,20 +34,20 @@ No game-specific rewriter cuts, SDK cuts or host branches are needed for the tes
 
 ## Audio and memory
 
-<!-- PEANUTS: Android shared-font report, investigated 2026-11-13. -->
-- **Open: startup crash without firmware fonts (Android).** A Peanuts test build `4319fcf` on an AYN Thor with Turnip 26.0.0 R8 loads all 9,858 shaders, falls back to Android's `RobotoStatic-Regular.ttf` (305,656 bytes), and crashes at `main+0x8b37c`, address `0x38`, with a null pointer and `0x25a1` in the registers. The same-sized font read from a Thor loads in FreeType but has no U+25A1 (white square); the owner's firmware standard and extended fonts both have that glyph. This supports a missing fallback glyph as the cause, but a controlled boot with and without firmware fonts remains untested. The host already contains the `ScalableFontEngine::LoadFont` BFTTF-to-TTF correction, so the crash address alone does not establish a regression in that correction. Configure the owner's firmware fonts through Settings before retesting; no additional host workaround is justified yet.
+<!-- KIWI: Android shared-font report, investigated 2026-11-13. -->
+- **Open: startup crash without firmware fonts (Android).** A Kiwi test build `4319fcf` on an AYN Thor with Turnip 26.0.0 R8 loads all 9,858 shaders, falls back to Android's `RobotoStatic-Regular.ttf` (305,656 bytes), and crashes at `main+0x8b37c`, address `0x38`, with a null pointer and `0x25a1` in the registers. The same-sized font read from a Thor loads in FreeType but has no U+25A1 (white square); the owner's firmware standard and extended fonts both have that glyph. This supports a missing fallback glyph as the cause, but a controlled boot with and without firmware fonts remains untested. The host already contains the `ScalableFontEngine::LoadFont` BFTTF-to-TTF correction, so the crash address alone does not establish a regression in that correction. Configure the owner's firmware fonts through Settings before retesting; no additional host workaround is justified yet.
 
 - **Current:** the SDK audio renderer runs at 48 kHz, 240 samples per frame, 96 voices and a six-input DeviceSink. The Mac callback reports non-silent output and no underruns in the tested route.
 - The first dungeon corridor settles around 1.7–1.8 GB resident with 1.3 GB allocated by Metal. Level transitions change the footprint; the seven-minute repeat ends at 1,831 MB resident / 1,261 MB Metal, with a stable 490-pool count and no continuing growth in the stationary corridor windows.
 - The corridor runs at the game's 60 fps when the Mac window is presenting. Missing shader-pair tables and an archive built for the wrong depth caused first-use pipeline hitches (see [Rendering and shaders](#rendering-and-shaders)). Window-inactive timing is not a gameplay frame-rate measurement.
 - **Validation:** four-minute and seven-minute repeats through the opening corridor, followed by an 85-second run of the finalized profile with prewarming enabled. The final run has no red line. Timed runs end deliberately with SIGALRM (`CRASH sig=14`), rather than a game crash. The unsigned IPA's ZIP CRC check passed; it contains all 9,858 base shader libraries and no signing entries.
 
-<!-- PEANUTS begin: picture shapes -->
+<!-- KIWI begin: picture shapes -->
 ## Picture shapes (Android)
 
 **Untested.** Game settings › Display offers **Fill the screen** on 1.1.0 through 2 `aspect_plan` rows that nobody has seen on a device (`aspect_plan_untested 1`, and the Fill choice says so). They are every place this build's main has the packed 1920x1080 sizes in code and the 16/9 float words, from a scan of the code on 2026-11-21 with each expected word read on the pack; no community patch stands behind them. With Fill the 3D view may follow the screen, the HUD and menus may not, or the game may draw wrongly or not start. Fit and Stretch are unchanged. Open: every screen, at any shape.
 
-<!-- PEANUTS end -->
+<!-- KIWI end -->
 
 ## Mac routes
 

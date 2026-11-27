@@ -14,7 +14,7 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
-from typing import Any   # PEANUTS(upstream-candidate): exec populates this fixture namespace with functions.
+from typing import Any   # KIWI(upstream-candidate): exec populates this fixture namespace with functions.
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO / 'dm/gfx/tools'))
@@ -25,8 +25,8 @@ except ImportError:
     try: from backports import zstd   # pyright: ignore[reportMissingImports]
     except ImportError: zstd = None
 
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android/ShaderLibs.java'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/ShaderLibsJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative/ShaderLibs.java'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/ShaderLibsJvmTest.java'
 VK = delta.VK
 GAME = '040074A01BF12000'
 
@@ -45,7 +45,7 @@ def bind(n): return struct.pack('<BBHBBHhHBBhHHI', 1, 6, 4 * 64 + n, 0, 0, 1, n,
 def borrowed(*names):
     """Functions of dmsh_build.py by name (vk_android_build.py takes them the same way: borrow)"""
     src = (REPO / 'dm/gfx/tools/dmsh_build.py').read_text()
-    ns: dict[str, Any] = {'os': os, 'collections': collections}   # PEANUTS(upstream-candidate): extracted functions join these modules.
+    ns: dict[str, Any] = {'os': os, 'collections': collections}   # KIWI(upstream-candidate): extracted functions join these modules.
     exec(compile(ast.Module(body=[n for n in ast.parse(src).body if isinstance(n, ast.FunctionDef) and n.name in names], type_ignores=[]), 'dmsh_build.py', 'exec'), ns)
     return [ns[n] for n in names]
 
@@ -69,7 +69,7 @@ def write_lib(path, version, game=GAME, abi='', shaders=(), codec=1):
     for key, ms, c1 in sorted(shaders):
         c1o = put(c1) if c1 else 0; m0, b0 = nm, nb
         for v, s in enumerate(ms):
-            # PEANUTS(upstream-candidate): compressed fixture modules require the optional codec.
+            # KIWI(upstream-candidate): compressed fixture modules require the optional codec.
             if codec == 1:
                 assert zstd is not None
                 st = zstd.compress(s)
@@ -112,7 +112,7 @@ class EntryHash(unittest.TestCase):
         L = delta.Library(str(self.tmp / 'A.lib')); good = L.hash_of(0, zstd)[1]
         off, size, stored, *_ = delta.MOD.unpack_from(L.m, L.mo); L.close()
         outcomes = set()
-        # PEANUTS(upstream-candidate): initialize the corruption buffer before its first loop use.
+        # KIWI(upstream-candidate): initialize the corruption buffer before its first loop use.
         d = bytearray((self.tmp / 'A.lib').read_bytes())
         for at in range(stored):
             d0 = bytes(d); d[L.blob_off + off + at] ^= 0x5a; (self.tmp / 'B.lib').write_bytes(bytes(d)); d = bytearray(d0)
@@ -179,11 +179,11 @@ class Manifest(unittest.TestCase):
 
     def test_leaks_refused(self):
         t = delta.format_manifest('76b097613f15', GAME, '5dd843bed8d1', self.H)
-        for extra in ('/data/someone/game\t1', 'name\tDonkey', '00000000000000cc\t0123456789abcdeg', '00000000000000cc\t0123', 'version\t76b097613f15', 'from\tabc\t1'):   # PEANUTS: /data/someone, not a home folder's path (the publish check reads one as private data)
+        for extra in ('/data/someone/game\t1', 'name\tDonkey', '00000000000000cc\t0123456789abcdeg', '00000000000000cc\t0123', 'version\t76b097613f15', 'from\tabc\t1'):   # KIWI: /data/someone, not a home folder's path (the publish check reads one as private data)
             self.assertTrue(delta.manifest_problems(t + extra + '\n'), extra)
         self.assertTrue(delta.manifest_problems(t.replace('# The Android', '# /home/x The Android')))
         self.assertTrue(delta.manifest_problems(t.replace(f'game\t{GAME}\n', '')))
-        with self.assertRaises(ValueError): delta.format_manifest('76b097613f15', GAME, '/data/x/inputs', self.H)   # PEANUTS: /data/x (as above)
+        with self.assertRaises(ValueError): delta.format_manifest('76b097613f15', GAME, '/data/x/inputs', self.H)   # KIWI: /data/x (as above)
 
     def test_committed_manifests(self):
         """Every profile's vk_delta.tsv holds keys and hashes only, of that profile's shader map. One of an older version than this tree's is stale (a full build of this
@@ -235,11 +235,11 @@ class KeyList(unittest.TestCase):
         self.assertEqual(cand, [self.A, self.B], 'C did not build on the Mac: translated, never taken')
         got = {k: delta.find_entry(self.man, k, [old], zstd)[0] for k in cand}
         reused = got[self.A]
-        assert reused is not None   # PEANUTS(upstream-candidate): unchanged A is reusable.
+        assert reused is not None   # KIWI(upstream-candidate): unchanged A is reusable.
         self.assertEqual(reused.version, '111111111111')
         self.assertIsNone(got[self.B], 'B changed in this version: translated')
         L, ent, errs = delta.find_entry(self.man, self.A, [old], zstd)
-        assert ent is not None   # PEANUTS(upstream-candidate): unchanged A has an entry.
+        assert ent is not None   # KIWI(upstream-candidate): unchanged A has an entry.
         self.assertEqual((ent[0], errs), (self.A, []))
         self.assertEqual(delta.reuse_candidates(self.man, keys, {self.A}), [self.B], 'a key with a result already (an earlier run) is not taken again')
         old.close()
@@ -250,10 +250,10 @@ class KeyList(unittest.TestCase):
         old_old = self.lib('v1.lib', '111111111111', [(self.A, self.mod[self.A], b''), (self.B, self.mod[self.B], b'')])
         libs = [new_old, old_old]
         reused_a = delta.find_entry(self.man, self.A, libs, zstd)[0]
-        assert reused_a is not None   # PEANUTS(upstream-candidate): one older library holds this fixture entry.
+        assert reused_a is not None   # KIWI(upstream-candidate): one older library holds this fixture entry.
         self.assertEqual(reused_a.version, '111111111111', 'A changed in the newer one: the older one\'s is as the manifest has it')
         reused_b = delta.find_entry(self.man, self.B, libs, zstd)[0]
-        assert reused_b is not None   # PEANUTS(upstream-candidate): one older library holds this fixture entry.
+        assert reused_b is not None   # KIWI(upstream-candidate): one older library holds this fixture entry.
         self.assertEqual(reused_b.version, '111111111112', 'newest first')
         for L in libs: L.close()
         d = bytearray((self.tmp / 'v2.lib').read_bytes()); L = delta.Library(str(self.tmp / 'v2.lib'))
@@ -261,7 +261,7 @@ class KeyList(unittest.TestCase):
         d[L.blob_off + off:L.blob_off + off + 8] = b'\xff' * 8; (self.tmp / 'v2.lib').write_bytes(bytes(d))
         libs = [delta.Library(str(self.tmp / 'v2.lib')), delta.Library(str(self.tmp / 'v1.lib'))]
         L, _, errs = delta.find_entry(self.man, self.B, libs, zstd)
-        assert L is not None   # PEANUTS(upstream-candidate): the undamaged older library remains reusable.
+        assert L is not None   # KIWI(upstream-candidate): the undamaged older library remains reusable.
         self.assertEqual(L.version, '111111111111', 'the damaged newest entry passed over')
         for L in libs: L.close()
 
@@ -298,7 +298,7 @@ class KeyList(unittest.TestCase):
         with self.assertRaises(ValueError): delta.phone_keys(mapk, 'key\tstage\n', pairs, build_keys)
 
     def test_version_exclusions_survive_pair_expansion(self):
-        # PEANUTS: the three one-version splits reported at the start of shader translation.
+        # KIWI: the three one-version splits reported at the start of shader translation.
         load_pairs, build_keys = borrowed('load_pairs', 'build_keys')
         cases = (('010015100B514000', 'v327680', 12817),
                  ('0100152000022000', 'v1441792', 29650),
@@ -322,7 +322,7 @@ class KeyList(unittest.TestCase):
                 self.assertEqual(set(delta.package_keys(set(), locations, pairs, absent, build_keys)), wanted)
 
     def test_selected_vertex_keeps_required_pixel(self):
-        # PEANUTS: a missing optional pixel must not suppress its required sibling.
+        # KIWI: a missing optional pixel must not suppress its required sibling.
         build_keys, = borrowed('build_keys')
         locations = dict.fromkeys(('vertex', 'required', 'optional', 'unrelated'))
         pairs = {'vertex': {'optional', 'required'}}
@@ -364,7 +364,7 @@ class Abi(unittest.TestCase):
         """dm/gfx/vk_android/vka_abi_compat.h: the older ABIs the replay and the launcher also play were checked against this tree's ABI (VKA_ABI_COMPAT_FOR), none of
         them is this ABI, and the file is not one the digest reads (a row moves no version)"""
         h = (REPO / 'dm/gfx/vk_android/vka_abi_compat.h').read_text()
-        # PEANUTS(upstream-candidate): required ABI definitions must match before their values are read.
+        # KIWI(upstream-candidate): required ABI definitions must match before their values are read.
         def define(n):
             match = re.search(rf'#define\s+{n}\s+"([^"]*)"', h)
             assert match is not None
@@ -395,7 +395,7 @@ class Launcher(unittest.TestCase):
     def tearDownClass(cls): shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def java(self, *a):
-        r = subprocess.run(['java', '-Dstdout.encoding=UTF-8', '-cp', str(self.tmp / 'classes'), 'dev.nxnative.android.ShaderLibsJvmTest', *map(str, a)],
+        r = subprocess.run(['java', '-Dstdout.encoding=UTF-8', '-cp', str(self.tmp / 'classes'), 'hernandez.kiwinative.ShaderLibsJvmTest', *map(str, a)],
                            capture_output=True, text=True, encoding='utf-8')
         self.assertEqual(r.returncode, 0, r.stderr)
         return r.stdout.rstrip('\n').split(' ', 1)[1]
@@ -499,15 +499,15 @@ class Launcher(unittest.TestCase):
         self.assertIsNone(pack_android.selected_keys(d), 'no shader_seen.tsv: the whole map')
         (d / 'shader_seen.tsv').write_text('key\tstage\n00000000000000bb\tvertex\n00000000000000dd\tpixel\n')
         selected = pack_android.selected_keys(d)
-        assert selected is not None   # PEANUTS(upstream-candidate): the fixture has shader_seen.tsv.
+        assert selected is not None   # KIWI(upstream-candidate): the fixture has shader_seen.tsv.
         self.assertEqual(','.join(selected), self.java('selection', d))
         seen = sorted(p.parent for p in (REPO / 'dm/games').glob('*/shader_seen.tsv') if (p.parent / 'shader_map.tsv').is_file())
-        # PEANUTS: upstream asserts Pokopia (0400A3A01EE4C000) has a selected set; that Switch 2 profile is not carried and no Switch 1 profile has one yet: the
+        # KIWI: upstream asserts Pokopia (0400A3A01EE4C000) has a selected set; that Switch 2 profile is not carried and no Switch 1 profile has one yet: the
         # fixture above is the check then, and any profile with a shader_seen.tsv is checked below
         for p in seen:
             with self.subTest(profile=p.name):
                 selected = pack_android.selected_keys(p)
-                assert selected is not None   # PEANUTS(upstream-candidate): these profiles have shader_seen.tsv.
+                assert selected is not None   # KIWI(upstream-candidate): these profiles have shader_seen.tsv.
                 self.assertEqual(','.join(selected), self.java('selection', p))
 
     def test_windows_wrapper_reads_a_keys_file(self):
@@ -537,7 +537,7 @@ class Launcher(unittest.TestCase):
         split.write_text(rows('00000000000000aa', '00000000000000bb', '00000000000000cc'))
         self.assertEqual(self.java('absent', d, split), 'none', 'nothing lacking: the byte comparison decides')
 
-    def test_other_versions_shaders(self):   # PEANUTS: tables that are the union of two versions (shader_versions), a dump of one (Mario Kart 8 Deluxe 4.0.0: 135 of 29,785 are 4.0.1's)
+    def test_other_versions_shaders(self):   # KIWI: tables that are the union of two versions (shader_versions), a dump of one (Mario Kart 8 Deluxe 4.0.0: 135 of 29,785 are 4.0.1's)
         d = self.tmp / 'union'; d.mkdir(exist_ok=True)
         head = '# kind: evidence\npackage\tindex\tstage\tdm_ctl_sha16\tsource\n'
         A, B, C, D = ('00000000000000' + k for k in ('aa', 'bb', 'cc', 'dd'))
@@ -568,7 +568,7 @@ class Launcher(unittest.TestCase):
         (d / 'game.tsv').write_text('shader_versions\tv100 v2000\n')   # v200 is not v2000
         self.assertEqual(self.java('versions', d, split, 100), 'none | v2000 |  | none')
 
-    def test_mario_kart_8_deluxe_is_two_versions(self):   # PEANUTS: the profile as it is: 135 rows are 4.0.1's own, which a dump of 4.0.0 alone may lack
+    def test_mario_kart_8_deluxe_is_two_versions(self):   # KIWI: the profile as it is: 135 rows are 4.0.1's own, which a dump of 4.0.0 alone may lack
         prof = REPO / 'dm/games/0100152000022000'
         split = self.tmp / 'mk8_split.tsv'
         split.write_text(''.join(l + '\n' for l in (prof / 'shader_map.tsv').read_text().splitlines() if '\t/v1507328/' not in l and '@v1507328' not in l))
@@ -578,7 +578,7 @@ class Launcher(unittest.TestCase):
         self.assertEqual(out[0], out[2], 'the dump lacks exactly the other version\'s rows')
         self.assertEqual(out[3], '135 of 29,785 shaders in this app\'s table belong to other versions of the game (v1507328): not needed for v1441792')
 
-    def test_missing_sources(self):   # PEANUTS: the keys a split lacks, each with the RomFS file its row names (the DLC-not-imported message's evidence)
+    def test_missing_sources(self):   # KIWI: the keys a split lacks, each with the RomFS file its row names (the DLC-not-imported message's evidence)
         head = '# kind: evidence\npackage\tindex\tstage\tdm_ctl_sha16\tsource\n'
         prof, split = self.tmp / 'miss_profile.tsv', self.tmp / 'miss_split.tsv'
         rows = [('00000000000000aa', '/Common/a.ptcl#BNSH@0x1000#var0'), ('00000000000000dd', '/Course/Dlc/course.ptcl#BNSH@0xab000#var0'),
@@ -611,10 +611,10 @@ class Launcher(unittest.TestCase):
         self.assertRegex(text, r'^about \d+-\d+ minutes$')
         # A whole Prepare: the rewrite and the shaders step, by the game's shader count (DKB 22,852 within the 30-45 minutes measured and estimated, MKW 11,604 less)
         dkb_match = re.fullmatch(r'about (\d+)-(\d+) minutes', self.java('job', 22852))
-        assert dkb_match is not None   # PEANUTS(upstream-candidate): require the displayed duration range.
+        assert dkb_match is not None   # KIWI(upstream-candidate): require the displayed duration range.
         dkb = [int(x) for x in dkb_match.groups()]
         mkw_match = re.fullmatch(r'about (\d+)-(\d+) minutes', self.java('job', 11604))
-        assert mkw_match is not None   # PEANUTS(upstream-candidate): require the displayed duration range.
+        assert mkw_match is not None   # KIWI(upstream-candidate): require the displayed duration range.
         mkw = [int(x) for x in mkw_match.groups()]
         self.assertTrue(dkb[0] >= int(lo) and 40 <= dkb[1] <= 50 and mkw[0] < dkb[0] and mkw[1] < dkb[1], (dkb, mkw))
 
@@ -634,7 +634,7 @@ class RequireAll(unittest.TestCase):
         """Mario Kart World's compute 078997bf631992c5 does not build (Ampere 0x481). A manifest of an older version excuses nothing (load_manifest: not of this version), so
         the phone's step stopped at 96 % with "1 of 11603 shaders did not build" once the chain moved (0.3.25, Forgejo #339). A game whose manifest has a "-" row needs one
         of the current chain; it may hold nothing but those rows (the entries a phone can reuse need a full Mac build)"""
-        # PEANUTS(upstream-candidate): fail explicitly when the chain header has no version.
+        # KIWI(upstream-candidate): fail explicitly when the chain header has no version.
         chain_match = re.search(r'DMSH_VK_CHAIN "([0-9a-f]{12})"', (REPO / 'dm/gfx/nvn/dmsh_chain_vk.h').read_text())
         assert chain_match is not None
         chain = chain_match.group(1)
@@ -665,7 +665,7 @@ class RequireAll(unittest.TestCase):
 
     def test_mkw_manifest(self):
         """Mario Kart World's manifest: its one shader that builds nowhere is "-", so a phone build of that version is complete without it"""
-        # PEANUTS: the profile is a Switch 2 one Kiwi Native does not carry; its manifest (six lines) as it was
+        # KIWI: the profile is a Switch 2 one Kiwi Native does not carry; its manifest (six lines) as it was
         m = delta.parse_manifest("# The Android shader library delta manifest (dm/gfx/tools/vk_android_delta.py, android/SHADERS.md#delta-updates): the hash of every shader's library entry in\n"
                                  '# the version below, from a full Mac build; "-" for a shader that did not build. Hashes only. "from" rows: shaders a phone with that older library translates\n'
                                  'version\tc1eff1d2d8c1\n'

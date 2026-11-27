@@ -1,10 +1,10 @@
 # Minecraft Dungeons II (`0100A7C01B792000`)
 
-<!-- PEANUTS: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
+<!-- KIWI: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
 
 Update 1.1.3.0 (v131072) over the base game 1.1.1.0 (v0), SDK 20.5.15. Mojang Studios, Unreal Engine 5.6.1 (`SDK MW+EpicGames+UnrealEngine-5_6_1` in `main`; `SF_GLSL_SWITCH` shaders), NVN, Wwise sound, Havok. Modules `main`, `subsdk0` (NintendoSDK_movie, which `main` imports from) and `sdk`. One add-on content package, the Hero Pack (`0100A7C01B793001`, about 120 KB: an entitlement and a text file, no shaders).
 
-**Status (current): plays on an AYN Thor (Turnip 27.0.0-R2), 60 fps.** First run 2026-11-23 with a pack of 1.1.3.0 and the Hero Pack built on a PC: boot, the opening and the first level (Squid Coast), 130 s of play: no crash, median 59 fps (35.7 at the lowest, while loading), GPU busy p50 / p90 11.1 / 16.3 ms, no audio underrun, about 2.1 GB of memory. The profile is the survey's guess (`dm/games/profile_guess.py`) plus `tex_dyn_slots on` (below). Not run on the system driver. <!-- PEANUTS -->
+**Status (current): plays on an AYN Thor (Turnip 27.0.0-R2), 60 fps.** First run 2026-11-23 with a pack of 1.1.3.0 and the Hero Pack built on a PC: boot, the opening and the first level (Squid Coast), 130 s of play: no crash, median 59 fps (35.7 at the lowest, while loading), GPU busy p50 / p90 11.1 / 16.3 ms, no audio underrun, about 2.1 GB of memory. The profile is the survey's guess (`dm/games/profile_guess.py`) plus `tex_dyn_slots on` (below). Not run on the system driver. <!-- KIWI -->
 
 ## Builds
 

@@ -35,7 +35,7 @@ ctl() { $A shell "echo '$1' >> $FILES/ctl.txt" >/dev/null; }
 $A shell "am force-stop $PKG; f=$E; if [ -f \$f ]; then cp \$f \$f.nxrun; else rm -f \$f.nxrun; fi" >/dev/null
 printf '%sDM_FASTBOOT=1\n' "$envs" | $A shell "cat >> $E"
 before=$(newest_log)
-$A shell "am start -n $PKG/dev.nxnative.android.MainActivity --es game '$game' --ez run true" >/dev/null
+$A shell "am start -n $PKG/hernandez.kiwinative.MainActivity --es game '$game' --ez run true" >/dev/null
 restore() { $A shell "f=$E; if [ -f \$f.nxrun ]; then mv \$f.nxrun \$f; else rm -f \$f; fi" >/dev/null; }
 
 # The readiness check's "Ready, with limits" notice (a warning only, shown again for each new driver) is answered with Continue, wherever the button is

@@ -11,10 +11,10 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
-ONDEVICE = REPO / 'android/app/src/ondevice/java/dev/nxnative/android'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/PrepareTextJvmTest.java'
-STUB = '''package dev.nxnative.android;
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+ONDEVICE = REPO / 'android/app/src/ondevice/java/hernandez/kiwinative'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/PrepareTextJvmTest.java'
+STUB = '''package hernandez.kiwinative;
 public final class BuildConfig {
     public static final String NX_PROFILES = "040074A01BF12000\\tDonkey Kong Bananza\\t22852\\tabcdef012345\\t458752 main=aa";
 }
@@ -28,7 +28,7 @@ class Words(unittest.TestCase):
             stub = Path(t) / 'BuildConfig.java'
             stub.write_text(STUB)
             subprocess.run(['javac', '-Xlint:all', '-Werror', '-d', t, str(SRC / 'PrepareText.java'), str(SRC / 'Profile.java'), str(stub), str(TEST)], check=True)
-            r = subprocess.run(['java', '-cp', t, 'dev.nxnative.android.PrepareTextJvmTest'], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', t, 'hernandez.kiwinative.PrepareTextJvmTest'], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertRegex(r.stdout, r'^ok \d+')
 
@@ -41,7 +41,7 @@ class Wiring(unittest.TestCase):
         self.assertIn('j.fail(PrepareText.notIncluded(missing))', work)
         self.assertNotIn('j.state("failed"', src, 'every failure goes through Job.fail (short text, Details, the offer)')
 
-    def test_missing_shaders_name_the_addon_content(self):   # PEANUTS: a game imported without its DLC was told to dump the game again (2026-11-15; no game is known that needs it)
+    def test_missing_shaders_name_the_addon_content(self):   # KIWI: a game imported without its DLC was told to dump the game again (2026-11-15; no game is known that needs it)
         src = (ONDEVICE / 'PackService.java').read_text(encoding='utf-8')
         m = src[src.index('private String splitMatchesProfile'):src.index('static List<String> splitSkipped')]
         self.assertLess(m.index('Lack lack = lack(j, have);'), m.index('Outputs.delete(split);'), 'the split\'s map is read before it is deleted')
@@ -55,7 +55,7 @@ class Wiring(unittest.TestCase):
         self.assertIn('Nup.open(dump).of(Nup.ADDON).size()', m)
         self.assertIn('n.lookup(p, "romfs" + s)', m, 'a file is looked up in the RomFS the split read')
 
-    def test_addon_cause_reaches_the_job_file(self):   # PEANUTS: the build stops and asks for this cause instead of pressing Try anyway by itself (dev.peanuts.build.AutoRelax)
+    def test_addon_cause_reaches_the_job_file(self):   # KIWI: the build stops and asks for this cause instead of pressing Try anyway by itself (hernandez.kiwinative.kiwi.build.AutoRelax)
         text = (SRC / 'PrepareText.java').read_text(encoding='utf-8')
         self.assertIn('static final String CAUSE_ADDON = "addon_not_imported";', text)
         self.assertIn('detail, FIX_ANYWAY, CAUSE_ADDON, absent, total);', text, 'addonNotImported names its cause; Try anyway stays the card\'s offer')
@@ -78,7 +78,7 @@ class Wiring(unittest.TestCase):
     def test_translator_mismatch_is_the_tools_text(self):   # the trigger (2026-11-10): an APK with a stale translator library; its card said Tap Retry
         java = (SRC / 'PrepareText.java').read_text(encoding='utf-8')
         m = re.search(r'static final String XLATE_MISMATCH = "([^"]+)";', java)
-        assert m is not None, 'PrepareText.XLATE_MISMATCH'   # PEANUTS(upstream-candidate): required text definition.
+        assert m is not None, 'PrepareText.XLATE_MISMATCH'   # KIWI(upstream-candidate): required text definition.
         tool = (REPO / 'dm/gfx/tools/vk_android_build.py').read_text(encoding='utf-8')
         self.assertIn(f"sys.exit('\\n'.join('[RED] {m.group(1)}' + b for b in _bad))", tool, 'check_translator refuses with the text PrepareText matches')
         self.assertIn('if (red.startsWith(XLATE_MISMATCH))', java)

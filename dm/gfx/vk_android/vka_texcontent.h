@@ -1,4 +1,4 @@
-// PEANUTS(upstream-candidate): which texture first used as a sample takes its content from its pool storage (vka_tex.c storage_mode), as pure logic, free of Android and Vulkan so a unit
+// KIWI(upstream-candidate): which texture first used as a sample takes its content from its pool storage (vka_tex.c storage_mode), as pure logic, free of Android and Vulkan so a unit
 // test on Linux can check it (dm/host/tests/t_android_texcontent.c).
 // On a Switch a texture is its storage: what the CPU wrote there is what the GPU reads. The replay keeps images in memory of its own, so the CPU's content must be
 // copied in, and what says the storage holds it differs by NVN generation:

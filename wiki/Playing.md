@@ -25,7 +25,7 @@ Kiwi Native starts a game for emulator frontends such as ES-DE, Daijisho, Beacon
 - A game that is ready to play starts at once, with no launcher screen. When you stop it, the frontend comes back.
 - If something needs you (no pack, Prepare, shaders to update, file access), Home opens with the game; fix it, then start again from the frontend.
 - A game's menu on Home has **Add to home screen**, which pins a shortcut with its name and tile.
-- Frontends need no change of their own, but until one ships Kiwi Native in its emulator list you add it once by hand with the component `hernandez.kiwinative.live/dev.nxnative.android.Launch`. Examples for ES-DE are in the project's FRONTENDS note in the repository (`android/FRONTENDS.md`).
+- Frontends need no change of their own, but until one ships Kiwi Native in its emulator list you add it once by hand with the component `hernandez.kiwinative.live/hernandez.kiwinative.Launch`. Examples for ES-DE are in the project's FRONTENDS note in the repository (`android/FRONTENDS.md`).
 
 ## First starts can be slow
 

@@ -1,4 +1,4 @@
-# PEANUTS: new file (code mods: branches straight from one module into another, design/platform/DESIGN-MODS.md "Code injection")
+# KIWI: new file (code mods: branches straight from one module into another, design/platform/DESIGN-MODS.md "Code injection")
 """The console's module layout, for a build with code mods whose modules branch straight into each other.
 
 A mod made for the console may hold b / bl instructions that leave their module: Luminescent Platinum for Pokemon Brilliant Diamond 1.3.0 patches 106 of them into main

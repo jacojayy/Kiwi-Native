@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The window animations of the library's sheets (hernandez.kiwinative.kiwi.ui.Motion.sheet looks these up by name, so a build without this folder keeps the platform's) -->
+    <style name="KiwiSheet">
+        <item name="android:windowEnterAnimation">@anim/kiwi_sheet_in</item>
+        <item name="android:windowExitAnimation">@anim/kiwi_fade_out</item>
+    </style>
+    <style name="KiwiSheetReduced">
+        <item name="android:windowEnterAnimation">@anim/kiwi_fade_in</item>
+        <item name="android:windowExitAnimation">@anim/kiwi_fade_out</item>
+    </style>
+</resources>

@@ -1,4 +1,4 @@
-// PEANUTS: how a texel buffer is read (dm/gfx/vk_android/vka_tbuf.h; vka_draw.c tbuf_view): the choice between a view in place, the CPU's copy and a copy the GPU makes,
+// KIWI: how a texel buffer is read (dm/gfx/vk_android/vka_tbuf.h; vka_draw.c tbuf_view): the choice between a view in place, the CPU's copy and a copy the GPU makes,
 // for every combination of its inputs against the rules written out here; without a pending GPU write (or with DM_VK_TBUF_GW=0) it is the choice the replay made
 // before; then which writes count as pending, over a small model of the tracker (vka_tex.c g_gw): the sequence of Final Fantasy Resonance's first frame of a scene
 // (a clear and a count through storage texel buffers, then the read of the counts in the same submission), the frames after it, and the writes that must not count;
@@ -113,7 +113,7 @@ int main(void) {
     #undef ASK
     (void)nc;
 
-    // PEANUTS: The copy kept for the submission (vka_tbuf_copy_live): Hogwarts Legacy's frame, three submissions whose fences the worker reserved before the first is recorded, so
+    // KIWI: The copy kept for the submission (vka_tbuf_copy_live): Hogwarts Legacy's frame, three submissions whose fences the worker reserved before the first is recorded, so
     // vka_fence_last() + 1 is the same in all three (the key the copy was matched by before): a copy made in the first is not bound in the second or third
     { uint64_t fence_last = 7581, sub = 100, made_key_old = fence_last + 1, made_sub = sub;
       CHECK(vka_tbuf_copy_live(made_sub, sub), "a copy is bound again in the submission that made it");

@@ -1,4 +1,4 @@
-# PEANUTS: new file (Metroid Dread 60 fps cutscenes: dm/games/010093801237C000/patches.py)
+# KIWI: new file (Metroid Dread 60 fps cutscenes: dm/games/010093801237C000/patches.py)
 """Metroid Dread's frame step stub (the cutscene predicate main+0x119a320 behind the state page's target): recorded through a context like docs_patches.py's, decoded with capstone and
 walked instruction by instruction for a target of 60, 30 and 0 (no game files: the site's original bytes are given to the context). Also the profile: fps_target 60 and the build ID."""
 import importlib.util
@@ -22,7 +22,7 @@ SITE_ORIG = bytes.fromhex('ff0305d1')   # sub sp, sp, #0x140: the predicate's fi
 
 def load_patches():
     spec = importlib.util.spec_from_file_location('dread_patches', REPO / 'dm/games' / GAME / 'patches.py')
-    assert spec is not None and spec.loader is not None   # PEANUTS(upstream-candidate): required fixture loader.
+    assert spec is not None and spec.loader is not None   # KIWI(upstream-candidate): required fixture loader.
     m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
     return m
 

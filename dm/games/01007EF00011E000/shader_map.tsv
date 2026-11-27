@@ -1,6 +1,6 @@
 # kind: evidence  Breath of the Wild shaders (BNSH / BAHS in RomFS + main) → control section + code area keys (dm/gfx/tools/shader_split.py)
 # column 5 records where each key first appears; this game has no PC version to pair with
-# PEANUTS: version-tagged sources belong to one update only.
+# KIWI: version-tagged sources belong to one update only.
 package	index	stage	dm_ctl_sha16	source
 ps_effect.bin	0	pixel	2788fb66ab4dab06	/Effect/AncientBall.sesetlist#BNSH@0x2000#var0
 vs_effect.bin	0	vertex	ba40eb97d7dffe19	/Effect/AncientBall.sesetlist#BNSH@0x2000#var0

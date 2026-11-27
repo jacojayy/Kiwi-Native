@@ -13,8 +13,8 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/GameListJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/GameListJvmTest.java'
 FIX_TID = '0100000000AB0000'
 FIX2 = '0100000000AC0000'   # a game whose supported build is its base, display version 1.8.0 (as Mario Kart World)
 FIX3 = '0100000000AD0000'   # a game with a romfs_check row, as Donkey Kong Bananza's
@@ -26,7 +26,7 @@ def nso_id(seed):
     return bytes((seed * 31 + i) & 0xff for i in range(16)).hex()
 
 
-STUB = '''package dev.nxnative.android;
+STUB = '''package hernandez.kiwinative;
 public final class BuildConfig {
     public static final String NX_PROFILES = "%s\\tFixture\\t0\\tunknown\\t65536 main=%s sdk=%s\\n%s\\tDonkey Kong Bananza\\t0\\tunknown\\t%s %s %s\\t\\t\\t\\t\\t\\t%s"
             + "\\n%s\\tFixture Two\\t0\\tunknown\\t0 @1.8.0 main=%s sdk=%s"
@@ -53,7 +53,7 @@ class GameListJvm(unittest.TestCase):
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def java(self, *args):
-        return subprocess.run(['java', '-cp', str(self.tmp / 'classes'), 'dev.nxnative.android.GameListJvmTest', *map(str, args)], capture_output=True, text=True)
+        return subprocess.run(['java', '-cp', str(self.tmp / 'classes'), 'hernandez.kiwinative.GameListJvmTest', *map(str, args)], capture_output=True, text=True)
 
     def test_list_and_build_check(self):
         run = self.tmp / 'run'
@@ -123,7 +123,7 @@ class DumpLayouts(unittest.TestCase):
 class ProfileRows(unittest.TestCase):
     """The profiles' romfs_check rows, as build.gradle romfsChecksOf gives them; with NX_TEST_MKW_ROMFS set to a Mario Kart World 1.8.0 RomFS folder, its file holds
     the profile's main build ID on that line (read only; skipped otherwise)"""
-    def rows(self, game):   # PEANUTS begin: a folder path is read like a title ID (the fixture below)
+    def rows(self, game):   # KIWI begin: a folder path is read like a title ID (the fixture below)
         d = Path(game) if Path(game).is_absolute() else REPO / f'dm/games/{game}'
         return ['|'.join(c.strip() for c in l.split('\t')[1:4]) for l in (d / 'game.tsv').read_text().splitlines() if l.startswith('romfs_check\t')]
 
@@ -132,7 +132,7 @@ class ProfileRows(unittest.TestCase):
         with tempfile.TemporaryDirectory() as t:
             (Path(t) / 'game.tsv').write_text('title_id\t0100000000AD0000\nromfs_check\tSystem/RegionLangMask.txt\t4\tmain\n')
             self.assertEqual(self.rows(t), [CHECK])
-        self.assertEqual([g for g in (p.parent.name for p in (REPO / 'dm/games').glob('*/game.tsv')) if self.rows(g) and self.rows(g) != [CHECK]], [])   # PEANUTS end
+        self.assertEqual([g for g in (p.parent.name for p in (REPO / 'dm/games').glob('*/game.tsv')) if self.rows(g) and self.rows(g) != [CHECK]], [])   # KIWI end
 
     @unittest.skipUnless(os.environ.get('NX_TEST_MKW_ROMFS'), 'NX_TEST_MKW_ROMFS not set')
     def test_mkw_dump(self):

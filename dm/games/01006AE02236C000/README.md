@@ -1,4 +1,4 @@
-<!-- PEANUTS: exact-build host bring-up -->
+<!-- KIWI: exact-build host bring-up -->
 # Double Dragon Revive
 
 ## Status

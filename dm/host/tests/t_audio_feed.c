@@ -1,4 +1,4 @@
-// PEANUTS: a Peanuts test file (the feeder ring in hle_audio.c, DM_AUDIO_FEED)
+// KIWI: a Kiwi test file (the feeder ring in hle_audio.c, DM_AUDIO_FEED)
 // The Android output path of hle_audio.c on Linux (stubbed AAudio): a six-channel AudioOut played through the stereo device callback, and the feeder ring that keeps a game with
 // a shallow queue (3 blocks of 256 frames) from underrunning a 960-frame burst (Octopath Traveler 0, issue #9). The "game" is a thread that gives each released block back at once.
 #include <stdbool.h>

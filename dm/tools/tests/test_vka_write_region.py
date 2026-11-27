@@ -1,4 +1,4 @@
-"""Run the production Vulkan region-write coalescing path without a Vulkan device."""  # PEANUTS: bounded WriteTexels dirty prep, #403 (0.1.8)
+"""Run the production Vulkan region-write coalescing path without a Vulkan device."""  # KIWI: bounded WriteTexels dirty prep, #403 (0.1.8)
 from pathlib import Path
 import shutil
 import subprocess

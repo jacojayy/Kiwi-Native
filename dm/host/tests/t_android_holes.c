@@ -1,4 +1,4 @@
-// PEANUTS: guest memory given back inside a placed segment (dm/gfx/vk_android/vka_holes.h; vka_mem.c "Ranges given back inside placed memory"): the table of holes
+// KIWI: guest memory given back inside a placed segment (dm/gfx/vk_android/vka_holes.h; vka_mem.c "Ranges given back inside placed memory"): the table of holes
 // (ranges joined, cut, looked up), what a give-back means for a segment, the parts of a segment a lookup answers for, and a model of vka_mem_release, the lookups and
 // the placing again (vka_mem.c compact, join, unplace) checked page by page against a plain map of what is placed
 #include <stdio.h>

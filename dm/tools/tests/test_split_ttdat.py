@@ -1,6 +1,6 @@
 """TT Games' DAT archives (ttdat.py) give the split the BNSH files of their RFPK-compressed resources: the index's name tree and file table, each of unref's four ops (overlapping
 copies included), stored chunks, and ZIPX (RC4) chunks. Synthetic bytes only."""
-# PEANUTS: Synthetic archive coverage for LEGO CITY UNDERCOVER's DAT reader.
+# KIWI: Synthetic archive coverage for LEGO CITY UNDERCOVER's DAT reader.
 import contextlib
 import io
 import struct

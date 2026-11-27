@@ -1,4 +1,4 @@
-# PEANUTS: Double Dragon Revive; Unreal Engine 5.4.3, NVN.
+# KIWI: Double Dragon Revive; Unreal Engine 5.4.3, NVN.
 title_id	01006AE02236C000
 program_id	01006AE02236C000
 name	Double Dragon Revive
@@ -24,7 +24,7 @@ sys_resource	0x1400000
 shader_groups	ShaderArchive-Global-=global ShaderArchive-=game
 shader_note	Double Dragon Revive shaders
 
-# PEANUTS: frame rate choices from 20 to 120 fps, with Game owned (its own pacing). The game starts at 60 fps (0.1.8; Game owned before); a cap paces the display and is
+# KIWI: frame rate choices from 20 to 120 fps, with Game owned (its own pacing). The game starts at 60 fps (0.1.8; Game owned before); a cap paces the display and is
 # marked experimental (fps_limit_present), since no run has yet checked that the game's speed follows elapsed time above its own rate
 fps_limit_max	120
 fps_limit_present	1

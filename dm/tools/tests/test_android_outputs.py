@@ -8,9 +8,9 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/ondevice/java/dev/nxnative/android/Outputs.java'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/OutputsJvmTest.java'
-PACK_SERVICE = REPO / 'android/app/src/ondevice/java/dev/nxnative/android/PackService.java'
+SRC = REPO / 'android/app/src/ondevice/java/hernandez/kiwinative/Outputs.java'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/OutputsJvmTest.java'
+PACK_SERVICE = REPO / 'android/app/src/ondevice/java/hernandez/kiwinative/PackService.java'
 
 
 @unittest.skipUnless(shutil.which('javac') and shutil.which('java'), 'no JDK')
@@ -21,7 +21,7 @@ class SplitOutputs(unittest.TestCase):
             classes = tmp / 'classes'
             subprocess.run(['javac', '-d', str(classes), str(SRC), str(TEST)], check=True)
             work = tmp / 'work'; work.mkdir()
-            r = subprocess.run(['java', '-cp', str(classes), 'dev.nxnative.android.OutputsJvmTest', str(work)], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', str(classes), 'hernandez.kiwinative.OutputsJvmTest', str(work)], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertIn('all ok', r.stdout)
         finally:
@@ -43,7 +43,7 @@ class OutputsThatWent(unittest.TestCase):
     outputs before the pack step uses them, and runs again when they went (OutputsJvmTest checks Outputs.redo and the checks themselves)"""
     def test_wired(self):
         s = PACK_SERVICE.read_text(encoding='utf-8')
-        work = s[s.index('private void work()'):s.index('private void finished(')]   # finished(Thread w) since #150 (PEANUTS, 0.1.8)
+        work = s[s.index('private void work()'):s.index('private void finished(')]   # finished(Thread w) since #150 (KIWI, 0.1.8)
         self.assertLess(work.index('dropMissing(j, "before it goes on")'), work.index('while ((i = j.next()) >= 0)'), 'checked before the steps run')
         self.assertIn('j.codeModules(Outputs.codeModules(j.pack()))', work, 'the rewrite records the modules it wrote')
         pack = s[s.index('case "pack": {'):s.index('default:\n                return "unknown step "')]

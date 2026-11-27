@@ -1,4 +1,4 @@
-// PEANUTS: which draws are not skipped while their pipeline is made in the background (dm/gfx/vk_android/vka_psosync.h vkps_why; vka_draw.c draw_body): a draw
+// KIWI: which draws are not skipped while their pipeline is made in the background (dm/gfx/vk_android/vka_psosync.h vkps_why; vka_draw.c draw_body): a draw
 // into a small target, a draw that writes memory, the size limit's edges, and that every other draw stays skipped
 #include <stdio.h>
 #include <string.h>

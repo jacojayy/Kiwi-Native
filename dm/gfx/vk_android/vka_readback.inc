@@ -1,6 +1,6 @@
-// PEANUTS: texture readback for the companion runtime, the replay's side (the whole file; included by vka_tex.c, whose table lock and live list it reads; the contract
+// KIWI: texture readback for the companion runtime, the replay's side (the whole file; included by vka_tex.c, whose table lock and live list it reads; the contract
 // and the pure rules are in vka_readback.h). Not a file of its own because the picker walks the texture cache's private live list.
-// dm/peanuts/rt/test/vka_readback_test.c compiles this file on a PC against a stub Vulkan table and drives every path below.
+// dm/kiwi/rt/test/vka_readback_test.c compiles this file on a PC against a stub Vulkan table and drives every path below.
 //
 // The path of one request:
 //   vka_rb_submit (any thread, the runtime's tick): claims one of two slots, copies the request, nothing else. No Vulkan call, no lock of the replay's. A request

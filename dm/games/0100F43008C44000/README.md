@@ -72,7 +72,7 @@ Each item was found from a red line or a pass dump on the way through the langua
 
 ## Kiwi Native on Android
 
-<!-- PEANUTS begin -->
+<!-- KIWI begin -->
 The x86-64 Linux builder can pack update 2.0.2 with Mega Dimension (add-on 2). The Oodle worker decoded the Trinity packs and reproduced all 28,603 profile shader keys. The resulting Vulkan library passed SPIR-V validation for all 41,920 modules.
 
 The targeted split reads packs of the resource types recorded in the shader map. Some packs pair shaders whose first appearance was in another pack. Selecting only first appearances missed these pairs. On 2.0.2 the targeted scan read 2,472 of 13,181 packs and reproduced the full scan’s tables, including all 26,051 variation pairs, and all shader package hashes. With eight workers the full split took 19.7 seconds and the targeted split took 13.2 seconds. Fresh builds from the same NUP took 540.2 seconds with the full split and 528.9 seconds through the normal targeted PC route. An incremental rebuild took 1.85 seconds. Both fresh builds produced the same per-file hashes for the runtime pack, including the Vulkan library. Only the two rewriter progress logs differed.
@@ -99,7 +99,7 @@ Two wall-clock seconds of forward input from the same station autosave brought t
 A cold launch processed all 221 seed records in 7.0 seconds before guest entry. Turnip created all 221 pipelines. The preparation screen, title and controllable station all rendered. Entering the station still created one transform-feedback pipeline on the frame path (34.5 ms). Relaunching read 4,204,637 bytes of driver cache, skipped the blocking preparation screen and finished background prewarm in under 0.1 seconds.
 
 One shared 40-profile dev APK was used for all device runs. Its per-title test environment supplied the corrected first-frame timing value and the captured seed. The release asset merge reproduced the seed byte for byte, and the generated release catalog contained the corrected value and driver recommendation.
-<!-- PEANUTS end -->
+<!-- KIWI end -->
 
 ## Build performance
 

@@ -1,6 +1,6 @@
 # Tetris Effect: Connected (0100DE501433A000): the rewriter's patches of this game's own builds, keyed by the NSO build ID (dm/tools/patch_nso.py, "Registered patches").
 # Patches of Nintendo SDK module builds are in dm/tools/sdk_patches.py.
-# PEANUTS: a Kiwi Native profile (Kiwi Native has none for this title).
+# KIWI: a Kiwi Native profile (Kiwi Native has none for this title).
 CUTS = {
   # 2.0.2.2 (v1310720) main. The host never loads the Epic Online Services SDK (nro_collect.py ONLINE_SDKS; hle_ro.c refuses it), so Redpoint's EOS online subsystem
   # module ("RedpointEOS") has no platform. The function at main+0xb64b18 takes that module from the module manager (main+0xe93aa0, main+0xe94a9c), asks it for an

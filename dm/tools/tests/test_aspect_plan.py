@@ -1,4 +1,4 @@
-"""PEANUTS: aspect rows (dm/host/aspect_plan.h): the shape rule, each kind's word, and the all-or-nothing write."""
+"""KIWI: aspect rows (dm/host/aspect_plan.h): the shape rule, each kind's word, and the all-or-nothing write."""
 import pathlib
 import re
 import subprocess

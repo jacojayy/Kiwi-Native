@@ -12,11 +12,11 @@ Playable on the Mac: language, look and name selection, the academy settings,
 the opening, the Paldea flyover, getting up in the bedroom, walking, camera
 control, the main menu and autosave, and reloading that save. iPhone testing
 is pending; no IPA has been built yet.
-<!-- PEANUTS: retain the verified Mac route and record the Android update. -->
+<!-- KIWI: retain the verified Mac route and record the Android update. -->
 Select the tested Mac 1.0.0 route with
 `scripts/build_ipa_from_nsp.py <dump folder> --platform mac -p v0`.
 
-<!-- PEANUTS begin -->
+<!-- KIWI begin -->
 ## Kiwi Native on Android
 
 - 4.0.0 (`v786432`), main `709bfd66115298640155fcc4979dba15`, SDK 13.3.13,
@@ -31,7 +31,7 @@ Select the tested Mac 1.0.0 route with
   academy opening. The 23-word timing plan and elapsed-time row both applied.
   During the final 300-frame interval, frames displayed for two refreshes each
   at 59.85 Hz. The player selected Stop before the opening reached free movement.
-<!-- PEANUTS end -->
+<!-- KIWI end -->
 
 ## What it needs
 
@@ -106,9 +106,9 @@ No `patches.py`.
   been built. Build its iOS shaders with Scarlet's iOS libraries as prefill
   (`DMSH_PREFILL=<Scarlet Mac root>=<Scarlet iOS root>`) when they are on
   disk.
-- <!-- PEANUTS --> On-device timing, cold shader preparation and gameplay on 4.0.0 still need verification.
+- <!-- KIWI --> On-device timing, cold shader preparation and gameplay on 4.0.0 still need verification.
 - Outdoor exploration and battles have not been validated, as on Scarlet.
-- <!-- PEANUTS --> [The freeze in Trinity's rendezvous](../../../docs/reference/threads.md#trinitys-rendezvous-loses-its-release-on-apple-cores)
+- <!-- KIWI --> [The freeze in Trinity's rendezvous](../../../docs/reference/threads.md#trinitys-rendezvous-loses-its-release-on-apple-cores)
   was reported here too, based on return addresses. The match between Violet's
   completer and the rewriter's barrier rule remains unchecked on affected builds.
 - [Conservative rasterization](../../../docs/reference/rendering.md#conservative-rasterization-remains-unimplemented)

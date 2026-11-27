@@ -1,4 +1,4 @@
-// PEANUTS: NVN transform feedback on the Vulkan replay (Pokemon Legends: Arceus skins its people and Pokemon this way: a vertex shader writes the skinned vertices
+// KIWI: NVN transform feedback on the Vulkan replay (Pokemon Legends: Arceus skins its people and Pokemon this way: a vertex shader writes the skinned vertices
 // into buffers under rasterizer discard, and the character draws read those buffers as vertex streams; without the capture they drew nothing).
 //
 // How it reaches the replay: nvnCommandBufferBindTransformFeedbackBuffer(s) record OP_TF_BIND (the four buffers, kept in the queue's vka_dstate), Begin / End / Pause /
@@ -182,7 +182,7 @@ void vka_tf_end(VkCommandBuffer cb) {
 }
 void vka_tf_flush(VkCommandBuffer cb) {
     if (!g_npend) return;
-    // PEANUTS: order transform feedback writes before transfer reads (pass-end barrier no longer drains ALL_COMMANDS)
+    // KIWI: order transform feedback writes before transfer reads (pass-end barrier no longer drains ALL_COMMANDS)
     vka_barrier_stages(cb, VK_PIPELINE_STAGE_TRANSFORM_FEEDBACK_BIT_EXT, VK_ACCESS_TRANSFORM_FEEDBACK_WRITE_BIT_EXT,
                        VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_READ_BIT);
     for (int i = 0; i < g_npend; i++) {

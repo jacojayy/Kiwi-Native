@@ -8,8 +8,8 @@ the game's **pack**. A computer does this much faster than the phone: a Mac prep
 
 Get this repository from [git.eden-emu.dev](https://git.eden-emu.dev/moceure/BananaNative) (clone it, or download it). The packer is in its `scripts` folder:
 
-- **Windows:** `scripts\bananative.bat`. New and not yet tested on a real PC — please report how it goes.
-- **Mac:** `scripts/bananative.command`. Tested.
+- **Windows:** `scripts\kiwinative.bat`. New and not yet tested on a real PC — please report how it goes.
+- **Mac:** `scripts/kiwinative.command`. Tested.
 
 ## 2. First start
 
@@ -29,8 +29,8 @@ place. If you already have a working environment, it uses that one. Later starts
 The same from the command line:
 
 ```sh
-scripts/bananative.command pack /path/to/Switch2/DonkeyKongBananza     # Mac
-scripts\bananative.bat pack D:\Switch2\DonkeyKongBananza               # Windows
+scripts/kiwinative.command pack /path/to/Switch2/DonkeyKongBananza     # Mac
+scripts\kiwinative.bat pack D:\Switch2\DonkeyKongBananza               # Windows
 ```
 
 ## 4. Get the pack onto the phone
@@ -53,12 +53,12 @@ The app also offers **Use an existing pack…** in the same question: it uses a 
 
 ## If it fails
 
-- The window's log and its tool check say what is missing. `scripts/bananative.command check` (or
-  `scripts\bananative.bat check`) checks the tools again.
+- The window's log and its tool check say what is missing. `scripts/kiwinative.command check` (or
+  `scripts\kiwinative.bat check`) checks the tools again.
 - Open an issue as described in [Troubleshooting](troubleshooting.md), with the packer's log.
 
-<!-- PEANUTS begin -->
-## Peanuts: send the pack to the phone
+<!-- KIWI begin -->
+## Kiwi: send the pack to the phone
 
 A pack made here now takes the two settings the phone's packer sets for every job (`PackService`): the targeted split with its direct scan
 (`DM_SPLIT_DIRECT=1`) and the shader library at zstd 6 (`DMSH_VK_ZSTD_LEVEL=6`). A value already set in the environment wins.
@@ -66,22 +66,22 @@ This changes the packer for everyone who packs on a computer: the shader library
 than at the former level 19 (the shaders in it are the same), and the split reads less of the RomFS when the profile records where each shader
 is (it falls back to the whole files by itself when its tables differ). `DMSH_VK_ZSTD_LEVEL=19` and `DM_SPLIT_DIRECT=0` give the former pack.
 
-One command from `.nsp` / `.xci` files to the phone: [peanuts/docs/BUILDER.md](../../peanuts/docs/BUILDER.md).
+One command from `.nsp` / `.xci` files to the phone: [kiwi/docs/BUILDER.md](../../kiwi/docs/BUILDER.md).
 
-Copy the pack to the device over adb with `peanuts/scripts/push-pack.py`:
+Copy the pack to the device over adb with `kiwi/scripts/push-pack.py`:
 
 ```sh
-peanuts/scripts/push-pack.py <work>/android-pack                                       # the pack only
-peanuts/scripts/push-pack.py <work>/android-pack --game "<dump>/DonkeyKongBananza"     # and the game parts the phone needs
+kiwi/scripts/push-pack.py <work>/android-pack                                       # the pack only
+kiwi/scripts/push-pack.py <work>/android-pack --game "<dump>/DonkeyKongBananza"     # and the game parts the phone needs
 ```
 
 `<work>` is the `<title ID>-work` folder next to the game folder. The script writes the pack to
-`/sdcard/Peanut Roms/<title ID>-work/android-pack` (`--dest` changes the `/sdcard/Peanut Roms` part, the same default folder
-`peanuts_build.py` uses; pass the folder your games are in on the phone, for example `--dest /sdcard/SW2`), and with `--game` also
+`/sdcard/Kiwi Roms/<title ID>-work/android-pack` (`--dest` changes the `/sdcard/Kiwi Roms` part, the same default folder
+`kiwi_build.py` uses; pass the folder your games are in on the phone, for example `--dest /sdcard/SW2`), and with `--game` also
 `base/exefs`, the update (`--version`, default the highest) and `dlc/` into `<dest>/<game folder>/`. `--serial` picks the device when more
 than one is connected; `--dry-run` prints the adb commands only. The app finds the pack there by itself, beside the game folder, so no
 import is needed, as long as `<dest>` is one of the folders the library scans (Settings, Library).
 
 On the device the script replaces only the folders it pushes (`<title ID>-work/android-pack`, `base/exefs`, `updates/<version>`, `dlc`),
 each through a `.tmp` copy. `--dest` must be an absolute path without `.` or `..` parts, and `--version` a number.
-<!-- PEANUTS end -->
+<!-- KIWI end -->

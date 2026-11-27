@@ -12,12 +12,12 @@ import zlib
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/DumpMetaJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/DumpMetaJvmTest.java'
 sys.path.insert(0, str(REPO / 'dm/tools'))
 import nacp  # noqa: E402
 
-STUB = '''package dev.nxnative.android;
+STUB = '''package hernandez.kiwinative;
 public final class BuildConfig {
     public static final String NX_PROFILES = "040015100B514001\\tSuper Mario Bros. Wonder - Nintendo Switch 2 Edition\\t0\\tabcdef012345\\t327680 main=aa";
     public static final String NX_DMSH_VK_CHAIN = "c0ffee000001", NX_DMSH_VK_ABI = "abc123abc123", NX_DMSH_VK_ABI_COMPAT = "";
@@ -82,7 +82,7 @@ class DumpMetaJvm(unittest.TestCase):
     def tearDownClass(cls): shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def java(self, *a):
-        r = subprocess.run(['java', '-Dstdout.encoding=UTF-8', '-cp', str(self.tmp / 'classes'), 'dev.nxnative.android.DumpMetaJvmTest', *map(str, a)],
+        r = subprocess.run(['java', '-Dstdout.encoding=UTF-8', '-cp', str(self.tmp / 'classes'), 'hernandez.kiwinative.DumpMetaJvmTest', *map(str, a)],
                            capture_output=True, text=True, encoding='utf-8')
         self.assertEqual(r.returncode, 0, r.stderr)
         return r.stdout.strip()
@@ -123,14 +123,14 @@ class DumpMetaJvm(unittest.TestCase):
         d = self.tmp / 'w-edition'; program(d / 'base/program/0', 0x010015100B514000); program(d / 'updates/327680/program/0', 0x010015100B514000)
         program(d / 'updates/327680/program/1', 0x040015100B514001)
         self.assertEqual(self.java('playable', d), '040015100B514001')
-        self.assertEqual(self.java('find', d), 'This app version does not include this game, 010015100B514000. Install an app version that includes it.')  # PEANUTS: build text in the player's words (0.1.8)
+        self.assertEqual(self.java('find', d), 'This app version does not include this game, 010015100B514000. Install an app version that includes it.')  # KIWI: build text in the player's words (0.1.8)
 
     def test_switch1_only_dump(self):
         """A dump of the Switch game alone: its card stays the game's, and the sentence says the dump lacks the Edition this app runs"""
         d = self.tmp / 'w-switch1'; program(d / 'base/program/0', 0x010015100B514000); program(d / 'updates/327680/program/0', 0x010015100B514000)
         self.assertEqual(self.java('playable', d), '010015100B514000')
         why = self.java('missing', '010015100B514000')
-        self.assertTrue(why.startswith('These game files hold only the Switch game.'), why)  # PEANUTS: build text in the player's words (0.1.8)
+        self.assertTrue(why.startswith('These game files hold only the Switch game.'), why)  # KIWI: build text in the player's words (0.1.8)
         self.assertIn('This app version runs Super Mario Bros. Wonder - Nintendo Switch 2 Edition, which they do not hold.', why)
         self.assertEqual(self.java('find', d), why)   # Prepare says the same
         self.assertTrue(self.java('missing', '0100000000010000').startswith('This app version does not include this game'))   # another game: as before

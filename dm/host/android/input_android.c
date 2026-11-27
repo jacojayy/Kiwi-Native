@@ -291,14 +291,14 @@ void nxhost_user_select_callback(nxhost_user_select_fn fn, void *ctx) {
     atomic_store(&g_us_ctx, ctx); atomic_store(&g_us_fn, fn);
     LOG("input: the user selector goes to the launcher's picker%s", fn ? "" : " (none: the preselected user)");
 }
-__attribute__((weak)) void dm_thread_native_wait(int entering);   // PEANUTS: hle_thread.c; absent in the unit tests of this file, which have no game threads
+__attribute__((weak)) void dm_thread_native_wait(int entering);   // KIWI: hle_thread.c; absent in the unit tests of this file, which have no game threads
 int android_user_select(const char *const *names, const int *offered, int n, int def) {
     nxhost_user_select_fn fn = atomic_load(&g_us_fn);
     if (!fn) return -2;
     input_hold(1);
-    if (dm_thread_native_wait) dm_thread_native_wait(1);   // PEANUTS: the game's thread waits for the player here (a native wait, as hle_nvn.c's pacing sleeps): a stop of all threads does not wait the screen out
+    if (dm_thread_native_wait) dm_thread_native_wait(1);   // KIWI: the game's thread waits for the player here (a native wait, as hle_nvn.c's pacing sleeps): a stop of all threads does not wait the screen out
     int r = fn(atomic_load(&g_us_ctx), names, offered, n, def);
-    if (dm_thread_native_wait) dm_thread_native_wait(0);   // PEANUTS
+    if (dm_thread_native_wait) dm_thread_native_wait(0);   // KIWI
     input_hold(0);
     return r;
 }
@@ -348,11 +348,11 @@ int android_controller_support(const void *arg, int *count) {
     LOG("controller applet: the join screen opens for %d to %d players%s, %d already joined", g_join.min, g_join.max, g_join.a.take_over ? "" : " (no take over)", pad_join_count(&g_join));
     pthread_mutex_unlock(&g_mu);
     fn(atomic_load(&g_ctrl_ctx), 1);
-    if (dm_thread_native_wait) dm_thread_native_wait(1);   // PEANUTS: the wait for the join screen is a native wait of the game's thread, as the user selector's above
+    if (dm_thread_native_wait) dm_thread_native_wait(1);   // KIWI: the wait for the join screen is a native wait of the game's thread, as the user selector's above
     pthread_mutex_lock(&g_mu);
     while (!g_join.done) pthread_cond_wait(&g_join_cv, &g_mu);
     pthread_mutex_unlock(&g_mu);
-    if (dm_thread_native_wait) dm_thread_native_wait(0);   // PEANUTS: left without the lock (the leave waits out a stop under way); done stays set until this thread clears the screen below
+    if (dm_thread_native_wait) dm_thread_native_wait(0);   // KIWI: left without the lock (the leave waits out a stop under way); done stays set until this thread clears the screen below
     pthread_mutex_lock(&g_mu);
     int ok = g_join.done == 1;
     if (ok) { join_apply(); if (count) *count = pad_join_count(&g_join); }
@@ -421,7 +421,7 @@ bool nxhost_input_motion(int device, const float acc[3], const float gyro[3]) {
 }
 static void *motion_thread(void *arg) {
     (void)arg; plat_thread_set_name("dm sensors");
-    // PEANUTS: ALLOW_NON_CALLBACKS, not 0: the sensor queue below is added to this looper without a callback, which a looper prepared with 0 refuses ("Looper: Invalid attempt
+    // KIWI: ALLOW_NON_CALLBACKS, not 0: the sensor queue below is added to this looper without a callback, which a looper prepared with 0 refuses ("Looper: Invalid attempt
     // to set NULL callback but not allowed for this looper" in logcat). The queue then never woke the poll: the thread read the sensors when its 200 ms timeout ran out, so
     // motion reached the game in bursts five times a second, up to 200 ms late (aiming by gyroscope trailed the hand and moved in steps)
     ALooper *lp = ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS); atomic_store(&g_mo_looper, lp);
@@ -431,20 +431,20 @@ static void *motion_thread(void *arg) {
     int gyro = gyr && !env_off("DM_MOTION") && !env_off("DM_PHONE_MOTION");
     if (!q || !acc) { LOG("[RED] input: no accelerometer (sensor manager %p): no phone motion", (void *)m); atomic_store(&g_mo_run, 0); }
     else {
-        // PEANUTS: 200 Hz, the console's own six-axis rate and the most Android gives without the high-sampling-rate permission (was 100 Hz): a sample per entry of the history a game reads
+        // KIWI: 200 Hz, the console's own six-axis rate and the most Android gives without the high-sampling-rate permission (was 100 Hz): a sample per entry of the history a game reads
         ASensorEventQueue_registerSensor(q, acc, 5000, 0);
         if (gyro) ASensorEventQueue_registerSensor(q, gyr, 5000, 0);
         LOG("input: phone sensors on: accelerometer for shakes%s", gyro ? ", gyroscope as player 1's six-axis sensor" : gyr ? " (gyroscope off by DM_MOTION / DM_PHONE_MOTION)" : " (no gyroscope)");
     }
     nxin_shake sh = {0}; const char *e = getenv("DM_SHAKE_G"); sh.thr = e && atof(e) > 0 ? (float)atof(e) : 1.5f;
     float a[3] = {0, 0, 9.80665f}; int have_a = 0;
-    // PEANUTS: the gyroscope's delivery, logged every 10 s: how many samples, their spacing by the sensor's clock, and how long after its measurement a sample got here (10 s after the start, then every minute)
+    // KIWI: the gyroscope's delivery, logged every 10 s: how many samples, their spacing by the sensor's clock, and how long after its measurement a sample got here (10 s after the start, then every minute)
     struct { uint64_t t0, last, n, late_max, gap_max, late_sum, every; } ms = {.every = 10000000000ull};   // the first line after 10 s, then one a minute
     while (atomic_load(&g_mo_run)) {
         ALooper_pollOnce(200, NULL, NULL, NULL);
         ASensorEvent ev[32]; ssize_t n;
         while (q && (n = ASensorEventQueue_getEvents(q, ev, 32)) > 0) {
-          // PEANUTS: a sensor event carries the time it was measured (CLOCK_BOOTTIME); off moves it onto the host clock, so events that waited for this thread keep their real
+          // KIWI: a sensor event carries the time it was measured (CLOCK_BOOTTIME); off moves it onto the host clock, so events that waited for this thread keep their real
           // spacing: stamped on arrival, events read together were turning counted as none
           struct timespec bt; clock_gettime(CLOCK_BOOTTIME, &bt);
           uint64_t now = now_ns(); int64_t off = (int64_t)now - ((int64_t)bt.tv_sec * 1000000000ll + bt.tv_nsec);
@@ -459,7 +459,7 @@ static void *motion_thread(void *arg) {
             } else if (ev[i].type == ASENSOR_TYPE_GYROSCOPE && have_a) {
                 float acc_s[3], rot_s[3];
                 nxin_motion_to_switch(atomic_load(&g_rotation), a, ev[i].vector.v, acc_s, rot_s);
-                int64_t ts = ev[i].timestamp + off; uint64_t t = ts > 0 && (uint64_t)ts < now ? (uint64_t)ts : now;   // PEANUTS: the sample's own time, never in the future
+                int64_t ts = ev[i].timestamp + off; uint64_t t = ts > 0 && (uint64_t)ts < now ? (uint64_t)ts : now;   // KIWI: the sample's own time, never in the future
                 dm_motion_set_switch_at(0, acc_s, rot_s, t);
                 if (!ms.t0) ms.t0 = now;
                 if (ms.last && t > ms.last && t - ms.last > ms.gap_max) ms.gap_max = t - ms.last;
@@ -578,21 +578,21 @@ static void cpu_line(const char *what) {
     else LOG("[lifecycle] %s: threads' CPU since the process started %.2f s (%d threads)%s%s", what, (double)total / hz, threads, tlen ? "; busiest: " : "", tl);   // the first line: no earlier reading
     memcpy(g_cpu, cur, (size_t)n * sizeof cur[0]); g_ncpu = n; g_cpu_at = now;
 }
-__attribute__((weak)) void peanuts_lifecycle(int suspended);   // PEANUTS: dm/peanuts/peanuts.c; absent in a build without it
-void vka_pso_pause(int on);   // PEANUTS: resume can precede the first guest frame
+__attribute__((weak)) void kiwi_lifecycle(int suspended);   // KIWI: dm/kiwi/kiwi.c; absent in a build without it
+void vka_pso_pause(int on);   // KIWI: resume can precede the first guest frame
 static void suspend_apply(const char *why) {
     int want = g_bg || g_pause;
     if (want == g_susp) return;
     g_susp = want;
     if (want) {
         dm_focus_set(2); dm_focus_set(3); audio_apply(); guest_clock_freeze_for(1, 1); dm_gfx_suspend(1); dm_guest_suspend(1); crash_watch_hold(1);
-        if (peanuts_lifecycle) peanuts_lifecycle(1);   // PEANUTS: the companion runtime learns of the pause after the game is told to stop (its mailbox epoch, its tick)
+        if (kiwi_lifecycle) kiwi_lifecycle(1);   // KIWI: the companion runtime learns of the pause after the game is told to stop (its mailbox epoch, its tick)
         cpu_line(why);
     } else {
         cpu_line(why);
-        if (peanuts_lifecycle) peanuts_lifecycle(0);   // PEANUTS: and of the resume before the game runs again, the order Eden Duo's Pause and Run keep
+        if (kiwi_lifecycle) kiwi_lifecycle(0);   // KIWI: and of the resume before the game runs again, the order Eden Duo's Pause and Run keep
         crash_watch_hold(0); dm_guest_suspend(0); dm_gfx_suspend(0); guest_clock_freeze_for(1, 0); audio_apply(); dm_focus_set(2);
-        vka_pso_pause(0);   // PEANUTS: let shader preparation finish so the guest can start
+        vka_pso_pause(0);   // KIWI: let shader preparation finish so the guest can start
         if (g_resumed) dm_focus_set(1);
     }
 }
@@ -639,12 +639,12 @@ void nxhost_codecs_log(void) {
 
 // ---- Frame rate cap ----
 void dm_fps_target_set(int t, const char *src); int dm_fps_target(void); int dm_fps_lock_rates(void); int nvn_game_fps(void); int nxhost_fps_limit_get(void);
-int dm_thermal_capped(void);   // PEANUTS: hle_nvn.c
+int dm_thermal_capped(void);   // KIWI: hle_nvn.c
 void nxhost_fps_cap_set(int fps) { dm_fps_target_set(fps, "the launcher's in-game panel"); }
 int nxhost_fps_cap_status(char *buf, int n) {
     int loaded = dm_main_build()[0] != 0, cap = dm_fps_target(), rates = loaded ? dm_fps_lock_rates() : 0;   // the limiters are looked for once, so only after main is loaded
     // the fourth: the rate the frame limit holds (hle_fpslock.c nxhost_fps_limit_get; a frame-step game holds 60, 30 or 20 only, so 45 and 40 run at 30), 0 = none
-    // PEANUTS: the fifth: 1 while the thermal cap holds rates above 30 at 30 (hle_nvn.c dm_thermal_capped; opt-in, a profile's thermal_cap), for the in-game panel and the stats page
-    if (buf && n > 0) snprintf(buf, (size_t)n, "%d %d %d %d %d", cap, rates, loaded ? nvn_game_fps() : 0, loaded ? nxhost_fps_limit_get() : 0, loaded && dm_thermal_capped());   // PEANUTS: the fifth
+    // KIWI: the fifth: 1 while the thermal cap holds rates above 30 at 30 (hle_nvn.c dm_thermal_capped; opt-in, a profile's thermal_cap), for the in-game panel and the stats page
+    if (buf && n > 0) snprintf(buf, (size_t)n, "%d %d %d %d %d", cap, rates, loaded ? nvn_game_fps() : 0, loaded ? nxhost_fps_limit_get() : 0, loaded && dm_thermal_capped());   // KIWI: the fifth
     return cap;
 }

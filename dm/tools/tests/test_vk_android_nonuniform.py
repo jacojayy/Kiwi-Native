@@ -1,4 +1,4 @@
-"""PEANUTS: vk_android_spv.nonuniform_arrays: a texture taken from a descriptor array at a computed index is marked NonUniform (the access chain and its load), one at a constant
+"""KIWI: vk_android_spv.nonuniform_arrays: a texture taken from a descriptor array at a computed index is marked NonUniform (the access chain and its load), one at a constant
 index is not, the capabilities and SPV_EXT_descriptor_indexing come once, and a second run marks nothing."""
 import struct
 import sys

@@ -1,4 +1,4 @@
-"""vka_floor_period_ns() honors active FPS caps while preserving uncapped recovery."""  # PEANUTS: the frame cap in the GPU clock floor, #220 (0.1.8)
+"""vka_floor_period_ns() honors active FPS caps while preserving uncapped recovery."""  # KIWI: the frame cap in the GPU clock floor, #220 (0.1.8)
 from pathlib import Path
 import shutil
 import subprocess

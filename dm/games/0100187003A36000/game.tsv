@@ -1,7 +1,7 @@
 # Game profile of Pokémon: Let's Go, Eevee! (Switch, base game v0 + update 1.0.2 = v131072)
-# PEANUTS: Pokémon: Let's Go, Pikachu!'s twin (010003F003A34000): made from that profile with Eevee's title, name, IPA name, build row (only main is a build of its own) and shader tables
+# KIWI: Pokémon: Let's Go, Pikachu!'s twin (010003F003A34000): made from that profile with Eevee's title, name, IPA name, build row (only main is a build of its own) and shader tables
 # Format: see dm/games/README.md
-# PEANUTS: a Kiwi Native profile (Kiwi Native has none for this title); whole file Peanuts' own
+# KIWI: a Kiwi Native profile (Kiwi Native has none for this title); whole file Kiwi' own
 # Game Freak's engine (the one before Sword's) on SDK 5.4.151, NVN, Wwise; subsdk0 is GLSLC (main does not import glslcCompile), subsdk1 the movie module.
 # The shaders are BNSH files under bin/ (loose, in .arc archives and in GFPAK archives under bin/archive), in system_resource/shader and in main (shader_split.py).
 # Status: provisional profile (dm/games/profile_guess.py from the survey); memory values not measured yet. README.md beside this file; Pikachu's note covers the engine.

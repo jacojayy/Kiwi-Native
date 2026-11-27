@@ -35,10 +35,10 @@ enum { BLK_SHIFT = 10, BLK = 1 << BLK_SHIFT, NBLK = 256, MAX_RANGE = BLK * NBLK 
 // Ranges are rounded to host pages (16 KB) but guest memory pools are only 4 KB aligned: adjacent pools share their first / last pages, so one address can fall in several registered ranges.
 // So: "is this texture tracked" looks for a range that holds its whole span; a fault / host pre-write unprotects and stamps every range covering that page; pool destruction identifies its range by the pool's exact start mem.
 // (Previously the first range containing the address was always taken: two SMBW ASTC 6x5 textures whose pool's first page is shared with a small preceding pool were judged untracked and re-uploaded on every use, about 6 MB per frame)
-// PEANUTS (upstream nxnative's fix, "A pool registered over memory an earlier pool held counts older stamps as written"): born is the clock when the range was registered.
+// KIWI (upstream nxnative's fix, "A pool registered over memory an earlier pool held counts older stamps as written"): born is the clock when the range was registered.
 // A page's generation starts at 0 then, so a stamp taken before that (content checked in a pool this memory held before, or while no pool held it) saw no newer generation
 // although the game wrote there in between without a fault: a stamp older than born counts as written (nvn_dirty_since_span, nvn_dirty_bounds_since)
-typedef struct { uintptr_t base, end, mem; _Atomic uint8_t *state; _Atomic uint64_t *gen; uint8_t *ever; size_t cap; _Atomic int live, red; _Atomic uint64_t born; } range_t;   // PEANUTS(upstream-candidate): red: a write protection in it failed (logged once)
+typedef struct { uintptr_t base, end, mem; _Atomic uint8_t *state; _Atomic uint64_t *gen; uint8_t *ever; size_t cap; _Atomic int live, red; _Atomic uint64_t born; } range_t;   // KIWI(upstream-candidate): red: a write protection in it failed (logged once)
 static _Atomic(range_t *) g_blk[NBLK];
 static inline range_t *rg(int i) { return &atomic_load_explicit(&g_blk[i >> BLK_SHIFT], memory_order_acquire)[i & (BLK - 1)]; }
 static _Atomic int g_nr;
@@ -165,12 +165,12 @@ static int on_fault(void *addr, int is_write, void *uc) {
 // Unprotect pages p..q of a range with one mprotect per run of protected pages (a host write over a whole texture, e.g. WriteTexels, used to make one system call per 16 KB page:
 // Link's Awakening, about 275 a frame). Pages another thread is changing are handled one by one after the run so far is finished, so no BUSY page is held while waiting
 static void release_pages(range_t *r, uintptr_t p, uintptr_t q, _Atomic uint64_t *count) {
-    // PEANUTS(upstream-candidate): no early return on a per-range count of protected pages (#618, eeeedd52's nprot): with it LEGO MARVEL Super Heroes drew its streets as
+    // KIWI(upstream-candidate): no early return on a per-range count of protected pages (#618, eeeedd52's nprot): with it LEGO MARVEL Super Heroes drew its streets as
     // noise in every run (Turnip on an Adreno 740 and two Turnip builds on an Adreno 825), and without it in none; a diagnostic build never saw the count disagree with the page states, so
     // how the skip broke it is open (docs/reference/nvn-objects.md, "Textures drawn as noise after a skip on a count of protected pages"). Pages already NONE are passed over without a CAS below, which keeps most of that change's saving
     uintptr_t run = 0; int open = 0;
     for (uintptr_t i = p; i <= q + 1; i++) {
-        uint8_t st = i <= q ? atomic_load(&r->state[i]) : PG_NONE;   // PEANUTS(upstream-candidate): avoid CAS on PG_NONE pages
+        uint8_t st = i <= q ? atomic_load(&r->state[i]) : PG_NONE;   // KIWI(upstream-candidate): avoid CAS on PG_NONE pages
         int took = st == PG_PROT && atomic_compare_exchange_strong(&r->state[i], &st, PG_BUSY);
         if (took) { if (!open) { run = i; open = 1; } continue; }
         if (open) {
@@ -178,7 +178,7 @@ static void release_pages(range_t *r, uintptr_t p, uintptr_t q, _Atomic uint64_t
                 // Linux changes protection mapping by mapping, so part of the run may have become writable: page by page, each page's state as it ends up
                 for (uintptr_t k = run; k < i; k++) {
                     if (mp(r->base + (k << g_shift), g_pg, PROT_READ | PROT_WRITE)) { atomic_store(&r->state[k], PG_PROT); continue; }   // still read-only: the write faults and is reported
-                    stamp_page(r, k); atomic_store(&r->state[k], PG_NONE); if (count) atomic_fetch_add(count, 1);   // PEANUTS(upstream-candidate)
+                    stamp_page(r, k); atomic_store(&r->state[k], PG_NONE); if (count) atomic_fetch_add(count, 1);   // KIWI(upstream-candidate)
                 }
             } else {
                 for (uintptr_t k = run; k < i; k++) { stamp_page(r, k); atomic_store(&r->state[k], PG_NONE); }
@@ -194,7 +194,7 @@ static void prep_write(void *addr, size_t len) {
     if (!len) return;
     for (int i = 0; i < n; i++) {
         range_t *r = rg(i);
-        if (!live_at(i) || e <= r->base || a >= r->end) continue;   // PEANUTS(upstream-candidate): every overlapping range, as before eeeedd52's nprot skip (#618, release_pages)
+        if (!live_at(i) || e <= r->base || a >= r->end) continue;   // KIWI(upstream-candidate): every overlapping range, as before eeeedd52's nprot skip (#618, release_pages)
         uintptr_t lo = a > r->base ? a : r->base, hi = e < r->end ? e : r->end;
         uintptr_t p = (lo - r->base) >> g_shift, q = (hi - 1 - r->base) >> g_shift;
         if (g_bmask) block_bounds(r, &p, &q);
@@ -261,7 +261,7 @@ void nvn_dirty_add_range(const void *mem, size_t size) {
         memset((void *)state, 0, np); memset((void *)gen, 0, np * sizeof *gen); memset(ever, 0, np);
     }
     r->base = base; r->end = end; r->mem = (uintptr_t)mem; r->state = state; r->gen = gen; r->ever = ever; atomic_store(&r->red, 0);
-    atomic_store_explicit(&r->born, atomic_fetch_add(&g_now, 1) + 1, memory_order_relaxed); atomic_fetch_add(&g_now, 1);   // PEANUTS: published by the release store of live below; stamps taken from now on are past it
+    atomic_store_explicit(&r->born, atomic_fetch_add(&g_now, 1) + 1, memory_order_relaxed); atomic_fetch_add(&g_now, 1);   // KIWI: published by the release store of live below; stamps taken from now on are past it
     if (slot == n) atomic_store(&g_nr, n + 1);
     atomic_store_explicit(&r->live, 1, memory_order_release);
     pthread_mutex_unlock(&g_slot_mu);
@@ -376,7 +376,7 @@ int nvn_dirty_since_span(const void *span, const void *addr, size_t len, uint64_
     range_t *r = (range_t *)span; uintptr_t a0 = (uintptr_t)addr;   // the kept handle still holds the span (a slot reused by another pool over the same memory is as good): no scan
     if (!r || !atomic_load_explicit(&r->live, memory_order_acquire) || a0 < r->base || a0 + len > r->end) r = find_span(a0, len);
     if (!r) return 1;   // When untracked, conservatively treat as dirty: better to upload more than to show stale content
-    if (stamp < atomic_load_explicit(&r->born, memory_order_relaxed)) return 1;   // PEANUTS: checked before this pool was registered over the memory (born)
+    if (stamp < atomic_load_explicit(&r->born, memory_order_relaxed)) return 1;   // KIWI: checked before this pool was registered over the memory (born)
     uintptr_t a = (uintptr_t)addr, p = (a - r->base) >> g_shift, q = (a + len - 1 - r->base) >> g_shift;
     for (uintptr_t i = p; i <= q; i++) if (atomic_load(&r->gen[i]) > stamp) return 1;   // The generation of the last write before upload is <= the stamp; any later write must be > the stamp
     return 0;
@@ -388,7 +388,7 @@ int nvn_dirty_bounds_since(const void *span, const void *addr, size_t len, uint6
     range_t *r = (range_t *)span; uintptr_t a = (uintptr_t)addr;
     if (!r || !atomic_load_explicit(&r->live, memory_order_acquire) || a < r->base || a + len > r->end) r = find_span(a, len);
     if (!r) return 1;
-    if (stamp < atomic_load_explicit(&r->born, memory_order_relaxed)) return 1;   // PEANUTS: every page counts (born); *lo, *hi are the whole of it already
+    if (stamp < atomic_load_explicit(&r->born, memory_order_relaxed)) return 1;   // KIWI: every page counts (born); *lo, *hi are the whole of it already
     uintptr_t p = (a - r->base) >> g_shift, q = (a + len - 1 - r->base) >> g_shift, f = UINTPTR_MAX, l = 0;
     for (uintptr_t i = p; i <= q; i++) if (atomic_load(&r->gen[i]) > stamp) { if (f == UINTPTR_MAX) f = i; l = i; }
     if (f == UINTPTR_MAX) return 0;

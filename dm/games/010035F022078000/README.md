@@ -1,9 +1,9 @@
-<!-- PEANUTS: DRAGON BALL: Sparking! ZERO (010035F022078000) -->
+<!-- KIWI: DRAGON BALL: Sparking! ZERO (010035F022078000) -->
 # DRAGON BALL: Sparking! ZERO (`010035F022078000`)
 
 Base 1.0.0 (`v0`), SDK 14.3.0 (`14_3_0`), Unreal Engine 4.27 (IoStore containers beside `.pak` archives, `FMallocBinned3`), NVN, CRIWARE sound and Sofdec VP9 movies.
 
-<!-- PEANUTS: 60 fps (patches.py) -->
+<!-- KIWI: 60 fps (patches.py) -->
 **Status:** boots and plays battles on Android (tested on Xiaomi `25053PC47I`, Adreno 825, Turnip `Turnip_Adreno_Driver_T30_Mr_Purple_666_` and Qualcomm system driver) at 60 fps (`fps_target 60`, `fps_modes 60`, [`patches.py`](patches.py) bypassing `bUseFixedFrameRate`) with sound, movies and save commits working.
 
 ## Builds
@@ -12,7 +12,7 @@ Base 1.0.0 (`v0`), SDK 14.3.0 (`14_3_0`), Unreal Engine 4.27 (IoStore containers
 |---|---|---|---|---|
 | `v0` | `1.0.0` | `764daf48e0d3500e369c1baffa5159d6` | `c781dd63daf0ddcdb9975da50a198f93` | `2aef2cffb104ee7c9e212fd2f4c731e9` |
 
-<!-- PEANUTS: 60 fps (patches.py) -->
+<!-- KIWI: 60 fps (patches.py) -->
 ## Frame rate
 
 - **Current:** 60 fps (`fps_target 60`, `fps_modes 60`, [`patches.py`](patches.py) on `v0` `main` `764daf48e0d3500e369c1baffa5159d6`).

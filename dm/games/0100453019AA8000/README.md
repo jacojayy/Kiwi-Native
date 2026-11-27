@@ -1,4 +1,4 @@
-<!-- PEANUTS: Switch 1 Xenoblade X profile adapted from nxnative. -->
+<!-- KIWI: Switch 1 Xenoblade X profile adapted from nxnative. -->
 # Xenoblade Chronicles X: Definitive Edition (`0100453019AA8000`)
 
 ## Current status
@@ -55,11 +55,11 @@ Source research included [Fl4sh9174's mods](https://github.com/Fl4sh9174/Switch-
 Its XCX archive's main dynamic 20–120 fps and static 60 fps patches target 1.0.1
 (`3f2425864cf22684`), so those main offsets were not carried into this build.
 Its SDK 120 fps patch does match this release's SDK, but changes a native SDK
-queue-buffer instruction; Peanuts supplies NVN presentation itself, so that
+queue-buffer instruction; Kiwi supplies NVN presentation itself, so that
 instruction is not included in this main-module plan. The timing corrections
 instead follow [FPSLocker Warehouse's exact 1.0.2 configuration](https://github.com/masagrator/FPSLocker-Warehouse/blob/v4/SaltySD/plugins/FPSLocker/patches/0100453019AA8000/2A720C7CE5C84905.yaml).
 
-The existing Peanuts FPS framework supplies the launcher choices, reviewed
+The existing Kiwi FPS framework supplies the launcher choices, reviewed
 memory rows and loader relocation plan. The plan checks all 38 original code
 words before installing its 96 code/data words, allocates separate code and data
 pages, and seals code RX and data RW. Inserted-call sites belong to functions
@@ -159,11 +159,11 @@ beside the original game. No compiler or chain changes are needed.
 - All three modules rewrite for Android with no red diagnostics in their
   rewriter logs. Main applies all six function-matched allocator cuts; the SDK
   applies two shared cuts.
-- The Linux Peanuts host tests, 176 Peanuts Python tests, 25 Android profile
+- The Linux Kiwi host tests, 176 Kiwi Python tests, 25 Android profile
   tests (three skipped), 16 patch-registry tests, 11 documentation tests and
   five tile-budget tests pass. Runtime-profile generation covers all 152
   profiles with the existing schema and layout.
-- The normal Peanuts PC builder completes from a `.nup` containing the base,
+- The normal Kiwi PC builder completes from a `.nup` containing the base,
   update and DLC: 157.5 MiB pack, zero red diagnostics. The importer validates
   the package structure and all 117 file extents (26.74 GiB); this check is not
   a full payload checksum. The imported update's three modules match the
@@ -190,9 +190,9 @@ beside the original game. No compiler or chain changes are needed.
   drivers; check rendering, audio, input, shared fonts and memory pressure.
 - Validate camera, combat and simulation speed with the experimental 60/120 fps timing plan.
 
-<!-- PEANUTS begin: picture shapes -->
+<!-- KIWI begin: picture shapes -->
 ## Picture shapes (Android)
 
 **Untested.** Game settings › Display offers **Fill the screen** on 1.0.2 through 1 `aspect_plan` row that nobody has seen on a device (`aspect_plan_untested 1`, and the Fill choice says so). They are every place this build's main has the packed 1920x1080 sizes in code and the 16/9 float words, from a scan of the code on 2026-11-21 with each expected word read on the pack; no community patch stands behind them. With Fill the 3D view may follow the screen, the HUD and menus may not, or the game may draw wrongly or not start. Fit and Stretch are unchanged. Open: every screen, at any shape.
 
-<!-- PEANUTS end -->
+<!-- KIWI end -->

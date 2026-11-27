@@ -1,14 +1,14 @@
 // Front end on Android (front.h). The guest runs on the calling thread; the window does not pass through here: the launcher hands its Surface to the NVN → Vulkan replay
 // with nxhost_set_window (dm/gfx/vk_android). Text input goes to the launcher's input box (nxhost_text_input_callback). nxhost_main takes the same arguments as dmhost on the Mac.
-// PEANUTS: The front end prepares cold Vulkan pipelines before entering the guest.
+// KIWI: The front end prepares cold Vulkan pipelines before entering the guest.
 #include "../dm.h"
 #include "../front.h"
 #include "../android/input_android.h"
-#include "../../gfx/vk_android/vk_android.h"   // PEANUTS: prepare cold pipelines before guest entry
+#include "../../gfx/vk_android/vk_android.h"   // KIWI: prepare cold pipelines before guest entry
 #include <malloc.h>
 #include <stdatomic.h>
 void front_run(void (*guest)(void)) {
-    vka_pso_prepare_launch();   // PEANUTS: startup waits for the cold pipeline build when a seed ships
+    vka_pso_prepare_launch();   // KIWI: startup waits for the cold pipeline build when a seed ships
     LOG("front end: the guest runs on this thread; presents go to the launcher's window (nxhost_set_window)");
     guest();
 }

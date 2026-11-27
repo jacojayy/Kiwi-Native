@@ -1,4 +1,4 @@
-# Written by peanuts/scripts/issue_forms.py: change that script, then run it.
+# Written by kiwi/scripts/issue_forms.py: change that script, then run it.
 name: "Question, device report or development topic"
 description: "Ask how something works, tell how a game runs on your device, or discuss how to build or contribute something"
 body:

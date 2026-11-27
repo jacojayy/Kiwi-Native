@@ -1,4 +1,4 @@
-<!-- PEANUTS: Peanuts' profile of the EU edition, made from nxnative's profile of the RU edition (0100A0800E9C4000, commit a4c82979) -->
+<!-- KIWI: Kiwi' profile of the EU edition, made from nxnative's profile of the RU edition (0100A0800E9C4000, commit a4c82979) -->
 # The Witcher 3: Wild Hunt — Complete Edition (`01003D100E9C6000`)
 
 Update 4.04b (v458752) over the base game, SDK 15.3.0, on NVN. CD PROJEKT RED's REDengine 3 in Saber Interactive's Switch port; Havok, Wwise. Modules `main` and `sdk`. Hearts of Stone and Blood and Wine are in the base game's RomFS (`dlc/`): the main menu lists both as installed, with no DLC to add.

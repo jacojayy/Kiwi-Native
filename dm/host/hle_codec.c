@@ -3,7 +3,7 @@
 // Basis: both are implementations of nn::codec::IOpusDecoder, with the 10 vtable slots identical one by one in order and signature (destructor×2, GetWorkBufferSize, IsInitialized,
 // Initialize, Finalize, GetSampleRate, GetChannelCount, Reset, DecodeInterleaved); the game allocates 0x40 bytes and the software object is 0x30 bytes.
 #include "hle.h"
-#include <stdatomic.h>   // PEANUTS: (the init log count)
+#include <stdatomic.h>   // KIWI: (the init log count)
 
 HLE_FORCE("_ZN2nn5codec19HardwareOpusDecoderC1Ei", "hwopus service; replaced by the SDK software OpusDecoder (same IOpusDecoder virtual interface)",
           void, h_codec_HwOpusCtor, void *self, int option) {
@@ -19,7 +19,7 @@ HLE_FORCE("_ZN2nn5codec19HardwareOpusDecoderC1Ei", "hwopus service; replaced by 
 #define SOFT_OPUS_STATE 0x200   // bytes for the software OpusDecoderType (larger than the SDK's)
 static void *opus_fn(const char *name) { void *f = guest_sym(name); if (!f) die("sdk lacks %s", name); return f; }
 static void *opus_soft(const void *hw) { void *s = objmap_get(hw); if (!s) die("Opus decoder %p was not initialized by the host", hw); return s; }
-// PEANUTS begin: the game's own libopus instead of the sdk's. The sdk's libopus (fixed point, functions named nncodecLibopus_*) keeps its tables under libopus's plain
+// KIWI begin: the game's own libopus instead of the sdk's. The sdk's libopus (fixed point, functions named nncodecLibopus_*) keeps its tables under libopus's plain
 // names (eMeans, tf_select_table, silk_*) with default visibility, and the loader binds a name to the first module that defines it: in Hogwarts Legacy that is main's own
 // libopus 1.1-beta (floating point), so the sdk's decoder read main's float eMeans as bytes and decoded every Opus stream 15-20 dB low with three of four CELT bands nearly
 // gone (speech and music muffled and thin; the same code run on its own decodes as libopus does). On the console this code never runs: the hardware decoder does the work.
@@ -42,7 +42,7 @@ static int popus_on(void) {
     return v;
 }
 static popus *popus_of(const void *hw) { popus *p = objmap_get(hw); return p && p->magic == POPUS_MAGIC ? p : NULL; }
-// PEANUTS end
+// KIWI end
 HLE_FORCE("_ZN2nn5codec36GetHardwareOpusDecoderWorkBufferSizeEiii", "hwopus service; work buffer computed for the software decoder", size_t, h_codec_HwOpusWorkSize, int rate, int ch, int option) {
     (void)option; size_t (*f)(int, int) = opus_fn("_ZN2nn5codec28GetOpusDecoderWorkBufferSizeEii"); return f(rate, ch);
 }
@@ -51,62 +51,62 @@ HLE_FORCE("_ZN2nn5codec36GetHardwareOpusDecoderWorkBufferSizeEii", "hwopus servi
           int rate, int ch) {
     size_t (*f)(int, int) = opus_fn("_ZN2nn5codec28GetOpusDecoderWorkBufferSizeEii"); return f(rate, ch);
 }
-HLE_FORCE_BIG("_ZN2nn5codec29InitializeHardwareOpusDecoderEPNS0_23HardwareOpusDecoderTypeEiiPvmi", "hwopus service; replaced by the software OpusDecoder", int, h_codec_HwOpusInit,   // PEANUTS(upstream-candidate): on the big host stack (logging; The Witcher 3 calls it from a thread with a 4 KB stack)
+HLE_FORCE_BIG("_ZN2nn5codec29InitializeHardwareOpusDecoderEPNS0_23HardwareOpusDecoderTypeEiiPvmi", "hwopus service; replaced by the software OpusDecoder", int, h_codec_HwOpusInit,   // KIWI(upstream-candidate): on the big host stack (logging; The Witcher 3 calls it from a thread with a 4 KB stack)
           void *hw, int rate, int ch, void *buf, size_t size, int option) {
     (void)option; int r;
-    if (popus_on()) {   // PEANUTS: the game's own libopus (above)
+    if (popus_on()) {   // KIWI: the game's own libopus (above)
         popus *p = popus_of(hw); if (!p) { if (objmap_get(hw)) die("Opus decoder %p initialized twice", hw); p = calloc(1, sizeof *p); objmap_put(hw, p); }
         int n = g_po.size(ch); free(p->st);
         *p = (popus){POPUS_MAGIC, rate, ch, n > 0 ? calloc(1, (size_t)n) : NULL};
         r = p->st && !g_po.init(p->st, rate, ch) ? 0 : 8;   // 8: the sdk's answer to a rate or channel count it does not take
-        if (r) { objmap_del(hw); free(p->st); free(p); }   // PEANUTS: no decoder is left behind: its calls answer as for one never initialized (below)
+        if (r) { objmap_del(hw); free(p->st); free(p); }   // KIWI: no decoder is left behind: its calls answer as for one never initialized (below)
     } else {
     int (*f)(void *, int, int, void *, size_t) = opus_fn("_ZN2nn5codec21InitializeOpusDecoderEPNS0_15OpusDecoderTypeEiiPvm");
     void *s = objmap_get(hw); if (!s) { s = calloc(1, SOFT_OPUS_STATE); objmap_put(hw, s); }
     r = f(s, rate, ch, buf, size);
     }
-    { static _Atomic int n; if (atomic_fetch_add(&n, 1) < 16) LOG("codec: hardware Opus decoder %p: %d Hz, %d channels, work buffer %#zx: result %#x (%s)", hw, rate, ch, size, r, popus_on() ? "the game's libopus" : "software OpusDecoder"); }   // PEANUTS: what the game asks for
+    { static _Atomic int n; if (atomic_fetch_add(&n, 1) < 16) LOG("codec: hardware Opus decoder %p: %d Hz, %d channels, work buffer %#zx: result %#x (%s)", hw, rate, ch, size, r, popus_on() ? "the game's libopus" : "software OpusDecoder"); }   // KIWI: what the game asks for
     return r;
 }
 static int opus_mgr_dec_fini(void *gd); static int opus_mgr_dec_reset(void *gd);   // a decoder of a manager (below)
 HLE_FORCE("_ZN2nn5codec27FinalizeHardwareOpusDecoderEPNS0_23HardwareOpusDecoderTypeE", "hwopus service; software OpusDecoder", void, h_codec_HwOpusFini, void *hw) {
     if (opus_mgr_dec_fini(hw)) return;
-    if (popus_of(hw)) { popus *p = objmap_del(hw); free(p->st); free(p); return; }   // PEANUTS
+    if (popus_of(hw)) { popus *p = objmap_del(hw); free(p->st); free(p); return; }   // KIWI
     void (*f)(void *) = opus_fn("_ZN2nn5codec19FinalizeOpusDecoderEPNS0_15OpusDecoderTypeE");
     void *s = objmap_del(hw); if (s) { f(s); free(s); }
 }
-HLE_FORCE_BIG("_ZN2nn5codec32GetHardwareOpusDecoderSampleRateEPKNS0_23HardwareOpusDecoderTypeE", "hwopus service; software OpusDecoder", int, h_codec_HwOpusRate, const void *hw) {   // PEANUTS(upstream-candidate): on the big host stack (logging; The Witcher 3 calls it from a thread with a 4 KB stack)
-    { popus *p = popus_of(hw); if (p) return p->rate; if (popus_on()) return 0; }   // PEANUTS: 0 for a decoder whose initialization failed
+HLE_FORCE_BIG("_ZN2nn5codec32GetHardwareOpusDecoderSampleRateEPKNS0_23HardwareOpusDecoderTypeE", "hwopus service; software OpusDecoder", int, h_codec_HwOpusRate, const void *hw) {   // KIWI(upstream-candidate): on the big host stack (logging; The Witcher 3 calls it from a thread with a 4 KB stack)
+    { popus *p = popus_of(hw); if (p) return p->rate; if (popus_on()) return 0; }   // KIWI: 0 for a decoder whose initialization failed
     int (*f)(const void *) = opus_fn("_ZN2nn5codec24GetOpusDecoderSampleRateEPKNS0_15OpusDecoderTypeE"); return f(opus_soft(hw));
 }
-HLE_FORCE_BIG("_ZN2nn5codec34GetHardwareOpusDecoderChannelCountEPKNS0_23HardwareOpusDecoderTypeE", "hwopus service; software OpusDecoder", int, h_codec_HwOpusCh, const void *hw) {   // PEANUTS(upstream-candidate): on the big host stack (logging; The Witcher 3 calls it from a thread with a 4 KB stack)
-    { popus *p = popus_of(hw); if (p) return p->ch; if (popus_on()) return 0; }   // PEANUTS: 0 for a decoder whose initialization failed
+HLE_FORCE_BIG("_ZN2nn5codec34GetHardwareOpusDecoderChannelCountEPKNS0_23HardwareOpusDecoderTypeE", "hwopus service; software OpusDecoder", int, h_codec_HwOpusCh, const void *hw) {   // KIWI(upstream-candidate): on the big host stack (logging; The Witcher 3 calls it from a thread with a 4 KB stack)
+    { popus *p = popus_of(hw); if (p) return p->ch; if (popus_on()) return 0; }   // KIWI: 0 for a decoder whose initialization failed
     int (*f)(const void *) = opus_fn("_ZN2nn5codec26GetOpusDecoderChannelCountEPKNS0_15OpusDecoderTypeE"); return f(opus_soft(hw));
 }
-HLE_FORCE_BIG("_ZN2nn5codec24ResetHardwareOpusDecoderEPNS0_23HardwareOpusDecoderTypeE", "hwopus service; software OpusDecoder", void, h_codec_HwOpusReset, void *hw) {   // PEANUTS(upstream-candidate): on the big host stack (logging; The Witcher 3 calls it from a thread with a 4 KB stack)
+HLE_FORCE_BIG("_ZN2nn5codec24ResetHardwareOpusDecoderEPNS0_23HardwareOpusDecoderTypeE", "hwopus service; software OpusDecoder", void, h_codec_HwOpusReset, void *hw) {   // KIWI(upstream-candidate): on the big host stack (logging; The Witcher 3 calls it from a thread with a 4 KB stack)
     if (opus_mgr_dec_reset(hw)) return;
-    { popus *p = popus_of(hw); if (p) { g_po.ctl(p->st, 4028); return; } if (popus_on()) return; }   // PEANUTS: OPUS_RESET_STATE; nothing to reset when its initialization failed
+    { popus *p = popus_of(hw); if (p) { g_po.ctl(p->st, 4028); return; } if (popus_on()) return; }   // KIWI: OPUS_RESET_STATE; nothing to reset when its initialization failed
     void (*f)(void *) = opus_fn("_ZN2nn5codec16ResetOpusDecoderEPNS0_15OpusDecoderTypeE"); f(opus_soft(hw));
 }
-HLE_FORCE_BIG("_ZN2nn5codec33DecodeOpusInterleavedWithHardwareEPNS0_23HardwareOpusDecoderTypeEPmPiPsmPKvm", "hwopus service; software OpusDecoder", int, h_codec_HwOpusDecode,   // PEANUTS(upstream-candidate): on the big host stack (logging; The Witcher 3 calls it from a thread with a 4 KB stack)
+HLE_FORCE_BIG("_ZN2nn5codec33DecodeOpusInterleavedWithHardwareEPNS0_23HardwareOpusDecoderTypeEPmPiPsmPKvm", "hwopus service; software OpusDecoder", int, h_codec_HwOpusDecode,   // KIWI(upstream-candidate): on the big host stack (logging; The Witcher 3 calls it from a thread with a 4 KB stack)
           void *hw, size_t *consumed, int *samples, int16_t *out, size_t out_size, const void *in, size_t in_size) {
     int r; popus *p = popus_of(hw);
-    if (p) {   // PEANUTS: Nintendo's packet header (big-endian payload size, final range), then the packet, as the sdk's DecodeOpusInterleaved takes it
+    if (p) {   // KIWI: Nintendo's packet header (big-endian payload size, final range), then the packet, as the sdk's DecodeOpusInterleaved takes it
         const uint8_t *b = in; uint32_t n = in && in_size >= 8 ? (uint32_t)b[0] << 24 | b[1] << 16 | b[2] << 8 | b[3] : 0; int ok = in && in_size >= 8 && n <= in_size - 8;
         int got = ok ? g_po.dec(p->st, b + 8, (int32_t)n, out, (int)(out_size / 2 / (size_t)p->ch), 0) : -1;
         r = !ok ? 6 : got < 0 ? 4 : 0;   // the sdk's codes: 6 a short packet, 4 a decode error
         if (!r) { if (consumed) *consumed = 8 + (size_t)n; if (samples) *samples = got; }
-    } else if (popus_on()) {   // PEANUTS: a decoder whose initialization failed: a decode error, not a call on no state
+    } else if (popus_on()) {   // KIWI: a decoder whose initialization failed: a decode error, not a call on no state
         r = 4;
     } else {
     int (*f)(void *, size_t *, int *, int16_t *, size_t, const void *, size_t) = opus_fn("_ZN2nn5codec21DecodeOpusInterleavedEPNS0_15OpusDecoderTypeEPmPiPsmPKvm");
     r = f(opus_soft(hw), consumed, samples, out, out_size, in, in_size);
     }
-    {   // PEANUTS: every 2000 packets, the packets' coded bandwidth (TOC byte after the 8-byte packet header), failures and output, to tell a band-limited encode from a decode that loses the top
+    {   // KIWI: every 2000 packets, the packets' coded bandwidth (TOC byte after the 8-byte packet header), failures and output, to tell a band-limited encode from a decode that loses the top
         static _Atomic uint64_t bw[5], n, bad, smp; static const char *nm[5] = {"narrowband", "mediumband", "wideband", "superwideband", "fullband"};
         if (in && in_size > 8) { unsigned c = ((const uint8_t *)in)[8] >> 3; int k = c < 12 ? c / 4 : c < 16 ? 3 + (c >= 14) : c < 20 ? 0 : c < 24 ? 2 : c < 28 ? 3 : 4; atomic_fetch_add(&bw[k], 1); }
         if (r) atomic_fetch_add(&bad, 1); else if (samples) atomic_fetch_add(&smp, (uint64_t)*samples);
-        { static FILE *df; static int on = -1; if (on < 0) { const char *e = getenv("DM_OPUS_DUMP"); on = e && (df = fopen(e, "wb")); }   // PEANUTS: DM_OPUS_DUMP=<file>: each decode as "OPKT", decoder, rate, channels, packet bytes, samples, 0 (32-bit each), the packet, the PCM
+        { static FILE *df; static int on = -1; if (on < 0) { const char *e = getenv("DM_OPUS_DUMP"); on = e && (df = fopen(e, "wb")); }   // KIWI: DM_OPUS_DUMP=<file>: each decode as "OPKT", decoder, rate, channels, packet bytes, samples, 0 (32-bit each), the packet, the PCM
           if (df && !r && samples && out) { int32_t h[5] = {h_codec_HwOpusRate(hw), h_codec_HwOpusCh(hw), (int32_t)in_size, *samples, 0}; uint64_t id = (uint64_t)(uintptr_t)hw;
               fwrite("OPKT", 1, 4, df); fwrite(&id, 8, 1, df); fwrite(h, 4, 5, df); fwrite(in, 1, in_size, df); fwrite(out, 2, (size_t)*samples * (size_t)h[1], df); } }
         if (atomic_fetch_add(&n, 1) % 2000 == 1999) LOG("codec: Opus packets %llu: %s %llu, %s %llu, %s %llu, %s %llu, %s %llu; failed %llu; %llu samples a channel out", (unsigned long long)atomic_load(&n),
@@ -268,7 +268,7 @@ static int opus_mgr_dec_reset(void *gd) {
     if (d->m) pthread_mutex_unlock(&d->m->lock);
     return 1;
 }
-HLE_FORCE_BIG("_ZN2nn5codec36EnqueueOpusDataToHardwareOpusDecoderEPNS0_23HardwareOpusDecoderTypeEPmPKvm", "hwopus service; queued for ExecuteHardwareOpusDecoderDecoding", int, h_codec_HwOpusEnqueue,   // PEANUTS(upstream-candidate): on the big host stack (logging; The Witcher 3 calls it from a thread with a 4 KB stack)
+HLE_FORCE_BIG("_ZN2nn5codec36EnqueueOpusDataToHardwareOpusDecoderEPNS0_23HardwareOpusDecoderTypeEPmPKvm", "hwopus service; queued for ExecuteHardwareOpusDecoderDecoding", int, h_codec_HwOpusEnqueue,   // KIWI(upstream-candidate): on the big host stack (logging; The Witcher 3 calls it from a thread with a 4 KB stack)
           void *gd, size_t *consumed, const void *in, size_t in_size) {
     opus_dec *d = opus_dec_of(gd); opus_mgr *m = d->m;
     if (consumed) *consumed = 0;
@@ -285,7 +285,7 @@ HLE_FORCE_BIG("_ZN2nn5codec36EnqueueOpusDataToHardwareOpusDecoderEPNS0_23Hardwar
     if (consumed) *consumed = in_size;
     return 0;
 }
-HLE_FORCE_BIG("_ZN2nn5codec34ExecuteHardwareOpusDecoderDecodingEPNS0_30HardwareOpusDecoderManagerTypeE", "hwopus service; the software OpusDecoder decodes the waiting packets here",   // PEANUTS(upstream-candidate): on the big host stack (logging; The Witcher 3 calls it from a thread with a 4 KB stack)
+HLE_FORCE_BIG("_ZN2nn5codec34ExecuteHardwareOpusDecoderDecodingEPNS0_30HardwareOpusDecoderManagerTypeE", "hwopus service; the software OpusDecoder decodes the waiting packets here",   // KIWI(upstream-candidate): on the big host stack (logging; The Witcher 3 calls it from a thread with a 4 KB stack)
           int, h_codec_HwOpusExecute, void *gm) {
     opus_mgr *m = opus_mgr_of(gm);
     int (*dec)(void *, size_t *, int *, int16_t *, size_t, const void *, size_t) = opus_fn("_ZN2nn5codec21DecodeOpusInterleavedEPNS0_15OpusDecoderTypeEPmPiPsmPKvm");
@@ -310,7 +310,7 @@ HLE_FORCE_BIG("_ZN2nn5codec34ExecuteHardwareOpusDecoderDecodingEPNS0_30HardwareO
     if (any) hle_signal_system_event_binding(hle_system_event_binding(m->event));
     return 0;
 }
-HLE_FORCE_BIG("_ZN2nn5codec48DequeuePcmInterleavedDataFromHardwareOpusDecoderEPNS0_23HardwareOpusDecoderTypeEPiPsm", "hwopus service; frames the software OpusDecoder decoded",   // PEANUTS(upstream-candidate): on the big host stack (logging; The Witcher 3 calls it from a thread with a 4 KB stack)
+HLE_FORCE_BIG("_ZN2nn5codec48DequeuePcmInterleavedDataFromHardwareOpusDecoderEPNS0_23HardwareOpusDecoderTypeEPiPsm", "hwopus service; frames the software OpusDecoder decoded",   // KIWI(upstream-candidate): on the big host stack (logging; The Witcher 3 calls it from a thread with a 4 KB stack)
           int, h_codec_HwOpusDequeue, void *gd, int *samples, int16_t *out, size_t out_size) {
     opus_dec *d = opus_dec_of(gd); opus_mgr *m = d->m;
     if (samples) *samples = 0;

@@ -1,4 +1,4 @@
-"""PEANUTS(upstream-candidate): the offline shaders shader_split.raw_shaders takes from a main when the code builds no address to
+"""KIWI(upstream-candidate): the offline shaders shader_split.raw_shaders takes from a main when the code builds no address to
 their code area. FINAL FANTASY XII THE ZODIAC AGE's main (0100EB100AB42000) has 7 control sections whose
 code area lies right before them, with no relocation slot pointing at either and no adrp + add building an
 address near them, so the built-address rule that picks between the two neighbours has nothing to choose

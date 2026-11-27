@@ -1,8 +1,8 @@
 # Game profile of Minecraft Dungeons II (Switch, update 1.1.3.0 = v131072 over the base game 1.1.1.0 = v0, with its Hero Pack add-on)
 # Format: see dm/games/README.md
-# PEANUTS: a Kiwi Native profile (Kiwi Native has none for this title); whole file Peanuts' own
+# KIWI: a Kiwi Native profile (Kiwi Native has none for this title); whole file Kiwi' own
 # Mojang Studios, Unreal Engine 5.6.1 (SDK MW+EpicGames+UnrealEngine-5_6_1 in main; SF_GLSL_SWITCH shaders in two IoStore shader libraries), SDK 20.5.15, NVN, Wwise sound, Havok.
-# Status: provisional profile (dm/games/profile_guess.py from the survey, peanuts/docs/NEW-GAME.md); the note (README.md) says what is a guess
+# Status: provisional profile (dm/games/profile_guess.py from the survey, kiwi/docs/NEW-GAME.md); the note (README.md) says what is a guess
 
 # ---- Identity ----
 title_id	0100A7C01B792000

@@ -8,8 +8,8 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-JAVA = REPO / 'android/app/src/main/java/dev/nxnative/android'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/AdvancedTableJvmTest.java'
+JAVA = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/AdvancedTableJvmTest.java'
 
 
 class Wiring(unittest.TestCase):
@@ -29,7 +29,7 @@ class Table(unittest.TestCase):
     def test_table_on_the_jvm(self):
         with tempfile.TemporaryDirectory(prefix='advanced_') as t:
             subprocess.run(['javac', '-Xlint:all', '-Werror', '-encoding', 'UTF-8', '-d', t, str(JAVA / 'AdvancedTable.java'), str(TEST)], check=True, capture_output=True, text=True)
-            r = subprocess.run(['java', '-cp', t, 'dev.nxnative.android.AdvancedTableJvmTest', str(REPO / 'docs/advanced_settings.tsv'), str(REPO / 'docs/env_switches.tsv')],
+            r = subprocess.run(['java', '-cp', t, 'hernandez.kiwinative.AdvancedTableJvmTest', str(REPO / 'docs/advanced_settings.tsv'), str(REPO / 'docs/env_switches.tsv')],
                                capture_output=True, text=True)
             self.assertEqual(r.stdout.strip(), 'ok', r.stdout + r.stderr)
 

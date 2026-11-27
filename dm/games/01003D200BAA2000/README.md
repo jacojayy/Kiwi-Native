@@ -1,4 +1,4 @@
-<!-- PEANUTS: new profile, provisional -->
+<!-- KIWI: new profile, provisional -->
 # Pokémon Mystery Dungeon: Rescue Team DX (`01003D200BAA2000`)
 
 Base game 1.0.0 (`v0`), SDK 7.4.0. **Unity 2018.3.12f1** (IL2CPP) with FMOD, rendering with **NVN**, 64-bit (the NPDM's byte 0xC is 0x17). Modules `main`, `subsdk0` and `sdk`. The closest profiles are the other Unity 2018 ones: [Raging Loop](../010020400E1C2000/README.md) (Unity 2018.3.10f1), [FINAL FANTASY CRYSTAL CHRONICLES Remastered Edition](../0100CE4010AAC000/README.md) (Unity 2018.4.2f1) and [Monster Sanctuary](../0100A0F00DA68000/README.md) (Unity 2018.4.23f1).

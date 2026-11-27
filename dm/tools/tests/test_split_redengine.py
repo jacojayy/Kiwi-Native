@@ -1,6 +1,6 @@
 """shader_split: REDengine 3's shader caches (The Witcher 3: Wild Hunt — Complete Edition). shadernx.cache (rdhs_shaders) is a run of records {u64 hash, u8 1, u32 raw length,
 u32 stored length, one zstd frame}, each a whole GLSLC output, ended by an index and the footer {u64 index offset, 'RDHS', u32 3}; staticshadernx.cache (fzlc_shaders) is a
-'FZLC' header and a table of chunks whose joined zstd frames hold the GLSLC outputs, which run across chunk boundaries. Synthetic bytes only."""  # PEANUTS: REDengine 3's shader caches (0.1.8)
+'FZLC' header and a table of chunks whose joined zstd frames hold the GLSLC outputs, which run across chunk boundaries. Synthetic bytes only."""  # KIWI: REDengine 3's shader caches (0.1.8)
 import contextlib
 import io
 import struct

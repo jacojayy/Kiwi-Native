@@ -14,7 +14,7 @@ No rewriter cuts of its own, no `patches.py`.
 
 ## Frame rate
 
-PEANUTS: **dynamic timing candidate, pending device validation.** The Android
+KIWI: **dynamic timing candidate, pending device validation.** The Android
 profile defaults to a 60 fps limit and exposes ceilings through 120. The reviewed
 plan runs only for main build `5441af3c89f97e1d25a8ccf14c742bf8`, with every
 changed word checked before code is sealed; Game owned leaves the original
@@ -53,12 +53,12 @@ performance remain unverified for this candidate.
 - **A torn movie picture (issue #497, not reproduced).** That report saw a horizontal band near the top of the opening movie, rows from two successive pictures, and proposes keeping a snapshot of the texture storage for each upload. On an Apple M6 here, 114 shots of `THP/Demo01_01.webm` show no row boundary that jumps across the width. Whether the race can happen here is not settled.
 - **Dash speed from a tilted stick (issue #928, not reproduced).** That report has Link running at dash speed without B at some diagonal angles, because a host stick can go outside the circle a Switch stick stays in, and proposes scaling every stick back onto the circle in `hle_hid.c`. In the Academy hall, a full diagonal for 1.2 s and the opposite diagonal on the circle for 1.2 s brought Link back to the same spot, so the game showed no extra speed at that angle. A shallower angle was inconclusive, the camera having turned. The change would reach every game, so it waits for a measurement.
 
-<!-- PEANUTS begin: picture shapes -->
+<!-- KIWI begin: picture shapes -->
 ## Picture shapes (Android)
 
 **Untested.** Game settings › Display offers **Fill the screen** on 1.0.1 through 8 `aspect_plan` rows that nobody has seen on a device (`aspect_plan_untested 1`, and the Fill choice says so). They are every place this build's main has the width,height pairs in data, from a scan of the code on 2026-11-21 with each expected word read on the pack; no community patch stands behind them. With Fill the 3D view may follow the screen, the HUD and menus may not, or the game may draw wrongly or not start. Fit and Stretch are unchanged. Open: every screen, at any shape.
 
-<!-- PEANUTS end -->
+<!-- KIWI end -->
 
 ## Mac routes
 
@@ -82,4 +82,4 @@ General host changes first needed here; each applies to every game:
 
 ## Android (Kiwi Native)
 
-PEANUTS: this profile is nxnative's, taken as it is (links to notes this tree does not have are plain text). Packed on Linux (2,470 shaders, all valid) and played on an AYN Thor (Adreno 740, Turnip) from a save in the Knight Academy: 60 fps, about 0.9 GB, graphics and HUD right indoors. Two log lines, each once: a sampler's reduction mode is not applied, and a colour clear of the alpha channel alone is skipped (the Vulkan replay has no masked clear yet). The game clears alpha before it writes its fog there for the depth of field, so Skyloft outdoors is the scene to check; not done yet.
+KIWI: this profile is nxnative's, taken as it is (links to notes this tree does not have are plain text). Packed on Linux (2,470 shaders, all valid) and played on an AYN Thor (Adreno 740, Turnip) from a save in the Knight Academy: 60 fps, about 0.9 GB, graphics and HUD right indoors. Two log lines, each once: a sampler's reduction mode is not applied, and a colour clear of the alpha channel alone is skipped (the Vulkan replay has no masked clear yet). The game clears alpha before it writes its fog there for the depth of field, so Skyloft outdoors is the scene to check; not done yet.

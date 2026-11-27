@@ -1,4 +1,4 @@
-# PEANUTS: nxnative b32d0bf3 allocator adaptation; build/function gated.
+# KIWI: nxnative b32d0bf3 allocator adaptation; build/function gated.
 # Xenoblade Chronicles X DE: changes to the game's own module, by NSO build ID.
 # Nintendo SDK changes belong to dm/tools/sdk_patches.py.
 # Keep only the atomic matcher: upstream's fixed CUTS belong to 1.0.1,

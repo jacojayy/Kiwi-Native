@@ -1,10 +1,10 @@
-"""PEANUTS: DM_VK_TU_FLUSHALL=1 (a game option) is TU_DEBUG=flushall in the game's environment: GameActivity.settingsEnv adds it after the option lines, and the readiness
+"""KIWI: DM_VK_TU_FLUSHALL=1 (a game option) is TU_DEBUG=flushall in the game's environment: GameActivity.settingsEnv adds it after the option lines, and the readiness
 check, which makes the process's first Vulkan device (when Turnip reads TU_DEBUG), takes settingsEnv before the user's lines, so a TU_DEBUG line of theirs wins."""
 import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-ACT = REPO / 'android/app/src/main/java/dev/nxnative/android/GameActivity.java'
+ACT = REPO / 'android/app/src/main/java/hernandez/kiwinative/GameActivity.java'
 LINE = 'if (env.contains("DM_VK_TU_FLUSHALL=1")) env.add("TU_DEBUG=flushall");'
 
 

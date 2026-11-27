@@ -32,7 +32,7 @@ A new version of the app may come with new shaders. What happens depends on what
 - **Some shaders changed:** the game's card says **Ready · updating shaders …** with the count and the time left. Only
   the changed shaders are translated, in the background, from your dump on the phone, and you can keep playing with the
   old shaders meanwhile. When the update is done, the game uses the new ones.
-- **The app cannot update them by itself:** the game plays as before. Open the game's page: the line **Shader update · Optional** beside the game <!-- PEANUTS: no Ready · update label on Peanuts' Home; #840's one line -->
+- **The app cannot update them by itself:** the game plays as before. Open the game's page: the line **Shader update · Optional** beside the game <!-- KIWI: no Ready · update label on Kiwi' Home; #840's one line -->
   opens **Shader update available** with an **Update shaders** button that opens the build sheet, where **Rebuild** makes them (or its button reads **Prepare shaders**, or **Storage › Prepare again**). The update is optional. A pack made on a
   computer can be made again there and imported instead.
 

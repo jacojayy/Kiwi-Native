@@ -30,7 +30,7 @@ defaults:
 # Actions are pinned to commit SHAs (the tag in the comment): a tag can be moved, a SHA cannot. Dependabot (github-actions) can raise them.
 jobs:
   host-tests:
-    if: vars.UPSTREAM_CI == 'true'   # PEANUTS: this job needs Kiwi Native's runner or its lint baseline; the fork's checks are in peanuts.yml
+    if: vars.UPSTREAM_CI == 'true'   # KIWI: this job needs Kiwi Native's runner or its lint baseline; the fork's checks are in kiwi.yml
     name: Host unit tests and CPU-only gfx tests
     runs-on: xcode-27
     timeout-minutes: 20
@@ -81,7 +81,7 @@ jobs:
   # Documented fixture/framework exceptions live in dm/sanitizers; new host findings fail the job and are fixed.
   # A job of its own, so its time shows beside the plain tests'.
   sanitizers:
-    if: vars.UPSTREAM_CI == 'true'   # PEANUTS: this job needs Kiwi Native's runner or its lint baseline; the fork's checks are in peanuts.yml
+    if: vars.UPSTREAM_CI == 'true'   # KIWI: this job needs Kiwi Native's runner or its lint baseline; the fork's checks are in kiwi.yml
     name: Sanitizers (ASan, UBSan and TSan over the host and CPU texture tests)
     runs-on: xcode-27
     timeout-minutes: 20
@@ -108,7 +108,7 @@ jobs:
   # request, which of its changed lines the tests run. Report only: no coverage threshold fails it, and a failing test is the other jobs' to report (the runs here keep going,
   # so the other tests' coverage is kept). The raw reports are uploaded on every run.
   coverage:
-    if: vars.UPSTREAM_CI == 'true'   # PEANUTS: this job needs Kiwi Native's runner or its lint baseline; the fork's checks are in peanuts.yml
+    if: vars.UPSTREAM_CI == 'true'   # KIWI: this job needs Kiwi Native's runner or its lint baseline; the fork's checks are in kiwi.yml
     name: Coverage (host, CPU texture and tool tests; report only)
     runs-on: xcode-27
     timeout-minutes: 25
@@ -165,7 +165,7 @@ jobs:
           retention-days: 7
 
   tool-tests:
-    if: vars.UPSTREAM_CI == 'true'   # PEANUTS: this job needs Kiwi Native's runner or its lint baseline; the fork's checks are in peanuts.yml
+    if: vars.UPSTREAM_CI == 'true'   # KIWI: this job needs Kiwi Native's runner or its lint baseline; the fork's checks are in kiwi.yml
     name: Tool tests
     runs-on: xcode-27
     timeout-minutes: 15
@@ -213,7 +213,7 @@ jobs:
           retention-days: 7
 
   build:
-    if: vars.UPSTREAM_CI == 'true'   # PEANUTS: this job needs Kiwi Native's runner or its lint baseline; the fork's checks are in peanuts.yml
+    if: vars.UPSTREAM_CI == 'true'   # KIWI: this job needs Kiwi Native's runner or its lint baseline; the fork's checks are in kiwi.yml
     name: Build check (Mac host, gfx tests, iOS sources)
     runs-on: xcode-27
     timeout-minutes: 40
@@ -255,7 +255,7 @@ jobs:
           retention-days: 7
 
   ios-build:
-    if: vars.UPSTREAM_CI == 'true'   # PEANUTS: this job needs Kiwi Native's runner or its lint baseline; the fork's checks are in peanuts.yml
+    if: vars.UPSTREAM_CI == 'true'   # KIWI: this job needs Kiwi Native's runner or its lint baseline; the fork's checks are in kiwi.yml
     name: Unsigned iOS app (synthetic modules, Swift and link)
     runs-on: xcode-27
     timeout-minutes: 40

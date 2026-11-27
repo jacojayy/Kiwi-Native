@@ -1,4 +1,4 @@
-"""PEANUTS: shader archives are decoded one record at a time, with the same offsets and codec fallback."""
+"""KIWI: shader archives are decoded one record at a time, with the same offsets and codec fallback."""
 import io
 from pathlib import Path
 import struct

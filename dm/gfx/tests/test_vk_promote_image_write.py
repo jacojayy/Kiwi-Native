@@ -1,4 +1,4 @@
-# PEANUTS: a test of the Android shader chain's promote_locals on an image write (OCTOPATH TRAVELER 0, issue #9)
+# KIWI: a test of the Android shader chain's promote_locals on an image write (OCTOPATH TRAVELER 0, issue #9)
 """promote_locals (vk_android_spv.py) on a compute shader whose storage image write takes its coordinate from a Function variable the translator stored once: the load is
 replaced by the stored value in every instruction, the OpImageWrite's coordinate and an OpAtomicStore's value included. _remap_operands read an instruction with no result id
 from its word 3 on (OpImageWrite: image, coordinate, texel, so it skipped the coordinate), which left the coordinate naming a load that promote_locals had deleted: spirv-val

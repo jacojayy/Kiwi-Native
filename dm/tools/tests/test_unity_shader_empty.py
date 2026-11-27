@@ -1,4 +1,4 @@
-"""PEANUTS: shader_split.unity_shaders leaves out a Shader subprogram without code (a blob entry of 0 bytes, or a subprogram whose program code is 0
+"""KIWI: shader_split.unity_shaders leaves out a Shader subprogram without code (a blob entry of 0 bytes, or a subprogram whose program code is 0
 bytes), with one counted line, and keeps the file's other shaders: what unity_compute does for a compute kernel without code
 (test_unity_compute_empty.py). Reading such an entry raised, and the scan took the whole file as unreadable. No game was met with one; the case is the
 same as My Time at Sandrock's empty compute kernel, which cost its `shader` bundle 152 Shader objects. A synthetic Shader object is written from

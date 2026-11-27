@@ -55,12 +55,12 @@ Status: brought up on the Mac: the first-boot brightness screen, the title, a ne
 - **Resolved: a `jump table <addr>` assertion on an ordinary byte table near the start of the text** (`main+0x219234`, `adr x18; ldrb w0,[x17,x16]; add x18,x18,x0,lsl #2; br x18`). `func_of` made every site before the first FDE a function of one instruction, so no form saw the `adr` in front of the `br`. The text before the first FDE is now one function, from the end of the data block before it (or the text's start), as a gap between two FDEs already was.
 - **Resolved: the rewrite never finished, the Mac swapped, the rewriter's footprint reached 100 GB.** A stretch without FDEs is one function to `func_of`, and its detailed disassembly costs about 880 bytes an instruction once built (2.6 KB while capstone builds it): 21.6 million instructions. A function longer than 256 KB is now analysed in pieces (`pieces` in `patch_nso.py`), cut only right after a `ret` / `br` / `b` where no conditional branch and no `b` within 64 KB crosses. Counting `b` up to 1 MB left only 21,385 cut points in the 82 MB (tail calls between neighbours) and pieces of up to 6.5 MB; with 64 KB there are 185,228, and no piece is over 256 KB (the two stretches: 28 and 344 pieces). The rewrite then takes 13 minutes at about 2.7 GB resident on a loaded Mac. It came out the same as with `b` counted up to 1 MB (3 and 136 pieces), so the analysis does not depend on where the cuts fall.
 
-<!-- PEANUTS begin: picture shapes -->
+<!-- KIWI begin: picture shapes -->
 ## Picture shapes (Android)
 
 **Untested.** Game settings › Display offers **Fill the screen** on 1.0.1 through 2 `aspect_plan` rows that nobody has seen on a device (`aspect_plan_untested 1`, and the Fill choice says so). They are every place this build's main has the packed 1920x1080 sizes in code and the 16/9 float words, from a scan of the code on 2026-11-21 with each expected word read on the pack; no community patch stands behind them. With Fill the 3D view may follow the screen, the HUD and menus may not, or the game may draw wrongly or not start. Fit and Stretch are unchanged. Open: every screen, at any shape.
 
-<!-- PEANUTS end -->
+<!-- KIWI end -->
 
 ## Mac routes
 
@@ -76,7 +76,7 @@ General host changes first needed here; each applies to every game:
 - **Rewriter:** text before the first FDE as one function (`func_of`) and long functions analysed in pieces (`pieces`): [Code before the first unwind entry is one function](../../../docs/reference/rewriter.md#code-before-the-first-unwind-entry-is-one-function), [Long functions analysed in pieces](../../../docs/reference/rewriter.md#long-functions-analysed-in-pieces).
 - **Bindless reads through a phi that also carries non-handle values** (the vendored translator's `TryTableHandle`): [Bindless reads whose handle phi also carries other values](../../../docs/reference/shaders.md#bindless-reads-whose-handle-phi-also-carries-other-values).
 - **Buffer texture views below the 16-byte alignment read through an aligned copy** (`tbuf_shadow`): [Buffer textures at offsets below 16 bytes](../../../docs/reference/rendering.md#buffer-textures-at-offsets-below-16-bytes).
-- **The Unreal HttpManagerThread polls its eventfd every 100 ms from boot** (`hle_net.c`), so a stop of all threads never found it in game code and the companion's load plan was never installed: [Socket Poll waits are native waits](../../../docs/reference/threads.md#socket-poll-waits-are-native-waits) ([issue #610](https://github.com/jacojayy/Kiwi-Native/issues/610)). <!-- PEANUTS -->
+- **The Unreal HttpManagerThread polls its eventfd every 100 ms from boot** (`hle_net.c`), so a stop of all threads never found it in game code and the companion's load plan was never installed: [Socket Poll waits are native waits](../../../docs/reference/threads.md#socket-poll-waits-are-native-waits) ([issue #610](https://github.com/jacojayy/Kiwi-Native/issues/610)). <!-- KIWI -->
 
 ## Open
 

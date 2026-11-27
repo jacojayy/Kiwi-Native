@@ -1,4 +1,4 @@
-# Written by peanuts/scripts/issue_forms.py: change that script, then run it.
+# Written by kiwi/scripts/issue_forms.py: change that script, then run it.
 name: "Feature request"
 description: "Suggest something the app could do: performance, picture, controls, the second screen, the library, builds, mods, saves and more"
 labels: ["feature-request"]

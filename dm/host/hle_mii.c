@@ -29,10 +29,10 @@ typedef struct __attribute__((packed)) {
 } mii_charinfo;
 _Static_assert(sizeof(mii_charinfo) == 0x58, "nn::mii::CharInfo is 0x58 bytes");
 
-// PEANUTS begin: the console's own six default Miis (three men, three women: their hair, skin, eyes and favourite colours), not one Mii six times.
+// KIWI begin: the console's own six default Miis (three men, three women: their hair, skin, eyes and favourite colours), not one Mii six times.
 // Mario Kart 8 Deluxe's Select a Mii showed the host's copies, the first a blank tile (GitHub request: Mii heads from the firmware's MiiModel)
 // The console's six default Miis (nn::mii DefaultMii), as StoreData::BuildDefault turns them into a CharInfo: colours through the Ver3 tables (eyebrow_y as is: a CharInfo keeps it 3 above the StoreData's).
-// From Ryujinx (MIT; via Eden, GPL-3.0-or-later, src/core/hle/service/mii/types/raw_data.cpp), generated; PEANUTS
+// From Ryujinx (MIT; via Eden, GPL-3.0-or-later, src/core/hle/service/mii/types/raw_data.cpp), generated; KIWI
 static const struct mii_def { uint8_t faceline_type, faceline_color, faceline_wrinkle, faceline_make, hair_type, hair_color, hair_flip, eye_type, eye_color, eye_scale, eye_aspect, eye_rotate, eye_x, eye_y,
     eyebrow_type, eyebrow_color, eyebrow_scale, eyebrow_aspect, eyebrow_rotate, eyebrow_x, eyebrow_y, nose_type, nose_scale, nose_y, mouth_type, mouth_color, mouth_scale, mouth_aspect, mouth_y,
     mustache_type, beard_type, beard_color, mustache_scale, mustache_y, glass_type, glass_color, glass_scale, glass_y, mole_type, mole_scale, mole_x, mole_y, height, build, gender, favorite_color,
@@ -44,17 +44,17 @@ static const struct mii_def { uint8_t faceline_type, faceline_color, faceline_wr
     {0, 0, 0, 0, 14, 7, 0, 4, 13, 4, 3, 3, 2, 12, 0, 7, 4, 3, 6, 2, 10, 1, 4, 9, 23, 19, 4, 3, 13, 0, 0, 8, 4, 10, 0, 8, 4, 10, 0, 4, 2, 20, 64, 64, 1, 6, 0, 0, 0},
     {0, 0, 0, 0, 12, 1, 0, 4, 8, 4, 3, 3, 2, 12, 0, 1, 4, 3, 6, 2, 10, 1, 4, 9, 23, 19, 4, 3, 13, 0, 0, 8, 4, 10, 0, 8, 4, 10, 0, 4, 2, 20, 64, 64, 1, 7, 0, 0, 0},
 };
-// PEANUTS end
+// KIWI end
 // index ≥ 0: default Mii <index> (a fixed create ID, so a game that saved one finds the same Mii again); < 0: a random Mii (a fresh one)
 static void mii_default(mii_charinfo *c, int gender, int index) {
     memset(c, 0, sizeof *c);
     uint64_t a = index >= 0 ? 0x4d49494e44454641ull + (uint64_t)index : dm_entropy64(), b = index >= 0 ? 0x554c54444d484f53ull : dm_entropy64();
     memcpy(c->create_id, &a, 8); memcpy(c->create_id + 8, &b, 8);
     c->create_id[6] = (uint8_t)((c->create_id[6] & 0x0f) | 0x40); c->create_id[8] = (uint8_t)((c->create_id[8] & 0x3f) | 0x80);
-    // PEANUTS: the favourite colour comes from mii_defs below (the index-based colour that was set here was always overwritten)
+    // KIWI: the favourite colour comes from mii_defs below (the index-based colour that was set here was always overwritten)
     static const char name[] = "no name";
     for (size_t i = 0; i < sizeof name - 1; i++) c->nickname[i] = (uint16_t)name[i];
-    if (index >= 0 && index < 6) {   // PEANUTS: a default Mii from the console's table (mii_defs)
+    if (index >= 0 && index < 6) {   // KIWI: a default Mii from the console's table (mii_defs)
         const struct mii_def *d = &mii_defs[index];
         c->faceline_type = d->faceline_type; c->faceline_color = d->faceline_color; c->faceline_wrinkle = d->faceline_wrinkle; c->faceline_make = d->faceline_make;
         c->hair_type = d->hair_type; c->hair_color = d->hair_color; c->hair_flip = d->hair_flip;
@@ -82,18 +82,18 @@ static void mii_default(mii_charinfo *c, int gender, int index) {
 }
 
 // The object keeps its service pointer at +0, which the constructor zeroes and the destructor releases through its vtable when set; the host never sets it
-HLE_FORCE_BIG("_ZN2nn3mii8Database10InitializeEv", "mii:u service; the host's database: the six default Miis, none of the console's own", Result, h_mii_Init, void *self) {   // PEANUTS: big stack (LOG, fopen)
+HLE_FORCE_BIG("_ZN2nn3mii8Database10InitializeEv", "mii:u service; the host's database: the six default Miis, none of the console's own", Result, h_mii_Init, void *self) {   // KIWI: big stack (LOG, fopen)
     (void)self; LOG("mii: Database::Initialize (the six default Miis, none of the console's own)"); return RES_OK;
 }
 HLE_FORCE("_ZN2nn3mii8Database8FinalizeEv", "mii:u service; nothing to release", void, h_mii_Fin, void *self) { (void)self; }
 HLE_FORCE("_ZNK2nn3mii8Database11IsAvailableEv", "mii:u service; always available", int, h_mii_Avail, const void *self) { (void)self; return 1; }
 HLE_FORCE("_ZN2nn3mii8Database9IsUpdatedEi", "mii:u service; the empty database never changes", int, h_mii_Updated, void *self, int src) { (void)self; (void)src; return 0; }
 HLE_FORCE("_ZNK2nn3mii8Database14IsFullDatabaseEv", "mii:u service; empty, so not full", int, h_mii_Full, const void *self) { (void)self; return 0; }
-// PEANUTS begin: the player's own Miis, made in the Android app's Settings › Miis (dev.peanuts.mii.MiiStore) and handed over as DM_MII_DB=<file>: "PNMII1\0\0", a u32
+// KIWI begin: the player's own Miis, made in the Android app's Settings › Miis (hernandez.kiwinative.kiwi.mii.MiiStore) and handed over as DM_MII_DB=<file>: "PNMII1\0\0", a u32
 // count, then that many 0x58-byte CharInfo records. They are the console's database (source 1): Database::Get lists them before the six default Miis, GetIndex and
 // UpdateLatest find them by create ID. A record that fails the ranges CharInfoRaw::Verify checks is skipped (a game's CharInfoAccessor::IsValid would refuse it)
 enum { MII_DB_MAX = 100 };
-static mii_charinfo g_mii_db[MII_DB_MAX]; static int g_mii_db_n;   // PEANUTS: 0 until mii_db_load publishes it
+static mii_charinfo g_mii_db[MII_DB_MAX]; static int g_mii_db_n;   // KIWI: 0 until mii_db_load publishes it
 static int mii_ok(const mii_charinfo *c) {
     static const struct { uint8_t off, max; } r[] = {
         {38, 3}, {39, 11}, {40, 1}, {41, 127}, {42, 127}, {43, 1}, {44, 3}, {45, 11}, {46, 9}, {47, 11}, {48, 11}, {49, 131}, {50, 99}, {51, 1},
@@ -105,7 +105,7 @@ static int mii_ok(const mii_charinfo *c) {
     if (c->eyebrow_y < 3 || c->eyebrow_y - 3 > 15 || !c->nickname[0]) return 0;
     return 1;
 }
-// PEANUTS: loaded once under pthread_once (the array is complete before the count is published), only from the big-stack take-overs
+// KIWI: loaded once under pthread_once (the array is complete before the count is published), only from the big-stack take-overs
 static pthread_once_t g_mii_once = PTHREAD_ONCE_INIT;
 static void mii_db_load(void) {
     int n_ok = 0;
@@ -128,13 +128,13 @@ static int mii_db_find(const void *info) {
     for (int i = 0; info && i < mii_db(); i++) if (!memcmp(g_mii_db[i].create_id, info, 16)) return i;
     return -1;
 }
-// PEANUTS end
+// KIWI end
 // Source flags: 1 the console's database (empty here), 2 the six default Miis every console has. Mario Kart 8 Deluxe asks for the defaults with room for 6 and never reads the count
 // (main+0x81e954): its boot-time list of Mii icons (main+0x419dc8) builds a head for each of the six, and zeroed entries failed the model's CharInfo check
 enum { MII_SRC_DATABASE = 1, MII_SRC_DEFAULT = 2, MII_DEFAULTS = 6 };
 static int mii_get(void *buf, int n, int src, size_t stride) {
     int k = 0;
-    for (int i = 0; (src & MII_SRC_DATABASE) && buf && k < n && i < mii_db(); i++, k++) {   // PEANUTS: the player's own Miis first (source 0 = database)
+    for (int i = 0; (src & MII_SRC_DATABASE) && buf && k < n && i < mii_db(); i++, k++) {   // KIWI: the player's own Miis first (source 0 = database)
         uint8_t *e = (uint8_t *)buf + (size_t)k * stride;
         memcpy(e, &g_mii_db[i], sizeof(mii_charinfo));
         if (stride > sizeof(mii_charinfo)) { uint32_t source = 0; memcpy(e + sizeof(mii_charinfo), &source, 4); }
@@ -146,20 +146,20 @@ static int mii_get(void *buf, int n, int src, size_t stride) {
     }
     return k;
 }
-HLE_FORCE_BIG("_ZNK2nn3mii8Database8GetCountEi", "mii:u service; the player's Miis and the six default Miis", int, h_mii_Count, const void *self, int src) {   // PEANUTS: big stack (LOG, fopen)
-    (void)self; return (src & MII_SRC_DATABASE ? mii_db() : 0) + (src & MII_SRC_DEFAULT ? MII_DEFAULTS : 0);   // PEANUTS: the player's Miis count too
+HLE_FORCE_BIG("_ZNK2nn3mii8Database8GetCountEi", "mii:u service; the player's Miis and the six default Miis", int, h_mii_Count, const void *self, int src) {   // KIWI: big stack (LOG, fopen)
+    (void)self; return (src & MII_SRC_DATABASE ? mii_db() : 0) + (src & MII_SRC_DEFAULT ? MII_DEFAULTS : 0);   // KIWI: the player's Miis count too
 }
-HLE_FORCE_BIG("_ZN2nn3mii8Database3GetEPiPNS0_15CharInfoElementEii", "mii:u service; the six default Miis", Result, h_mii_GetE, void *self, int *out, void *buf, int n, int src) {   // PEANUTS: big stack (LOG, fopen)
+HLE_FORCE_BIG("_ZN2nn3mii8Database3GetEPiPNS0_15CharInfoElementEii", "mii:u service; the six default Miis", Result, h_mii_GetE, void *self, int *out, void *buf, int n, int src) {   // KIWI: big stack (LOG, fopen)
     (void)self; *out = mii_get(buf, n, src, sizeof(mii_charinfo) + 4); return RES_OK;
 }
-HLE_FORCE_BIG("_ZN2nn3mii8Database3GetEPiPNS0_8CharInfoEii", "mii:u service; the six default Miis", Result, h_mii_Get, void *self, int *out, void *buf, int n, int src) {   // PEANUTS: big stack (LOG, fopen)
+HLE_FORCE_BIG("_ZN2nn3mii8Database3GetEPiPNS0_8CharInfoEii", "mii:u service; the six default Miis", Result, h_mii_Get, void *self, int *out, void *buf, int n, int src) {   // KIWI: big stack (LOG, fopen)
     (void)self; *out = mii_get(buf, n, src, sizeof(mii_charinfo)); return RES_OK;
 }
-HLE_FORCE_BIG("_ZNK2nn3mii8Database8GetIndexEPiRKNS0_8CharInfoE", "mii:u service; the player's Miis by create ID", Result, h_mii_Index, const void *self, int *out, const void *info) {   // PEANUTS: big stack (LOG, fopen)
-    (void)self; int i = mii_db_find(info); *out = i; return i >= 0 ? RES_OK : MII_RES_NOT_FOUND;   // PEANUTS
+HLE_FORCE_BIG("_ZNK2nn3mii8Database8GetIndexEPiRKNS0_8CharInfoE", "mii:u service; the player's Miis by create ID", Result, h_mii_Index, const void *self, int *out, const void *info) {   // KIWI: big stack (LOG, fopen)
+    (void)self; int i = mii_db_find(info); *out = i; return i >= 0 ? RES_OK : MII_RES_NOT_FOUND;   // KIWI
 }
-HLE_FORCE_BIG("_ZNK2nn3mii8Database12UpdateLatestEPNS0_8CharInfoEi", "mii:u service; the player's Miis by create ID", Result, h_mii_Latest, const void *self, void *info, int src) {   // PEANUTS: big stack (LOG, fopen)
-    (void)self; int i = (src & MII_SRC_DATABASE) ? mii_db_find(info) : -1;   // PEANUTS: a saved Mii of the player's comes back as it is now
+HLE_FORCE_BIG("_ZNK2nn3mii8Database12UpdateLatestEPNS0_8CharInfoEi", "mii:u service; the player's Miis by create ID", Result, h_mii_Latest, const void *self, void *info, int src) {   // KIWI: big stack (LOG, fopen)
+    (void)self; int i = (src & MII_SRC_DATABASE) ? mii_db_find(info) : -1;   // KIWI: a saved Mii of the player's comes back as it is now
     if (i < 0) return MII_RES_NOT_FOUND;
     memcpy(info, &g_mii_db[i], sizeof(mii_charinfo)); return RES_OK;
 }
@@ -171,10 +171,10 @@ HLE_FORCE("_ZNK2nn3mii8Database12BuildDefaultEPNS0_8CharInfoEi", "mii:u service;
     (void)self; mii_default(out, index >= 3, index < 0 || index >= MII_DEFAULTS ? 0 : index); return RES_OK;
 }
 HLE_FORCE("_ZN2nn3mii8Database6FormatEv", "mii:u service; the database is already empty", Result, h_mii_Format, void *self) { (void)self; return RES_OK; }
-HLE_FORCE_BIG("_ZN2nn3mii8Database6ImportEPKvm", "mii:u service; importing needs the system's test mode", Result, h_mii_Import, void *self, const void *p, size_t n) {   // PEANUTS: big stack (LOG, fopen)
+HLE_FORCE_BIG("_ZN2nn3mii8Database6ImportEPKvm", "mii:u service; importing needs the system's test mode", Result, h_mii_Import, void *self, const void *p, size_t n) {   // KIWI: big stack (LOG, fopen)
     (void)self; (void)p; LOG("[RED] mii: Database::Import of %zu bytes refused (the host has no test mode)", n); return MII_RES_TEST_MODE;
 }
-HLE_FORCE_BIG("_ZNK2nn3mii8Database6ExportEPvm", "mii:u service; nothing to export", Result, h_mii_Export, const void *self, void *p, size_t n) {   // PEANUTS: big stack (LOG, fopen)
+HLE_FORCE_BIG("_ZNK2nn3mii8Database6ExportEPvm", "mii:u service; nothing to export", Result, h_mii_Export, const void *self, void *p, size_t n) {   // KIWI: big stack (LOG, fopen)
     (void)self; (void)p; (void)n; LOG("[RED] mii: Database::Export refused"); return MII_RES_TEST_MODE;
 }
 // MiiModel system data (0100000000000802) stand-in. The Mii rendering code an application links (Mario Kart 8 Deluxe 4.0.0: main+0x8f1400..+0x8fc000) reads one texture file

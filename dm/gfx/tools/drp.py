@@ -18,7 +18,7 @@ described by the finalpantasy/new-pokemon-snap-recomp census, which decrypts hea
 The Oodle streams are decoded by the decoder the caller passes (oodle(compressed, raw length) → the bytes): the split hands over its own, the game's decoder in the Mac host or the ooz
 worker (dm/third_party/ooz's unoodle, DM_OODLE_OOZ), so this file carries no Oodle code of its own. New Pokémon Snap's streams are Kraken and Mermaid, both of which ooz reads.
 Usage: the shader split takes entries() (its shaders); no other tool reads the format yet.
-PEANUTS(upstream-candidate): a Kiwi Native reader (Kiwi Native has none for this title)."""
+KIWI(upstream-candidate): a Kiwi Native reader (Kiwi Native has none for this title)."""
 import struct, sys, zlib
 
 MAGIC = 0x7F0E5359           # Crc32("DRPF")

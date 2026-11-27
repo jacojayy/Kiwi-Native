@@ -9,7 +9,7 @@
 #include <string.h>
 #include <time.h>
 #include "vka_fd_alias.h"
-#include "../../peanuts/peanuts_memory_probe.h"   // PEANUTS: guest-buffer remap probe (#47)
+#include "../../kiwi/kiwi_memory_probe.h"   // KIWI: guest-buffer remap probe (#47)
 #include "vka_tlsig.h"
 #include "vka_auto.h"
 _Static_assert(VKA_DRV_QCOM == VK_DRIVER_ID_QUALCOMM_PROPRIETARY && VKA_DRV_TURNIP == VK_DRIVER_ID_MESA_TURNIP, "vka_auto.h driver IDs");
@@ -89,7 +89,7 @@ uint64_t vka_fp_host(const char *who) {
 }
 // The calls of vk.* that compile go through these, so they compile with the host's FPCR on whatever thread calls them (the replay, presents, the NaN scan, NDSR,
 // a replay run inline on the game's thread), and the caller's FPCR is put back afterwards
-// PEANUTS begin: optional driver-call tracing also covers helper pipelines and shader variants outside vka_pso.c.
+// KIWI begin: optional driver-call tracing also covers helper pipelines and shader variants outside vka_pso.c.
 static int g_compile_trace;
 static void compile_trace(const char *kind, uint64_t begin, uint64_t end, VkResult result, uint32_t count, size_t bytes) {
     VLOG("compile trace kind=%s start=%llu end=%llu duration=%llu tid=%ld result=%d count=%u bytes=%zu", kind,
@@ -124,7 +124,7 @@ static void fp_wrap_compiles(void) {
     if ((g_cgp = vk.vkCreateGraphicsPipelines)) vk.vkCreateGraphicsPipelines = fp_cgp;
     if ((g_ccp = vk.vkCreateComputePipelines)) vk.vkCreateComputePipelines = fp_ccp;
 }
-// PEANUTS end
+// KIWI end
 static int init_once(void) {
     void *lib = vka_driver_open();   // DM_VK_DRIVER: a custom driver through libadrenotools (vka_driver.c); NULL = the system's
     if (!lib) lib = dlopen("libvulkan.so", RTLD_NOW | RTLD_LOCAL);
@@ -146,7 +146,7 @@ static int init_once(void) {
         for (uint32_t i = 0; i < nl; i++) if (!strcmp(lp[i].layerName, layer)) nlayer = 1;
         free(lp); VLOG("DM_VK_VALIDATE: validation layer %s", nlayer ? "on" : "not installed");
     }
-    VkApplicationInfo ai = {VK_STRUCTURE_TYPE_APPLICATION_INFO, .pApplicationName = "nxnative", .pEngineName = "nxnative",   // PEANUTS: bounded draw ranges
+    VkApplicationInfo ai = {VK_STRUCTURE_TYPE_APPLICATION_INFO, .pApplicationName = "nxnative", .pEngineName = "nxnative",   // KIWI: bounded draw ranges
         .apiVersion = api >= VK_API_VERSION_1_4 ? VK_API_VERSION_1_4 : VK_API_VERSION_1_3};
     VkInstanceCreateInfo ici = {VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, .pApplicationInfo = &ai, .enabledExtensionCount = niext, .ppEnabledExtensionNames = iext,
                                 .enabledLayerCount = nlayer, .ppEnabledLayerNames = &layer};
@@ -191,7 +191,7 @@ static int init_once(void) {
     if (V.display_timing) dext[ndext++] = VK_GOOGLE_DISPLAY_TIMING_EXTENSION_NAME;
     // The draw path (vka_draw.c): each one optional, with a fallback when absent
     int x_push = has_ext(de, nde, VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME), x_vin = has_ext(de, nde, VK_EXT_VERTEX_INPUT_DYNAMIC_STATE_EXTENSION_NAME);
-    int core_m5 = ai.apiVersion >= VK_API_VERSION_1_4 && V.props.apiVersion >= VK_API_VERSION_1_4;   // PEANUTS: bounded draw ranges
+    int core_m5 = ai.apiVersion >= VK_API_VERSION_1_4 && V.props.apiVersion >= VK_API_VERSION_1_4;   // KIWI: bounded draw ranges
     int x_m5 = !core_m5 && has_ext(de, nde, VK_KHR_MAINTENANCE_5_EXTENSION_NAME);
     if (x_m5) dext[ndext++] = VK_KHR_MAINTENANCE_5_EXTENSION_NAME;
     const char *x_rob = has_ext(de, nde, VK_KHR_ROBUSTNESS_2_EXTENSION_NAME) ? VK_KHR_ROBUSTNESS_2_EXTENSION_NAME : has_ext(de, nde, VK_EXT_ROBUSTNESS_2_EXTENSION_NAME) ? VK_EXT_ROBUSTNESS_2_EXTENSION_NAME : NULL;
@@ -222,11 +222,11 @@ static int init_once(void) {
     const char *fault_env = getenv("DM_VK_DEVICE_FAULT");
     int x_fault = has_ext(de, nde, VK_EXT_DEVICE_FAULT_EXTENSION_NAME) && !(fault_env && !strcmp(fault_env, "0"));
     if (x_fault) dext[ndext++] = VK_EXT_DEVICE_FAULT_EXTENSION_NAME;
-    // PEANUTS: VK_EXT_transform_feedback for NVN transform feedback (vka_tf.c). DM_VK_XFB=0 (restart) leaves it off: such draws are then skipped or drawn without capture, as before
+    // KIWI: VK_EXT_transform_feedback for NVN transform feedback (vka_tf.c). DM_VK_XFB=0 (restart) leaves it off: such draws are then skipped or drawn without capture, as before
     const char *xfb_env = getenv("DM_VK_XFB");
     int x_xfb = has_ext(de, nde, VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME) && !(xfb_env && !strcmp(xfb_env, "0"));
     if (x_xfb) dext[ndext++] = VK_EXT_TRANSFORM_FEEDBACK_EXTENSION_NAME;
-    // PEANUTS: VK_EXT_attachment_feedback_loop_layout + _dynamic_state: a draw that samples a level its own pass draws into (Breath of the Wild's decals read the G-buffer
+    // KIWI: VK_EXT_attachment_feedback_loop_layout + _dynamic_state: a draw that samples a level its own pass draws into (Breath of the Wild's decals read the G-buffer
     // they write) says so through vkCmdSetAttachmentFeedbackLoopEnableEXT (vka_draw.c), and a tiling driver (Turnip) then renders that pass in system memory, where the reads
     // see the pass's own writes: in tile memory they read what the image held before the pass. DM_VK_FB_LOOP=0 (restart) leaves both off
     const char *fbl_env = getenv("DM_VK_FB_LOOP");
@@ -239,7 +239,7 @@ static int init_once(void) {
 
     // Every feature the device has, but robustness and capture-replay (they cost and nothing needs them); the shader side takes what it needs from the same device
     VkPhysicalDeviceMapMemoryPlacedFeaturesEXT fmp = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAP_MEMORY_PLACED_FEATURES_EXT};
-    VkPhysicalDeviceMaintenance5Features fm5 = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_5_FEATURES};   // PEANUTS: bounded draw ranges
+    VkPhysicalDeviceMaintenance5Features fm5 = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_5_FEATURES};   // KIWI: bounded draw ranges
     VkPhysicalDeviceVertexInputDynamicStateFeaturesEXT fvin = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_INPUT_DYNAMIC_STATE_FEATURES_EXT};
     VkPhysicalDeviceRobustness2FeaturesKHR frob = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_KHR};
     VkPhysicalDeviceIndexTypeUint8Features fi8 = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INDEX_TYPE_UINT8_FEATURES};
@@ -247,16 +247,16 @@ static int init_once(void) {
     VkPhysicalDeviceGraphicsPipelineLibraryFeaturesEXT fgpl = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GRAPHICS_PIPELINE_LIBRARY_FEATURES_EXT};
     VkPhysicalDeviceMeshShaderFeaturesEXT fmesh = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT};
     VkPhysicalDeviceFaultFeaturesEXT ffault = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FAULT_FEATURES_EXT};
-    VkPhysicalDeviceTransformFeedbackFeaturesEXT fxfb = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT};   // PEANUTS: transform feedback (vka_tf.c)
-    VkPhysicalDeviceAttachmentFeedbackLoopLayoutFeaturesEXT ffbl = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ATTACHMENT_FEEDBACK_LOOP_LAYOUT_FEATURES_EXT};   // PEANUTS: feedback loops
+    VkPhysicalDeviceTransformFeedbackFeaturesEXT fxfb = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT};   // KIWI: transform feedback (vka_tf.c)
+    VkPhysicalDeviceAttachmentFeedbackLoopLayoutFeaturesEXT ffbl = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ATTACHMENT_FEEDBACK_LOOP_LAYOUT_FEATURES_EXT};   // KIWI: feedback loops
     VkPhysicalDeviceAttachmentFeedbackLoopDynamicStateFeaturesEXT ffbd = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ATTACHMENT_FEEDBACK_LOOP_DYNAMIC_STATE_FEATURES_EXT};
     void *chain = placed ? &fmp : NULL;
 #define LINK(on, st) if (on) { (st).pNext = chain; chain = &(st); }
     struct { VkStructureType sType; void *pNext; VkBool32 queuePerfHint; } fph = {(VkStructureType)1000302001};   // VkPhysicalDeviceQueuePerfHintFeaturesQCOM (not in the NDK's headers yet)
     LINK(x_vin, fvin) LINK(x_rob, frob) LINK(x_i8, fi8) LINK(x_div, fdiv) LINK(x_ph, fph) LINK(x_gpl, fgpl) LINK(x_mesh, fmesh) LINK(x_fault, ffault)
-    LINK(core_m5 || x_m5, fm5)   // PEANUTS: bounded draw ranges
-    LINK(x_xfb, fxfb)   // PEANUTS: transform feedback (vka_tf.c)
-    LINK(x_fbl, ffbl) LINK(x_fbl, ffbd)   // PEANUTS: feedback loops (vka_draw.c)
+    LINK(core_m5 || x_m5, fm5)   // KIWI: bounded draw ranges
+    LINK(x_xfb, fxfb)   // KIWI: transform feedback (vka_tf.c)
+    LINK(x_fbl, ffbl) LINK(x_fbl, ffbd)   // KIWI: feedback loops (vka_draw.c)
 #undef LINK
     VkPhysicalDeviceVulkan13Features f13 = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES, .pNext = chain};
     VkPhysicalDeviceVulkan12Features f12 = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES, .pNext = &f13};
@@ -275,8 +275,8 @@ static int init_once(void) {
     V.tess = f2.features.tessellationShader; V.depth_clamp = f2.features.depthClamp; V.fill_lines = f2.features.fillModeNonSolid; V.depth_bias_clamp = f2.features.depthBiasClamp;
     V.multi_vp = f2.features.multiViewport; V.a2c = 1; V.vstores = f2.features.vertexPipelineStoresAndAtomics; V.fstores = f2.features.fragmentStoresAndAtomics; V.mesh = x_mesh && fmesh.meshShader; V.task = V.mesh && fmesh.taskShader;
     if (!f12.timelineSemaphore || !f13.dynamicRendering) { VRED("the device lacks timeline semaphores (%d) or dynamic rendering (%d)", f12.timelineSemaphore, f13.dynamicRendering); return 0; }
-    fxfb.geometryStreams = VK_FALSE; V.xfb = x_xfb && fxfb.transformFeedback;   // PEANUTS: transform feedback (vka_tf.c): captures of stream 0 only
-    V.fb_loop = x_fbl && ffbl.attachmentFeedbackLoopLayout && ffbd.attachmentFeedbackLoopDynamicState;   // PEANUTS: feedback loops (vka_draw.c)
+    fxfb.geometryStreams = VK_FALSE; V.xfb = x_xfb && fxfb.transformFeedback;   // KIWI: transform feedback (vka_tf.c): captures of stream 0 only
+    V.fb_loop = x_fbl && ffbl.attachmentFeedbackLoopLayout && ffbd.attachmentFeedbackLoopDynamicState;   // KIWI: feedback loops (vka_draw.c)
     V.imageless = f12.imagelessFramebuffer;   // (enabled with the rest of f12)
     V.draw_count = f12.drawIndirectCount;
     V.minmax = f12.samplerFilterMinmax;   // (enabled with the rest of f12)
@@ -290,11 +290,11 @@ static int init_once(void) {
 #define D(f) vk.f = (PFN_##f)vk.vkGetDeviceProcAddr(V.dev, #f);
     VKA_DEVICE_FNS(D)
 #undef D
-    if (!fm5.maintenance5) vk.vkCmdBindIndexBuffer2KHR = NULL;   // PEANUTS: bounded draw ranges
+    if (!fm5.maintenance5) vk.vkCmdBindIndexBuffer2KHR = NULL;   // KIWI: bounded draw ranges
     else if (core_m5) vk.vkCmdBindIndexBuffer2KHR = (PFN_vkCmdBindIndexBuffer2KHR)vk.vkGetDeviceProcAddr(V.dev, "vkCmdBindIndexBuffer2");
     VLOG("bounded index buffer bindings: %s", vk.vkCmdBindIndexBuffer2KHR ? (core_m5 ? "core 1.4" : "KHR_maintenance5") : "unavailable");
-    if (V.xfb && !(vk.vkCmdBindTransformFeedbackBuffersEXT && vk.vkCmdBeginTransformFeedbackEXT && vk.vkCmdEndTransformFeedbackEXT)) V.xfb = 0;   // PEANUTS: transform feedback (vka_tf.c)
-    if (V.fb_loop && !vk.vkCmdSetAttachmentFeedbackLoopEnableEXT) V.fb_loop = 0;   // PEANUTS: feedback loops
+    if (V.xfb && !(vk.vkCmdBindTransformFeedbackBuffersEXT && vk.vkCmdBeginTransformFeedbackEXT && vk.vkCmdEndTransformFeedbackEXT)) V.xfb = 0;   // KIWI: transform feedback (vka_tf.c)
+    if (V.fb_loop && !vk.vkCmdSetAttachmentFeedbackLoopEnableEXT) V.fb_loop = 0;   // KIWI: feedback loops
     VLOG("attachment feedback loops (VK_EXT_attachment_feedback_loop_layout + _dynamic_state): %s", V.fb_loop ? "on: a draw sampling its own attachment says so (DM_VK_FB_LOOP=0: off)" :
          x_fbl ? "extensions without the features" : fbl_env && !strcmp(fbl_env, "0") ? "off (DM_VK_FB_LOOP=0)" : "not on this device");
     fp_wrap_compiles();
@@ -334,9 +334,9 @@ static int init_once(void) {
     VLOG("driver: %s (%s), driver ID %d, conformance %u.%u.%u.%u, driver version %#x; %s", pdr.driverName, pdr.driverInfo, pdr.driverID, pdr.conformanceVersion.major,
          pdr.conformanceVersion.minor, pdr.conformanceVersion.subminor, pdr.conformanceVersion.patch, V.props.driverVersion, vka_driver_tag() ? "custom (DM_VK_DRIVER)" : "the system's");
     V.driver_id = (int)pdr.driverID;
-    // PEANUTS: DM_VK_TU_FLUSHALL=1 (a game option) has the launcher put TU_DEBUG=flushall in the environment (GameActivity.settingsEnv): say what Turnip got
+    // KIWI: DM_VK_TU_FLUSHALL=1 (a game option) has the launcher put TU_DEBUG=flushall in the environment (GameActivity.settingsEnv): say what Turnip got
     if (getenv("DM_VK_TU_FLUSHALL") && V.driver_id == VK_DRIVER_ID_MESA_TURNIP) VLOG("DM_VK_TU_FLUSHALL: TU_DEBUG=%s", getenv("TU_DEBUG") ? getenv("TU_DEBUG") : "(unset)");
-    // PEANUTS (PR #164): PurpleVK T30 reports 30.2 MHz on this A650, but its timestamp queries read the 19.2 MHz always-on counter (measured against CLOCK_MONOTONIC).
+    // KIWI (PR #164): PurpleVK T30 reports 30.2 MHz on this A650, but its timestamp queries read the 19.2 MHz always-on counter (measured against CLOCK_MONOTONIC).
     if (V.driver_id == VK_DRIVER_ID_MESA_TURNIP && V.props.driverVersion == 0x06802063 &&
         strstr(pdr.driverInfo, "git-62ac221a33") && strstr(V.props.deviceName, "Adreno (TM) 650") &&
         V.props.limits.timestampPeriod == 33.112583160f) {
@@ -363,7 +363,7 @@ static int init_once(void) {
          p11.subgroupSupportedStages & VK_SHADER_STAGE_GEOMETRY_BIT ? "yes" : "NO", p11.subgroupSupportedStages & VK_SHADER_STAGE_FRAGMENT_BIT ? "yes" : "NO", p11.subgroupSupportedStages & VK_SHADER_STAGE_VERTEX_BIT ? "yes" : "NO",
          p11.subgroupSupportedOperations, p11.subgroupQuadOperationsInAllStages ? "yes" : "no", p13.requiredSubgroupSizeStages);
     V.subgroup_stages = p11.subgroupSupportedStages;
-    V.subgroup_quad = !!(p11.subgroupSupportedOperations & VK_SUBGROUP_FEATURE_QUAD_BIT);   // PEANUTS: vka_shader.c quad_shfl
+    V.subgroup_quad = !!(p11.subgroupSupportedOperations & VK_SUBGROUP_FEATURE_QUAD_BIT);   // KIWI: vka_shader.c quad_shfl
     V.cache_ctl = f13.pipelineCreationCacheControl;
     V.subgroup_req_stages = f13.subgroupSizeControl ? p13.requiredSubgroupSizeStages : 0;
     V.subgroup_size = p11.subgroupSize; V.subgroup_min = p13.minSubgroupSize ? p13.minSubgroupSize : p11.subgroupSize; V.subgroup_max = p13.maxSubgroupSize ? p13.maxSubgroupSize : p11.subgroupSize;
@@ -394,16 +394,16 @@ static int init_once(void) {
     V.guest_type = vka_mem_type(~0u, HV | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT, 0);
     if (V.guest_type == UINT32_MAX) V.guest_type = vka_mem_type(~0u, HV | VK_MEMORY_PROPERTY_HOST_CACHED_BIT, 0);
     if (V.guest_type == UINT32_MAX) V.guest_type = vka_mem_type(~0u, HV, 0);
-    // PEANUTS begin: an advertised placed-map feature can still reject guest pool remaps (#47, PanVK).
+    // KIWI begin: an advertised placed-map feature can still reject guest pool remaps (#47, PanVK).
     if (placed && V.placed) {
-        char why[160]; V.placed = peanuts_placed_probe(&vk, V.dev, V.guest_type, V.bda, V.placed_align, why, sizeof why);
+        char why[160]; V.placed = kiwi_placed_probe(&vk, V.dev, V.guest_type, V.bda, V.placed_align, why, sizeof why);
         VLOG("guest placed memory: %s", why);
         if (!V.placed) {
             V.placed_range = V.unmap_reserve = 0;
             if (x_fd && vka_fd_enabled()) { V.fd_alias = vka_fd_probe(&vk, V.pd, V.dev, &V.memp, V.bda, why, sizeof why); VLOG("exported guest memory alias: %s (%s)", V.fd_alias ? "on" : "unavailable", why); }
         }
     }
-    // PEANUTS end
+    // KIWI end
     V.upload_type = V.guest_type;
     V.local_type = vka_mem_type(~0u, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 0);
 
@@ -424,7 +424,7 @@ static int init_once(void) {
     void vka_driver_notes(void); vka_driver_notes();   // what driver_open did before the log was open (the Turnip UBWC hint)
     if (!V.placed && !V.fd_alias) VRED("no placed maps or exported guest memory alias: guest memory stays anonymous and the GPU sees no memory pool");
     if (!swap) VRED("no VK_KHR_swapchain: nothing is presented");
-    vka_rs_init();   // PEANUTS: DM_RES_SCALE, and the device's depth blits said in the log (vka_tex.c vka_resscale.inc)
+    vka_rs_init();   // KIWI: DM_RES_SCALE, and the device's depth blits said in the log (vka_tex.c vka_resscale.inc)
     vka_present_init();
     return 1;
 }
@@ -908,7 +908,7 @@ static void *completion_main(void *arg) {
         for (uint64_t f = done + 1; f <= v; f++) {
             post_rec *p = &g_post[f % POST_RING];
             if (p->fence == f) {
-                // PEANUTS: post_run frees ops. The next submission may legitimately allocate the same address;
+                // KIWI: post_run frees ops. The next submission may legitimately allocate the same address;
                 // comparing it with the previous, freed address cannot diagnose a repeated completion.
                 if (p->run) p->run(p->ops, p->n); else free(p->ops);
             }
@@ -943,8 +943,8 @@ static int sblk_idle(const sblk *b, uint64_t done, uint64_t udone) { return b->f
 static sblk *sblk_new(VkDeviceSize n) {
     sblk *b = calloc(1, sizeof *b); b->size = n;
     VkBufferCreateInfo bi = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, .size = n, .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
-                                                                         VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |   // expanded indices and instance tables   // PEANUTS: bounded draw ranges
-                                                                         VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT};   // indirect: the {count, 1, 1} copies of indirect mesh draws (vka_exec.c mdx_copy). PEANUTS: texel: the copy of a buffer texture (vka_draw.c tbuf_view)
+                                                                         VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |   // expanded indices and instance tables   // KIWI: bounded draw ranges
+                                                                         VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT};   // indirect: the {count, 1, 1} copies of indirect mesh draws (vka_exec.c mdx_copy). KIWI: texel: the copy of a buffer texture (vka_draw.c tbuf_view)
     if (vk.vkCreateBuffer(V.dev, &bi, NULL, &b->buf)) { free(b); return NULL; }
     VkMemoryRequirements mr; vk.vkGetBufferMemoryRequirements(V.dev, b->buf, &mr);
     uint32_t t = vka_mem_type(mr.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT, 0);
@@ -1144,7 +1144,7 @@ static double g_p90_sum; static uint64_t g_p90_n;
 // aiming at the current period (50 ms, or the 33.3 ms cap the auto floor had) sees that frame on target and never raises the clock. Aiming at the shortest period keeps the
 // clock where the game can step back up. DM_VK_GPU_FLOOR_PERIOD=<ms> (live; default 0 = the shortest period) sets it instead (33.3: the cap before 2026-11-05)
 _Atomic int64_t vka_period_min_ns;   // the shortest present period the game asked for (vka_perf.c vka_perf_frame); 0 = none yet
-// PEANUTS: a period no shorter than the active frame cap's (hle_fpslock.c dm_fps_cap_get, else the frame limit): the GPU floor's period here and the ADPF target (vka_perf.c), one rule
+// KIWI: a period no shorter than the active frame cap's (hle_fpslock.c dm_fps_cap_get, else the frame limit): the GPU floor's period here and the ADPF target (vka_perf.c), one rule
 int64_t vka_cap_period_clamp(int64_t ns) {
     int dm_fps_cap_get(void) __attribute__((weak)), nxhost_fps_limit_get(void) __attribute__((weak));
     int cap = &dm_fps_cap_get ? dm_fps_cap_get() : (&nxhost_fps_limit_get ? nxhost_fps_limit_get() : 0);
@@ -1158,7 +1158,7 @@ int64_t vka_floor_period_ns(void) {
     double ms = VKA_ENVF("DM_VK_GPU_FLOOR_PERIOD", 0.0);
     if (ms >= 4 && ms <= 200) return (int64_t)(ms * 1e6);
     int64_t m = atomic_load_explicit(&vka_period_min_ns, memory_order_relaxed), v = 16666667;
-    return vka_cap_period_clamp(m >= 4000000 && m < v ? m : v);   // PEANUTS: (vka_cap_period_clamp)
+    return vka_cap_period_clamp(m >= 4000000 && m < v ? m : v);   // KIWI: (vka_cap_period_clamp)
 }
 void vka_floor_span(uint64_t frame, uint64_t ns) {           // the completion thread: a submission of frame ended ns after the frame began
     unsigned k = frame % FSPAN;
@@ -1167,7 +1167,7 @@ void vka_floor_span(uint64_t frame, uint64_t ns) {           // the completion t
 }
 uint64_t vka_floor_span_of(uint64_t frame) { unsigned k = frame % FSPAN; return atomic_load(&g_fspan_f[k]) == frame ? atomic_load(&g_fspan[k]) : 0; }   // 0 = not in (vka_perf.c DM_VK_ADPF_SPAN)
 static int cmp_u64(const void *a, const void *b) { uint64_t x = *(const uint64_t *)a, y = *(const uint64_t *)b; return x < y ? -1 : x > y; }
-static int g_kg_host;   // KGSL host DCVS: only "highest" (1) or default governor (0)   // PEANUTS: #506
+static int g_kg_host;   // KGSL host DCVS: only "highest" (1) or default governor (0)   // KIWI: #506
 static int floor_auto(int top, uint64_t f) {
     static int cur = -1; static uint64_t last_f, changed_f;
     if (cur < 0 || cur > top) cur = top;
@@ -1180,7 +1180,7 @@ static int floor_auto(int top, uint64_t f) {
     double p90 = v[n * 9 / 10] / 1e6, per = vka_floor_period_ns() / 1e6;
     int was = cur;
     g_p90_sum += p90; g_p90_n++;
-    // KGSL host DCVS accepts only 0 (governor) and 1 (highest); stepping by 25 keeps the GPU at highest through 75/50/25,   // PEANUTS: #506
+    // KGSL host DCVS accepts only 0 (governor) and 1 (highest); stepping by 25 keeps the GPU at highest through 75/50/25,   // KIWI: #506
     // and jumping straight to max clock is expensive, so only boost within 1 ms of the period by default.
     int host_bin = !V.perf_hint && g_kg_host;
     double hi = VKA_ENVF("DM_VK_GPU_FLOOR_HI", host_bin ? 1.0 : 2.0), lo = VKA_ENVF("DM_VK_GPU_FLOOR_LO", 5.0);   // ms below the period: raise above per - hi, lower below per - lo
@@ -1188,9 +1188,9 @@ static int floor_auto(int top, uint64_t f) {
     // 840 a floor of 75 instead of 100 added 5-15 ms to the level's span at once, and on host-DCVS the KGSL idle hysteresis + 30-frame window can take ~100-150 frames
     // to reflect a failed drop.
     static uint64_t hold_until, backoff = 300, lowered_f;
-    int step = host_bin ? top : 25;   // PEANUTS: #506
+    int step = host_bin ? top : 25;   // KIWI: #506
     if (p90 > per - 0.5) cur = top;
-    else if (p90 > per - hi) cur = cur + step > top ? top : cur + step;   // PEANUTS: #506
+    else if (p90 > per - hi) cur = cur + step > top ? top : cur + step;   // KIWI: #506
     else if (p90 < per - lo && f - changed_f >= 60 && f >= hold_until) { cur = cur - step < 0 ? 0 : cur - step; lowered_f = f; }
     if (cur > was && lowered_f && f - lowered_f < 300) { hold_until = f + backoff; backoff = backoff * 2 > 4800 ? 4800 : backoff * 2; lowered_f = 0; }
     if (lowered_f && f - lowered_f > 600) { backoff = 300; lowered_f = 0; }   // a step down that held
@@ -1228,7 +1228,7 @@ struct kgsl_gp { unsigned int type; void *value; size_t sizebytes; };
 #define KGSL_IOCTL_SETPROPERTY _IOW(0x09, 0x32, struct kgsl_gp)
 enum { KG_FDS = 4, KG_IDS = 1024, KG_CTX = 8 };
 static int g_kg_fd[KG_FDS], g_kg_nfd; static uint8_t g_kg_own[KG_FDS][KG_IDS / 8];
-static struct { int fd; unsigned id; } g_kg[KG_CTX]; static int g_kg_n;   // the queue's contexts   // PEANUTS: #506
+static struct { int fd; unsigned id; } g_kg[KG_CTX]; static int g_kg_n;   // the queue's contexts   // KIWI: #506
 static int kg_set(int fd, unsigned id, int type, unsigned level) {
     unsigned lv = level; struct kgsl_dc c = {(unsigned)type, id, &lv, sizeof lv}; struct kgsl_gp g = {0x12, &c, sizeof c};   // KGSL_PROP_PWR_CONSTRAINT
     int r; do r = ioctl(fd, KGSL_IOCTL_SETPROPERTY, &g); while (r < 0 && (errno == EINTR || errno == EAGAIN));
@@ -1336,6 +1336,6 @@ void vka_gpu_floor(void) {
     int again = !V.perf_hint && (f >= sent_f + 30 || f < sent_f);
     if (again) sent_f = f;
     floor_set_(s, 0, again);
-    { extern void peanuts_gpu_floor_beat(int) __attribute__((weak)); if (g_kg_host && !V.perf_hint && peanuts_gpu_floor_beat) peanuts_gpu_floor_beat(s); }   // PEANUTS: the floor reaches the clock on "highest only" kernels (dm/peanuts/peanuts_gpufloor.c)
+    { extern void kiwi_gpu_floor_beat(int) __attribute__((weak)); if (g_kg_host && !V.perf_hint && kiwi_gpu_floor_beat) kiwi_gpu_floor_beat(s); }   // KIWI: the floor reaches the clock on "highest only" kernels (dm/kiwi/kiwi_gpufloor.c)
 }
 #endif

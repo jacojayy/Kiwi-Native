@@ -14,7 +14,7 @@ from unittest import mock
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO / 'dm/gfx/tools'))
-_had = os.environ.get('DM_GAME'); os.environ['DM_GAME'] = '01007EF00011E000'   # shader_split loads a profile at import; other tests expect no default game. PEANUTS: a Switch 1 profile (upstream: Pokopia, not carried)
+_had = os.environ.get('DM_GAME'); os.environ['DM_GAME'] = '01007EF00011E000'   # shader_split loads a profile at import; other tests expect no default game. KIWI: a Switch 1 profile (upstream: Pokopia, not carried)
 import shader_split as ss
 if _had is None: del os.environ['DM_GAME']
 else: os.environ['DM_GAME'] = _had
@@ -120,7 +120,7 @@ class Signature(unittest.TestCase):
     def test_empty_record(self):
         self.assertEqual(len(ss.EMPTY_RECORD), 0x38)
         self.assertIsNone(ss.record_problem(self.ctl(), b'\x78\x56\x34\x12' + bytes(0x60)))
-        # PEANUTS(upstream-candidate): this malformed record must report a problem.
+        # KIWI(upstream-candidate): this malformed record must report a problem.
         problem = ss.record_problem(self.ctl(), ss.CTL_MAGIC + bytes(0x60))
         assert problem is not None
         self.assertIn('control magic', problem)

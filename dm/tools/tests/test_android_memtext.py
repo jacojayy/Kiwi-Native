@@ -7,8 +7,8 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android/MemText.java'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/MemTextJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative/MemText.java'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/MemTextJvmTest.java'
 GIB = 1 << 30
 STATUS = 'Name:\tdev.nxnative.an\nVmPeak:\t 99999999 kB\nVmHWM:\t 5000000 kB\nVmRSS:\t 4508876 kB\nRssAnon:\t 4000000 kB\nThreads:\t87\n'
 
@@ -24,7 +24,7 @@ class MemText(unittest.TestCase):
     def tearDownClass(cls): shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def java(self, *a):
-        r = subprocess.run(['java', '-Dstdout.encoding=UTF-8', '-cp', str(self.tmp / 'classes'), 'dev.nxnative.android.MemTextJvmTest', *map(str, a)],
+        r = subprocess.run(['java', '-Dstdout.encoding=UTF-8', '-cp', str(self.tmp / 'classes'), 'hernandez.kiwinative.MemTextJvmTest', *map(str, a)],
                            capture_output=True, text=True, encoding='utf-8')
         self.assertEqual(r.returncode, 0, r.stderr)
         return r.stdout.rstrip('\n').split(' ', 1)[1]

@@ -1,6 +1,6 @@
 # Pokémon Shield (01008DB008C2C000): the rewriter's patches of this game's own builds, keyed by the NSO build ID (dm/tools/patch_nso.py, "Registered patches").
 # Patches of Nintendo SDK module builds are in dm/tools/sdk_patches.py.
-# PEANUTS: the cuts are nx2android's for this build (shirai91/nx2android, nxnative/dm/games/01008DB008C2C000/patches.py, MIT): not seen on the AYN Thor here, taken as a guard
+# KIWI: the cuts are nx2android's for this build (shirai91/nx2android, nxnative/dm/games/01008DB008C2C000/patches.py, MIT): not seen on the AYN Thor here, taken as a guard
 CUTS = {
   # 1.3.2 (v458752) main. With a save, the title screen builds the player's character in their outfit. The dress-up manager's function at main+0xcaaf00 hands each outfit
   # part's handle from its slot table to main+0x64f970, which reads the handle's object at main+0x64fa78 without a check. The slots fill as the parts load: on the Switch

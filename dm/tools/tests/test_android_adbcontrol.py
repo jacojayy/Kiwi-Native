@@ -10,18 +10,18 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
 JAVA = REPO / 'android/app/src'
-SRC = JAVA / 'main/java/dev/nxnative/android/AdbControl.java'
-TEST = JAVA / 'jvmtest/java/dev/nxnative/android/AdbControlJvmTest.java'
+SRC = JAVA / 'main/java/hernandez/kiwinative/AdbControl.java'
+TEST = JAVA / 'jvmtest/java/hernandez/kiwinative/AdbControlJvmTest.java'
 # The handlers MainActivity.fromIntent calls (and start(), which reads no_pause from the launcher's intent)
-HANDLERS = [JAVA / 'main/java/dev/nxnative/android/MainActivity.java', JAVA / 'main/java/dev/nxnative/android/GpuDriver.java',
-            JAVA / 'main/java/dev/nxnative/android/PackUi.java', JAVA / 'ondevice/java/dev/nxnative/android/Ondevice.java']
+HANDLERS = [JAVA / 'main/java/hernandez/kiwinative/MainActivity.java', JAVA / 'main/java/hernandez/kiwinative/GpuDriver.java',
+            JAVA / 'main/java/hernandez/kiwinative/PackUi.java', JAVA / 'ondevice/java/hernandez/kiwinative/Ondevice.java']
 NOT_CONTROL = {'frontend_game'}   # FrontendLaunch's hand-over: what the exported .Launch alias already does for any app
 EXTRA = re.compile(r'(?:get\w*Extra|hasExtra)\("([a-z_]+)"')
 
 
 def listed():
     m = re.search(r'EXTRAS = .*?asList\((.*?)\)\);', SRC.read_text(encoding='utf-8'), re.S)
-    assert m is not None   # PEANUTS(upstream-candidate): the extras declaration is required.
+    assert m is not None   # KIWI(upstream-candidate): the extras declaration is required.
     return re.findall(r'"([a-z_]+)"', m.group(1))
 
 
@@ -32,7 +32,7 @@ class Sources(unittest.TestCase):
         self.assertEqual(sorted(read - NOT_CONTROL - set(listed())), [], 'extras the launcher reads that AdbControl.EXTRAS does not gate')
 
     def test_gate_runs_before_the_handlers(self):
-        s = (JAVA / 'main/java/dev/nxnative/android/MainActivity.java').read_text(encoding='utf-8')
+        s = (JAVA / 'main/java/hernandez/kiwinative/MainActivity.java').read_text(encoding='utf-8')
         body = s[s.index('private void fromIntent(Intent i) {'):]
         self.assertLess(body.index('i = gated(i);'), body.index('Ondevice.fromIntent'))
         self.assertIn('setIntent(gated(getIntent()))', s)
@@ -49,7 +49,7 @@ class Gate(unittest.TestCase):
     def tearDownClass(cls): shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def java(self, *a):
-        r = subprocess.run(['java', '-cp', str(self.tmp / 'classes'), 'dev.nxnative.android.AdbControlJvmTest', *a], capture_output=True, text=True)
+        r = subprocess.run(['java', '-cp', str(self.tmp / 'classes'), 'hernandez.kiwinative.AdbControlJvmTest', *a], capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)
         return r.stdout.rstrip('\n').split(' ', 1)[1] if ' ' in r.stdout.strip() else ''
 

@@ -42,8 +42,8 @@ uint64_t dm_cheats_keys(void) { return held; }
 static char moddir[1100];                        // the module folder (loader.c), with the rewriter's main.changed.tsv
 const char *dm_module_dir(void) { return moddir; }
 const char *dm_main_dir(void) { return moddir; }   // (loader.c: main's folder, its variant's with DM_PATCH_VARIANT; the pack's here)
-// PEANUTS begin: built as if for Android (make GAME=<id> peanuts-cheats, with t_peanuts_cheats_plat.c): no alias of main, so code writes go through
-// dm/peanuts/peanuts_cheats.inc and its stop of the game's threads (hle_thread.c dm_guest_stop_all), here a stand-in that counts the stops, can fail them (threads
+// KIWI begin: built as if for Android (make GAME=<id> kiwi-cheats, with t_kiwi_cheats_plat.c): no alias of main, so code writes go through
+// dm/kiwi/kiwi_cheats.inc and its stop of the game's threads (hle_thread.c dm_guest_stop_all), here a stand-in that counts the stops, can fail them (threads
 // that do not stop in time) and can say a thread stands inside the words written
 #if PN_CODE
 static int stops, stop_fail, stood_inside;
@@ -51,7 +51,7 @@ int dm_guest_stop_all(uint64_t timeout_ns) { (void)timeout_ns; if (stop_fail) re
 void dm_guest_resume_all(void) {}
 int dm_guest_stopped_in(uint64_t lo, uint64_t hi) { (void)lo; (void)hi; return stood_inside; }
 #endif
-// PEANUTS end
+// KIWI end
 
 static int checks, fails;
 #define CHECK(c, s) do { checks++; int ok_ = !!(c); fails += !ok_; printf("%s %s\n", ok_ ? "✓" : "✗", s); } while (0)
@@ -255,7 +255,7 @@ int main(void) {
     int yon = at("Y - on", 0), yoff = at("Y - off", 0);
     CHECK(dm_cheat_pair_at(yon) == yoff && (dm_cheat_flags_at(yon) & DM_CHEAT_PAIR_ON) && (dm_cheat_flags_at(yoff) & DM_CHEAT_PAIR_OFF), "\"Y - on\" / \"Y - off\" are paired");
     dm_cheat_toggle(yon); cheats_pass();
-    CHECK(g_alias != NULL || PN_CODE, "the code page write path has its writable alias of main");   // PEANUTS: || PN_CODE (Android: peanuts_cheats.inc, below)
+    CHECK(g_alias != NULL || PN_CODE, "the code page write path has its writable alias of main");   // KIWI: || PN_CODE (Android: kiwi_cheats.inc, below)
     CHECK(dm_cheat_on_at(yon) && !dm_cheat_on_at(yoff) && rd32(0x100) == 0x52800020, "turning the pair on runs the on half only (code page, through the alias)");
     dm_cheat_toggle(yon);
     CHECK(!dm_cheat_on_at(yon) && dm_cheat_on_at(yoff), "turning it off turns the restore on");
@@ -343,9 +343,9 @@ int main(void) {
     // ---- safe mode after an unclean exit ----
     fresh("safe", "{Master}\n04000000 000040C0 00000001\n[S]\n04000000 000040C4 00000002\n");
     load_all(); dm_cheat_toggle(at("S", 0));
-    CHECK(!PLAT_MAC || exists(".cheats-running-0100000000000000"), "cheats on: the safe-mode flag exists");   // PEANUTS: !PLAT_MAC || (safe mode is the Mac's alone)
+    CHECK(!PLAT_MAC || exists(".cheats-running-0100000000000000"), "cheats on: the safe-mode flag exists");   // KIWI: !PLAT_MAC || (safe mode is the Mac's alone)
     folder_flags(); memset(img + 0x4000, 0, 0x100); load_all(); cheats_pass();   // the next launch, after a crash
-    CHECK(!PLAT_MAC || (dm_cheats_safe() && !dm_cheat_on_at(at("S", 0)) && rd32(0x40C0) == 0 && rd32(0x40C4) == 0), "after a crash every cheat starts off, masters too");   // PEANUTS: !PLAT_MAC ||
+    CHECK(!PLAT_MAC || (dm_cheats_safe() && !dm_cheat_on_at(at("S", 0)) && rd32(0x40C0) == 0 && rd32(0x40C4) == 0), "after a crash every cheat starts off, masters too");   // KIWI: !PLAT_MAC ||
     CHECK(!strcmp(get("1111111111111111.enabled"), "S\n"), "and the saved toggles are kept");
     put("1111111111111111.txt", "{Master}\n04000000 000040C0 00000001\n[S]\n04000000 000040C4 00000002\n[T]\n04000000 000040C8 00000003\n");
     put("1111111111111111.enabled", "S\n"); g_safe = 1; load_all();
@@ -651,7 +651,7 @@ int main(void) {
     g_any = 0;
     fresh("nofile", "[R]\n04000000 000043F8 00000001\n");
     load_all(); dm_cheat_toggle(at("R", 0));
-    CHECK(!PLAT_MAC || exists(".cheats-running-0100000000000000"), "a cheat on: the safe-mode flag is there");   // PEANUTS: !PLAT_MAC ||
+    CHECK(!PLAT_MAC || exists(".cheats-running-0100000000000000"), "a cheat on: the safe-mode flag is there");   // KIWI: !PLAT_MAC ||
     rm("1111111111111111.txt"); load_all();
     CHECK(!dm_cheats_found() && !exists(".cheats-running-0100000000000000"), "a reload that finds no file removes the flag: nothing runs now");
 
@@ -693,7 +693,7 @@ int main(void) {
     // unit table: main's singletons moved into this image's data (the only change to the file), the pool's block of 250 units of 0x8B0 bytes on the heap,
     // a force descriptor per unit (id at +0x10; player forces 0, 4, 5, 6, 7), PersonData with caps (+0x232) and a weapon mask (+0x262), the two EXP tables ----
     {
-        static const char *const FE = "../../../peanuts/tests/fixtures/profiles/fortunes-weave/cheats/DB93B0125F485060.txt";   // make -C dm/host/tests runs here; PEANUTS: a fixture (the Switch 2 profile is not carried)
+        static const char *const FE = "../../../kiwi/tests/fixtures/profiles/fortunes-weave/cheats/DB93B0125F485060.txt";   // make -C dm/host/tests runs here; KIWI: a fixture (the Switch 2 profile is not carried)
         FILE *f = fopen(FE, "r"); if (!f) { perror(FE); return 1; }
         static char fe[16384]; size_t n = fread(fe, 1, sizeof fe - 1, f); fe[n] = 0; fclose(f);
         static const char *const reloc[][2] = { { "0220A350", "00005A00" }, { "0220AB10", "00005A10" },   // UnitPool*, GameUserData*
@@ -779,7 +779,7 @@ int main(void) {
         #undef FE_DESC
     }
 
-    // PEANUTS begin: code cheats on Android (dm/peanuts/peanuts_cheats.inc), built as if for Android (make GAME=<id> peanuts-cheats): main's text is read + execute
+    // KIWI begin: code cheats on Android (dm/kiwi/kiwi_cheats.inc), built as if for Android (make GAME=<id> kiwi-cheats): main's text is read + execute
     // here, as the loader leaves it, and every code word goes through the stop of the game's threads (the stand-in above counts them)
 #if PN_CODE
     {
@@ -903,7 +903,7 @@ int main(void) {
         pn_forget(); held = 0;
     }
 #endif
-    // PEANUTS end
+    // KIWI end
 
     // ---- Atmosphère's limits in the report ----
     size_t cap = 0x200 * 9 + 64; char *big = malloc(cap); size_t o = (size_t)snprintf(big, cap, "[Big]\n");

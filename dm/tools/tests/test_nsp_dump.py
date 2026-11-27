@@ -1,7 +1,7 @@
 """NSP script with a dump folder (scripts/pack_dump.py), its only input: the folder's layout is read and packed into what the script's later steps read.
 The run stops at the prerequisite check; no game files or Xcode needed."""
 import importlib.util
-# PEANUTS(upstream-candidate): omit the unused io import.
+# KIWI(upstream-candidate): omit the unused io import.
 from pathlib import Path
 import shutil
 import struct
@@ -209,7 +209,7 @@ class Layout(Base):
         (self.dump / 'dlc/040074a01bf13801/131072/romfs').mkdir(parents=True); (self.dump / 'dlc/040074a01bf13801/131072/romfs/patched').write_text('p')
         (self.dump / 'addons/040074a01bf13002/0/romfs').mkdir(parents=True); (self.dump / 'addons/040074a01bf13002/0/romfs/f').write_text('a')
         before = dump_layout.read(self.dump)
-        assert before is not None and before[3] is not None   # PEANUTS(upstream-candidate): the synthetic dump has an update.
+        assert before is not None and before[3] is not None   # KIWI(upstream-candidate): the synthetic dump has an update.
         self.assertEqual(before[3][0], VER)   # program 1 found in switch2/
         self.assertEqual(self.run_layout('--apply'), 0)
         for p in (f'updates/{VER}/program/1/exefs/main', 'dlc/040074a01bf13001/0/updates/131072/program/0/romfs/patched',
@@ -285,14 +285,14 @@ class Main(Base):
         return Path(seen['DM_ROOT']), said
 
     def test_asks_for_nothing_and_builds_beside_the_dump(self):
-        # PEANUTS begin: a dump of a game with a profile in dm/games, whose registered version is an update: Breath of the Wild 1.9.0 (TID's profile, Donkey Kong
+        # KIWI begin: a dump of a game with a profile in dm/games, whose registered version is an update: Breath of the Wild 1.9.0 (TID's profile, Donkey Kong
         # Bananza, is a Switch 2 profile Kiwi Native does not carry)
         botw, ver = 0x01007EF00011E000, 1114112
         self.dump = self.dump.parent / 'botw'
         version(self.dump / 'base', tid=botw, marker='old'); version(self.dump / f'updates/{ver}', tid=botw, main=b'new code', marker='new')
         work, said = self.run_main()
         self.assertEqual(work, self.dump / f'{botw:016X}_build')
-        # PEANUTS end
+        # KIWI end
         self.assertTrue(any(s.startswith('a dump folder: ') for s in said), said)
 
     def test_title_id_must_match(self):

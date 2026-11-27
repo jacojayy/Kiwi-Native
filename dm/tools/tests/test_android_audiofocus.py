@@ -8,9 +8,9 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android/AudioFocus.java'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/AudioFocusJvmTest.java'
-ACTIVITY = REPO / 'android/app/src/main/java/dev/nxnative/android/GameActivity.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative/AudioFocus.java'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/AudioFocusJvmTest.java'
+ACTIVITY = REPO / 'android/app/src/main/java/hernandez/kiwinative/GameActivity.java'
 
 
 class Wiring(unittest.TestCase):
@@ -34,7 +34,7 @@ class AudioFocusJvm(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             c = subprocess.run(['javac', '-Xlint:all', '-Werror', '-encoding', 'UTF-8', '-d', d, str(SRC), str(TEST)], capture_output=True, text=True)
             self.assertEqual(c.returncode, 0, c.stderr)
-            r = subprocess.run(['java', '-cp', d, 'dev.nxnative.android.AudioFocusJvmTest'], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', d, 'hernandez.kiwinative.AudioFocusJvmTest'], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertEqual(r.stdout.strip(), 'ok')
 

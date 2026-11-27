@@ -110,7 +110,7 @@ void vka_perf_thread(int nice) {
 // sets the CPU clocks and cores of the replay's threads, and the old reports read a frame recorded in 30 ms at 20 fps as on target against the 50 ms period; whether that
 // holds the frame rate low after the phone cools is open (docs/reference/frame-rate.md "A dynamic interval that does not step back up after the phone cools on the Vulkan
 // replay"): DM_VK_ADPF_SPAN=100 is that A/B arm, the default stays until a phone run shows it helps
-int64_t vka_cap_period_clamp(int64_t ns);   // PEANUTS: the active frame cap's period as the shortest (vka_dev.c, the GPU floor's rule too)
+int64_t vka_cap_period_clamp(int64_t ns);   // KIWI: the active frame cap's period as the shortest (vka_dev.c, the GPU floor's rule too)
 static int span_pct(void) { int vka_floor_adpf(void); int p = VKA_ENV("DM_VK_ADPF_SPAN", -1); if (p < 0) p = vka_floor_adpf() ? 100 : 0; return p <= 0 ? 0 : p > 100 ? 100 : p; }
 static int64_t span_target(double period_s, int pct) { (void)period_s; int64_t vka_floor_period_ns(void); return vka_floor_period_ns() * pct / 100; }
 uint64_t vka_floor_span_of(uint64_t f); uint64_t vka_frame_start_ns(uint64_t f); uint64_t now_ns(void);
@@ -141,7 +141,7 @@ void vka_perf_frame(double period_s) {
             break;
         }
     }
-    int64_t tgt = pct ? span_target(period_s, pct) : vka_cap_period_clamp(period_s > 0.004 && period_s < 0.2 ? (int64_t)(period_s * 1e9) : 16666667);   // PEANUTS: the frame cap's period for the GPU floor and ADPF (0.1.8)
+    int64_t tgt = pct ? span_target(period_s, pct) : vka_cap_period_clamp(period_s > 0.004 && period_s < 0.2 ? (int64_t)(period_s * 1e9) : 16666667);   // KIWI: the frame cap's period for the GPU floor and ADPF (0.1.8)
     pthread_mutex_lock(&g_mu);
     session_update();
     if (g_s && tgt != g_target) { g_target = tgt; H.target(g_s, tgt); VLOG("ADPF target %.2f ms", tgt / 1e6); }
@@ -169,16 +169,16 @@ void vka_perf_frame(double period_s) {
 #include "vka_pace.h"
 void vka_worker_waits(uint64_t *room_ns, uint64_t *sub_ns); uint64_t vka_worker_sub_cpu(void); void mtl_stats(uint64_t *passes, uint64_t *draws);
 const char *vka_floor_state(int *pct, int *res); void vka_present_rates(int *fps, double *hz);
-static void *th_mgr; static int (*th_st)(void *); static float (*th_hr)(void *, int);   // PEANUTS: the thermal manager, looked up once (th_status)
+static void *th_mgr; static int (*th_st)(void *); static float (*th_hr)(void *, int);   // KIWI: the thermal manager, looked up once (th_status)
 static void th_look(void) { void *h = dlopen("libandroid.so", RTLD_NOW); void *(*acq)(void) = h ? (void *(*)(void))dlsym(h, "AThermal_acquireManager") : NULL;
     if (acq) { th_mgr = acq(); th_st = (int (*)(void *))dlsym(h, "AThermal_getCurrentThermalStatus"); th_hr = (float (*)(void *, int))dlsym(h, "AThermal_getThermalHeadroom"); } }
-static int th_status(void) { static pthread_once_t once = PTHREAD_ONCE_INIT; pthread_once(&once, th_look); return th_mgr && th_st ? th_st(th_mgr) : -1; }   // PEANUTS: once, from any thread
+static int th_status(void) { static pthread_once_t once = PTHREAD_ONCE_INIT; pthread_once(&once, th_look); return th_mgr && th_st ? th_st(th_mgr) : -1; }   // KIWI: once, from any thread
 static int pace_thermal(float *headroom) {   // the thermal status (-1: not available) and the headroom (NaN when the platform has none)
     int s = th_status();
     *headroom = th_mgr && th_hr ? th_hr(th_mgr, 0) : __builtin_nanf("");
     return s;
 }
-// PEANUTS: the thermal state on iOS's scale (0 nominal, 1 fair, 2 serious, 3 critical) for hle_nvn.c's thermal cap (frame rates above 30 hold 30 while serious or worse) and
+// KIWI: the thermal state on iOS's scale (0 nominal, 1 fair, 2 serious, 3 critical) for hle_nvn.c's thermal cap (frame rates above 30 hold 30 while serious or worse) and
 // its probes' gates. Opt-in on Android: only with DM_THERMAL_CAP set and not 0 (the launcher sets 1 for a profile with thermal_cap 1, Hogwarts Legacy), else -1 (none) as
 // before, so every other game runs as it did. Light and moderate are fair, severe serious, critical and above critical. The status is a binder call: read at most once a
 // second (callers ask once a second, and the probe gates on every frame). A Galaxy S24 Ultra at severe (skin 45 C) had its GPU capped at 231 of 1,000 MHz (kgsl
@@ -290,7 +290,7 @@ void dm_perf_time_constraint(uint64_t period_ns, uint64_t comp_ns) {
     vka_perf_thread(-8);
     if (!avail()) return;
     pthread_mutex_lock(&g_mu);
-    int64_t c_ns = vka_cap_period_clamp((int64_t)period_ns);   // PEANUTS: the frame cap's period for the GPU floor and ADPF (0.1.8)
+    int64_t c_ns = vka_cap_period_clamp((int64_t)period_ns);   // KIWI: the frame cap's period for the GPU floor and ADPF (0.1.8)
     if (!(H.report2 && span_pct()) && period_ns >= 4000000 && period_ns <= 200000000 && c_ns != g_target) { g_target = c_ns; if (g_s) H.target(g_s, g_target); }   // (with DM_VK_ADPF_SPAN vka_perf_frame sets it)
     pthread_mutex_unlock(&g_mu);
 }

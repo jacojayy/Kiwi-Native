@@ -1,6 +1,6 @@
 # STAR OCEAN THE SECOND STORY R (`010065301A2E0000`)
 
-<!-- PEANUTS: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
+<!-- KIWI: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
 
 Update 1.1.0 (v196608) over the base game, with 5 small DLC packages (`010065301A2E1001` to `…1005`, about 100 KB each), SDK 15.3.2. **Unity 2021.3.22f1** (IL2CPP) with CRIWARE (ADX/USM) and FMOD, rendering with **NVN**. Modules `main`, `subsdk0` (NintendoSDK_movie) and `sdk`. The closest profiles are [Blasphemous 2](../010040801A4C8000/README.md) (Unity 2021.3.20f1, also SDK 15 era with a 16 MB system resource) and [Sea of Stars](../01008C0016544000/README.md) (Unity 2021.3.25f1); [My Time at Sandrock](../0100B63016916000/README.md) (2021.3.26f1) for the pool size.
 

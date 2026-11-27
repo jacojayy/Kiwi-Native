@@ -1,4 +1,4 @@
-"""PEANUTS: shader_split DM_SPLIT_TARGETED=1 with a profile whose tables are the union of two versions (game.tsv shader_versions, Mario Kart 8 Deluxe's 4.0.0 and
+"""KIWI: shader_split DM_SPLIT_TARGETED=1 with a profile whose tables are the union of two versions (game.tsv shader_versions, Mario Kart 8 Deluxe's 4.0.0 and
 4.0.1) and a dump of one of them (single_shader_version). The union tags a later version's first appearances (/v65536/...), which a dump of that version alone
 names untagged; the shaders only the other version has are absent, and the map's rows may sit at another place (version_map_rows). The outputs are the full
 scan's of that dump, byte for byte, either way; anything else still takes the full scan. No game files needed: a synthetic two-version RomFS and profile."""

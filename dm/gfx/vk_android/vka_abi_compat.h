@@ -14,22 +14,22 @@
 
 // The host ABI the rows were checked against: when DMSH_VK_ABI moves, the table is not used (vka_abi_compat_of) until its rows are checked again against the new
 // headers and this line is raised (the unit test t_android_shlib fails meanwhile)
-// PEANUTS: raised for this tree's ABI, which is neither upstream's nor this fork's before: both sides' kinds, IMG_UBO renumbered (dmsh_abi_vk.h: TEX_DYN 23, SAMP_DYN 24,
+// KIWI: raised for this tree's ABI, which is neither upstream's nor this fork's before: both sides' kinds, IMG_UBO renumbered (dmsh_abi_vk.h: TEX_DYN 23, SAMP_DYN 24,
 // IMG_UBO 25). Upstream's own ABI of v0.3.22-v0.3.26 (4fbeb79f5ab7, IMG_UBO 23) is no row: its 23 is this host's TEX_DYN
-#define VKA_ABI_COMPAT_FOR "288a138fa7d1"   // PEANUTS: raised for the handle-type-2 sampler flag (the row 3d4e8bb1e1e8 below)
+#define VKA_ABI_COMPAT_FOR "288a138fa7d1"   // KIWI: raised for the handle-type-2 sampler flag (the row 3d4e8bb1e1e8 below)
 // The rows' ABIs, space-separated, in the table's order: what the launcher reads (build.gradle NX_DMSH_VK_ABI_COMPAT, ShaderLibs.playable)
-#define DMSH_VK_ABI_COMPAT "3d4e8bb1e1e8 cb5a89b39291 d9c33f6111c1 228b73bd10f6 674db0a4ff79"   // PEANUTS: 3d4e8bb1e1e8, cb5a89b39291 and d9c33f6111c1 (the rows below)
+#define DMSH_VK_ABI_COMPAT "3d4e8bb1e1e8 cb5a89b39291 d9c33f6111c1 228b73bd10f6 674db0a4ff79"   // KIWI: 3d4e8bb1e1e8, cb5a89b39291 and d9c33f6111c1 (the rows below)
 
 typedef struct { const char *abi; unsigned differs; } vka_abi_compat_row;
 static const vka_abi_compat_row vka_abi_compat[] = {
-    // PEANUTS: before the handle-type-2 sampler flag (2026-11-24; Vulkan chains up to c9337a3f4e01, 0.1.7's c679ddfbc5db among them): the headers differ only in
+    // KIWI: before the handle-type-2 sampler flag (2026-11-24; Vulkan chains up to c9337a3f4e01, 0.1.7's c679ddfbc5db among them): the headers differ only in
     // DMSH_VK_BF_SAMP_RAW (16), a binding flag no library of that ABI sets (bit 16 was never used before); samp_of reads a SAMP_UBO word as a handle without it,
     // as those libraries mean. Such a library plays as it did (the samplers of handle type 2 still wrong) until its shaders are made again
     {"3d4e8bb1e1e8", 0},
-    // PEANUTS: before the step of an array of handles read by record (2026-11-21; Vulkan chains up to dfebef5d68a9): the headers differ only in the binding
+    // KIWI: before the step of an array of handles read by record (2026-11-21; Vulkan chains up to dfebef5d68a9): the headers differ only in the binding
     // record's last 16-bit field before bytes (dmsh_abi_vk.h dmsh_vk_bind: reserved then, 0 in every library; step now, where 0 is the 8 bytes those libraries mean)
     {"cb5a89b39291", 0},
-    // PEANUTS: this fork's releases (its ABI from 2026-11-14 on; Vulkan chains c3959e8b8f88 to 4d3a924dcd04): the headers differ only in the kind added since
+    // KIWI: this fork's releases (its ABI from 2026-11-14 on; Vulkan chains c3959e8b8f88 to 4d3a924dcd04): the headers differ only in the kind added since
     // (dmsh_abi_vk.h DMSH_VK_KIND_IMG_UBO, 25 here, dmsh_abi.h DMSH_KIND_IMG_UBO), which no library of that ABI holds; TEX_DYN and SAMP_DYN keep their numbers
     {"d9c33f6111c1", 0},
     // Before the image handles in uniform buffers (2026-11-13; Vulkan chains up to 65883461079b): the headers differ only in the kind added (dmsh_abi_vk.h

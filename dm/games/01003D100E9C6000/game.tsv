@@ -1,5 +1,5 @@
 # The Witcher 3: Wild Hunt — Complete Edition (EU), update 4.04b (v458752). REDengine 3 in Saber Interactive's Switch port, SDK 15.3.0; see README.md
-# PEANUTS: made from nxnative's profile of the RU edition (0100A0800E9C4000, same update, same sdk build, main built separately): its memory, frame-rate and depth keys taken as they are,
+# KIWI: made from nxnative's profile of the RU edition (0100A0800E9C4000, same update, same sdk build, main built separately): its memory, frame-rate and depth keys taken as they are,
 # the identity, build row and shader tables from this edition's own provisional profile and split
 
 # ---- Identity ----
@@ -33,7 +33,7 @@ app_pool	0xCD500000
 sys_resource	0x400000
 
 # ---- Frame rate ----
-# PEANUTS: display pacing (method A), not nxnative's fps_target 60, which this host does not apply here ("present cap 60 fps not applied: this main has neither a frame
+# KIWI: display pacing (method A), not nxnative's fps_target 60, which this host does not apply here ("present cap 60 fps not applied: this main has neither a frame
 # step nor an engine frame limit"). The game's logic runs on real time (nxnative: 60.0 fps at the same game-clock speed as 30); FPSLocker's Warehouse has this exact
 # build (4BC4A8A814FD46A4.yaml: LimitFPS and the dynamic resolution frame-time targets, no frame step). On an AYN Thor (Turnip): 20, 30, 40, 45, 60 held (README.md)
 present_interval	display

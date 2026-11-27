@@ -18,12 +18,12 @@ The same keys as Sword's profile, for the same reasons ([Sword, What it needs](.
 
 - On the Mac: 30 fps as on the Switch (frame time p50 33.3 ms, p95 34–35 ms in the house and outside in Postwick), no red line in 10 minutes from a fresh save.
 
-<!-- PEANUTS begin: picture shapes -->
+<!-- KIWI begin: picture shapes -->
 ## Picture shapes (Android)
 
 **Untested.** Game settings › Display offers **Fill the screen** on 1.3.2 through 4 `aspect_plan` rows that nobody has seen on a device (`aspect_plan_untested 1`, and the Fill choice says so). They are every place this build's main has the packed 1920x1080 sizes in code and the 16/9 float words, from a scan of the code on 2026-11-21 with each expected word read on the pack; no community patch stands behind them. With Fill the 3D view may follow the screen, the HUD and menus may not, or the game may draw wrongly or not start. Fit and Stretch are unchanged. Open: every screen, at any shape.
 
-<!-- PEANUTS end -->
+<!-- KIWI end -->
 
 ## Mac routes
 
@@ -34,4 +34,4 @@ The same keys as Sword's profile, for the same reasons ([Sword, What it needs](.
 
 ## Android (Kiwi Native)
 
-PEANUTS: packed on Linux with both add-on contents (41,516 shaders, all valid) and played on an AYN Thor (Adreno 740, Turnip) from a shared save at the Isle of Armor station: 60 fps by the frame time row, the companion's town map and live party on the second screen. With a Chinese save most characters drew as "?" until the firmware's Chinese shared fonts were served (`dm/host/hle_sdk16.c`, the importer's `cjk_*.ttf`).
+KIWI: packed on Linux with both add-on contents (41,516 shaders, all valid) and played on an AYN Thor (Adreno 740, Turnip) from a shared save at the Isle of Armor station: 60 fps by the frame time row, the companion's town map and live party on the second screen. With a Chinese save most characters drew as "?" until the firmware's Chinese shared fonts were served (`dm/host/hle_sdk16.c`, the importer's `cjk_*.ttf`).

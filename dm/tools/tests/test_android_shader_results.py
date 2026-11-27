@@ -11,14 +11,14 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/ondevice/java/dev/nxnative/android/ShaderResults.java'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/ShaderResultsJvmTest.java'
+SRC = REPO / 'android/app/src/ondevice/java/hernandez/kiwinative/ShaderResults.java'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/ShaderResultsJvmTest.java'
 TOOL = REPO / 'dm/gfx/tools/vk_android_build.py'
 
 
 def magic():
     match = re.search(r"^RESULT_MAGIC = b'([^']+)'", TOOL.read_text(encoding='utf-8'), re.M)
-    assert match is not None   # PEANUTS(upstream-candidate): require the source pattern before reading it.
+    assert match is not None   # KIWI(upstream-candidate): require the source pattern before reading it.
     return match.group(1).encode()
 
 
@@ -45,7 +45,7 @@ class Retry(unittest.TestCase):
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def run_on(self, d):
-        r = subprocess.run(['java', '-cp', str(self.classes), 'dev.nxnative.android.ShaderResultsJvmTest', str(d)], capture_output=True, text=True)
+        r = subprocess.run(['java', '-cp', str(self.classes), 'hernandez.kiwinative.ShaderResultsJvmTest', str(d)], capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)
         return [l.split(' ', 1)[1].split('\t') for l in r.stdout.splitlines()]
 
@@ -82,7 +82,7 @@ class Layout(unittest.TestCase):
         self.assertIn(f'"{magic().decode()}"', src)
         tool = TOOL.read_text(encoding='utf-8')
         match = re.search(r"h = \{'vk': TOOLS.*?\}", tool, re.S)
-        assert match is not None   # PEANUTS(upstream-candidate): require the source pattern before reading it.
+        assert match is not None   # KIWI(upstream-candidate): require the source pattern before reading it.
         head = match.group(0)
         self.assertLess(head.index("'st'"), head.index("'refl'"))
 

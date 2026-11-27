@@ -9,7 +9,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[3]
 sys.path[:0] = [str(REPO / 'dm/tools'), str(REPO / 'scripts')]
 import nup
-import nup_meta   # pyright: ignore[reportMissingImports]  # PEANUTS(upstream-candidate): scripts/ is added to sys.path above.
+import nup_meta   # pyright: ignore[reportMissingImports]  # KIWI(upstream-candidate): scripts/ is added to sys.path above.
 
 ICON = b'\xff\xd8\xff\xe0' + b'x' * 3000 + b'\xff\xd9'
 

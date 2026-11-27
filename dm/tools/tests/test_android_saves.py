@@ -1,7 +1,7 @@
 """The Android launcher's save backup / restore (SaveStore.java: verified copies of the save and its device save, the automatic backup before a restore, the lock, the
 roll-forward journal it shares with the host's plat_rename_swap) and its game table (Profile.java), on the JVM: javac compiles them with a stub BuildConfig and
 android/app/src/jvmtest's LauncherJvmTest. Also: the lock held by another process, and the journal's recovery rules checked against the host's own plat_swap_recover
-(PEANUTS: its swap code cut out of dm/host/plat/plat_android.c and compiled for the local POSIX host), case by case, so the two sides keep one format and one set of rules.
+(KIWI: its swap code cut out of dm/host/plat/plat_android.c and compiled for the local POSIX host), case by case, so the two sides keep one format and one set of rules.
 Skipped without a JDK (the C half: without cc)."""
 import re
 import shutil
@@ -11,16 +11,16 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/LauncherJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/LauncherJvmTest.java'
 RES = REPO / 'android/app/src/main/res/values/strings.xml'   # the labels LauncherJvmTest checks (Profile.renderOutLabel)
 PLAT = REPO / 'dm/host/plat/plat_android.c'
-STUB = '''package dev.nxnative.android;
+STUB = '''package hernandez.kiwinative;
 public final class BuildConfig {
     public static final String NX_PROFILES = "040074A01BF12000\\tDonkey Kong Bananza\\t22852\\tabcdef012345\\t458752 main=aa";
 }
 '''
-# PEANUTS(upstream-candidate): glibc exposes nftw and FTW_DEPTH/FTW_PHYS with XSI declarations enabled.
+# KIWI(upstream-candidate): glibc exposes nftw and FTW_DEPTH/FTW_PHYS with XSI declarations enabled.
 HARNESS = '''#define _XOPEN_SOURCE 700
 #include <dirent.h>
 #include <errno.h>
@@ -122,7 +122,7 @@ class LauncherJvm(unittest.TestCase):
         cls.tmp.cleanup()
 
     def java(self, *args, **kw):
-        return subprocess.run(['java', '-Dnx.res=' + str(RES), '-cp', str(self.classes), 'dev.nxnative.android.LauncherJvmTest', *map(str, args)], capture_output=True, text=True, **kw)
+        return subprocess.run(['java', '-Dnx.res=' + str(RES), '-cp', str(self.classes), 'hernandez.kiwinative.LauncherJvmTest', *map(str, args)], capture_output=True, text=True, **kw)
 
     def test_saves_and_profiles(self):
         with tempfile.TemporaryDirectory() as d:
@@ -134,8 +134,8 @@ class LauncherJvm(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             s = Path(d) / 'saves/040074A01BF12000'; s.mkdir(parents=True); (s / 'slot0.bin').write_text('x')
             (Path(d) / 'src').mkdir(); (Path(d) / 'src/a.bin').write_text('a')
-            h = subprocess.Popen(['java', '-cp', str(self.classes), 'dev.nxnative.android.LauncherJvmTest', 'holdtwice', str(s)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
-            # PEANUTS(upstream-candidate): PIPE creates both streams for this holder process.
+            h = subprocess.Popen(['java', '-cp', str(self.classes), 'hernandez.kiwinative.LauncherJvmTest', 'holdtwice', str(s)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+            # KIWI(upstream-candidate): PIPE creates both streams for this holder process.
             assert h.stdout is not None and h.stdin is not None
             try:
                 self.assertEqual(h.stdout.readline().strip(), 'held')
@@ -144,7 +144,7 @@ class LauncherJvm(unittest.TestCase):
                 self.assertEqual((s / 'slot0.bin').read_text(), 'x')
             finally:
                 h.stdin.close(); h.wait(10)
-                h.stdout.close()   # PEANUTS: close both PIPE streams after the holder exits
+                h.stdout.close()   # KIWI: close both PIPE streams after the holder exits
             r = self.java('locked', s)   # released when the holder ended
             self.assertEqual(r.stdout.strip(), 'refused 0', r.stdout + r.stderr)
 

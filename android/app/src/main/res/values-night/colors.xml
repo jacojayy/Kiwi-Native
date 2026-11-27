@@ -5,9 +5,9 @@
     <color name="bn_card">#FF241C14</color>
     <color name="bn_card_stroke">#FF3A2E20</color>
     <color name="bn_tint">#FF3A2D17</color>
-    <color name="bn_banana">#FFFFD43B</color>
-    <color name="bn_banana_deep">#FFF2B705</color>
-    <color name="bn_on_banana">#FF3B2611</color>
+    <color name="bn_kiwi">#FFFFD43B</color>
+    <color name="bn_kiwi_deep">#FFF2B705</color>
+    <color name="bn_on_kiwi">#FF3B2611</color>
     <color name="bn_text">#FFFFF1D2</color>
     <color name="bn_text_2">#FFCDB48C</color>
     <color name="bn_accent">#FFFFD43B</color>

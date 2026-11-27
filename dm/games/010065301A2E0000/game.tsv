@@ -1,5 +1,5 @@
 # Game profile of STAR OCEAN THE SECOND STORY R (Switch, update 1.1.0 = v196608)
-# PEANUTS: a Kiwi Native profile (Kiwi Native has none for this title); whole file Peanuts' own
+# KIWI: a Kiwi Native profile (Kiwi Native has none for this title); whole file Kiwi' own
 # Format: see dm/games/README.md
 # Unity 2021.3.22f1 (IL2CPP) with CRIWARE and FMOD, SDK 15.3.2; subsdk0 is the movie module (the cinematics are CRI USM files in StreamingAssets).
 # The shaders are Unity's Shader and ComputeShader objects in Data/data.unity3d and the StreamingAssets bundles, read by unityfs.py (23,465 of 23,476; 11 are the player's GLSLC outputs in main).
@@ -40,7 +40,7 @@ shader_groups	/Data/=data
 shader_note	STAR OCEAN THE SECOND STORY R shaders
 
 # ---- Frame rate ----
-# PEANUTS: Unity steps the game by elapsed time: a 3 s walk from the Milokeenia autosave lands in the same place at the game's own 30 and display-paced 20 and 60 fps
+# KIWI: Unity steps the game by elapsed time: a 3 s walk from the Milokeenia autosave lands in the same place at the game's own 30 and display-paced 20 and 60 fps
 # (AYN Thor, Turnip, 2026-11-22; 59 fps in that scene at the 60 cap). FPSLocker Warehouse lists this exact main (D214BA64D902AEDA, 1.1.0) as needing no patch.
 # Game owned keeps the Switch's 30; the display-paced caps are opt-in and only the measured ones are offered.
 fps_limit_present	1

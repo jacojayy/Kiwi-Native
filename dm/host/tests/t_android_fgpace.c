@@ -1,4 +1,4 @@
-// PEANUTS(upstream-candidate): frame-generation pacing loop (dm/gfx/vk_android/vka_fg_pace.h + lsfg/lsfg_pacer.c):
+// KIWI(upstream-candidate): frame-generation pacing loop (dm/gfx/vk_android/vka_fg_pace.h + lsfg/lsfg_pacer.c):
 // closed-loop simulation of FIFO swapchain + VK_GOOGLE_display_timing desiredPresentTime backpressure. Verifies
 // recovery from temporary slowdowns across x2/x3/x4, target-FPS mode, and 60/90/120 Hz panels without breaking
 // genuinely GPU-bound, decoupled, or host-capped games.

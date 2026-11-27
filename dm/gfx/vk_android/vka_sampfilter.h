@@ -1,4 +1,4 @@
-// PEANUTS: filter compatibility for direct combined samplers, using the final view's optimal-tiling format features.
+// KIWI: filter compatibility for direct combined samplers, using the final view's optimal-tiling format features.
 #pragma once
 #include "../nvn/nvn_obj.h"
 

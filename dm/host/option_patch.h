@@ -1,4 +1,4 @@
-// PEANUTS: opt-in profile code words, independent of the FPS controller.
+// KIWI: opt-in profile code words, independent of the FPS controller.
 // Reuse the expected-byte transaction; allow only literal words in main text.
 #pragma once
 #include "fpslocker_plan.h"

@@ -64,7 +64,7 @@ class Timing(unittest.TestCase):
         return struct.unpack('<f', self.u.mem_read(self.obj+0xd0, 4))[0], self.read32(self.obj+0xd8)
 
     def test_integer_clock_keeps_thirty_ticks_per_second(self):
-        # PEANUTS: Fixed-step rates share the same 30 Hz clock.
+        # KIWI: Fixed-step rates share the same 30 Hz clock.
         for vsyncs, frames in ((1, 60), (2, 30), (3, 20)):
             self.u.mem_write(self.obj+0xd4, bytes(4))
             total = 0
@@ -85,7 +85,7 @@ class Timing(unittest.TestCase):
             self.assertEqual(integral, int(elapsed))
         self.assertEqual(struct.unpack('<Q', self.u.mem_read(self.state+0x30, 8))[0], 160)
 
-    # PEANUTS: Exercise every launcher rate with the elapsed clock.
+    # KIWI: Exercise every launcher rate with the elapsed clock.
     def test_elapsed_clock_tracks_all_launcher_rates(self):
         self.u.mem_write(self.state+0x3c, struct.pack('<I', 1))
         self.u.mem_write(self.obj+0xdc, struct.pack('<f', 0.03))

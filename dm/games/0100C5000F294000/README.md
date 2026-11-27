@@ -1,6 +1,6 @@
 # Battle Brothers (`0100C5000F294000`)
 
-<!-- PEANUTS: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
+<!-- KIWI: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
 
 Update 1.14.0 (v917504) on the base game. SDK 13.3.2. Overhype Studios' own engine: the game logic is Squirrel 3.0.4 scripts in the RomFS (`data/scripts/*.nut`), the interface NoesisGUI (`noesis/*.xaml`), with NVN graphics. Modules `main` and `sdk`.
 

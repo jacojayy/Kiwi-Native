@@ -1,4 +1,4 @@
-// PEANUTS(upstream-candidate): pure-C frame-generation pacing math (used by vka_framegen.c and tested by dm/host/tests/t_android_fgpace.c).
+// KIWI(upstream-candidate): pure-C frame-generation pacing math (used by vka_framegen.c and tested by dm/host/tests/t_android_fgpace.c).
 // Breaks the positive feedback loop between lsfg_pacer's smoothed_interval, VK_GOOGLE_display_timing hold,
 // and FIFO swapchain backpressure: when vkAcquireNextImageKHR blocks while the present thread spent no time
 // waiting for the game (neither in the present queue nor on the game's GPU fence), the measured arrival interval

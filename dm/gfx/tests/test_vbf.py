@@ -12,10 +12,10 @@ os.environ.setdefault('DM_GAME', '010015100B514000')
 import shader_split as split
 import vbf
 
-try: import lz4.block   # PEANUTS(upstream-candidate): only the comparison with the lz4 package below needs it
+try: import lz4.block   # KIWI(upstream-candidate): only the comparison with the lz4 package below needs it
 except ImportError: lz4 = None
 
-# PEANUTS(upstream-candidate): 1,000 bytes of b'last block' * 100 as an LZ4 block written by hand: 10 literals, a match of 985 bytes at offset 10 (token 0xAF, then the length bytes 255 255 255 201), 5 literals.
+# KIWI(upstream-candidate): 1,000 bytes of b'last block' * 100 as an LZ4 block written by hand: 10 literals, a match of 985 bytes at offset 10 (token 0xAF, then the length bytes 255 255 255 201), 5 literals.
 LZ4_LAST = b'\xaflast block\x0a\x00\xff\xff\xff\xc9\x50block'
 
 
@@ -47,7 +47,7 @@ class Vbf(unittest.TestCase):
             with path.open('rb') as f:
                 with self.assertRaises(ValueError): vbf.read(f, entries[0])
 
-    # PEANUTS(upstream-candidate): FFXII The Zodiac Age's VBF blocks are LZ4, not zlib: the block kind is read from the block, not from an exception.
+    # KIWI(upstream-candidate): FFXII The Zodiac Age's VBF blocks are LZ4, not zlib: the block kind is read from the block, not from an exception.
     def test_zlib_header(self):
         for level in (0, 1, 6, 9): self.assertTrue(vbf.zlib_header(zlib.compress(b'x' * 100, level)), level)
         self.assertTrue(vbf.zlib_header(zlib.compress(b'x' * 100, wbits=9)))

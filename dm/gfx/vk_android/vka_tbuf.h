@@ -1,4 +1,4 @@
-// PEANUTS: how a buffer texture bound to a texel buffer slot is read (vka_draw.c tbuf_view), as pure logic, free of Android and Vulkan so a unit test on Linux can check
+// KIWI: how a buffer texture bound to a texel buffer slot is read (vka_draw.c tbuf_view), as pure logic, free of Android and Vulkan so a unit test on Linux can check
 // it (dm/host/tests/t_android_tbuf.c).
 // A read-only buffer texture of up to 1 MiB is read through a copy of the CPU's bytes taken when its draw or dispatch is recorded (DM_VK_TBUF_COPY: the game may refill
 // the buffer for its next frame before the GPU has drawn this one). That copy is wrong for a buffer the GPU itself writes earlier in the same work: the CPU sees those
@@ -60,7 +60,7 @@ static inline int vktb_memo_put(vktb_memo *m, int tid, uint8_t dim, int gpu) {  
 }
 static inline void vktb_memo_fresh(vktb_memo *m, int tid, uint8_t dim) { int i = vktb_memo_find(m, tid, dim); if (i >= 0 && m->e[i].gpu) m->e[i].fresh = 1; }
 static inline int vktb_memo_bind_gpu(const vktb_memo *m, int tid, uint8_t dim) { int i = vktb_memo_find(m, tid, dim); return i >= 0 && m->e[i].gpu && m->e[i].fresh; }
-// PEANUTS: A copy of the CPU's bytes kept for the submission (vka_draw.c g_tbc) may be bound again only in the submission that made it: its scratch memory retires with that
+// KIWI: A copy of the CPU's bytes kept for the submission (vka_draw.c g_tbc) may be bound again only in the submission that made it: its scratch memory retires with that
 // submission's fence. sub: a count of the submissions recorded (vka_draw_sub_begin), not vka_fence_last() + 1, which stays the same over the submissions whose fences
 // the worker reserved ahead (Hogwarts Legacy: three a frame; a copy of the first was bound in the next two from memory handed out again: plants and ground black for single frames)
 static inline int vka_tbuf_copy_live(uint64_t made_sub, uint64_t cur_sub) { return made_sub == cur_sub; }

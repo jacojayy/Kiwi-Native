@@ -91,7 +91,7 @@ static void t_slots(void) {
 static void t_npads(void) {
     // One player (the keyboard, or one controller): as before, everything is player 1 on No1 docked
     g_mode = 1; dm_pad_players(0);
-    // PEANUTS: no style before the game has set its supported styles; the style events bound before are signalled when it does (No1 docked, Handheld in handheld mode),
+    // KIWI: no style before the game has set its supported styles; the style events bound before are signalled when it does (No1 docked, Handheld in handheld mode),
     // an empty set lifts nothing, a state read without any set lifts it, and a change of operation mode signals No1 and Handheld
     static char ev0[1], evh[1];
     g_signals = 0; h_hid_BindStyleEv(&(uint32_t){0}, ev0, 0); h_hid_BindStyleEv(&(uint32_t){NPAD_HANDHELD}, evh, 0);
@@ -108,7 +108,7 @@ static void t_npads(void) {
     CHECK(h_hid_GetStyle(&(uint32_t){0}) == 0 && buttons_of(0, STYLE_FULLKEY) == 0 && g_signals == 1 && g_signalled == ev0 && h_hid_GetStyle(&(uint32_t){0}) == STYLE_FULLKEY,
           "a state read without supported styles reports the controllers from then on");
     g_signals = 0;
-    // PEANUTS end
+    // KIWI end
     CHECK(h_hid_GetStyle(&(uint32_t){0}) == STYLE_FULLKEY && h_hid_GetStyle(&(uint32_t){1}) == 0 && h_hid_GetStyle(&(uint32_t){NPAD_HANDHELD}) == 0, "one player: No1 only");
     CHECK(dm_player_npad(0) == 0 && dm_player_npad(1) == 1 && dm_player_npad(7) == 7, "player n on No n docked");
     dm_input_set(DM_BTN_X, 100, 0, 0, 0); dm_pad_set(DM_BTN_A, -200, 0, 0, 0);

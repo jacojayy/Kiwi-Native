@@ -1,4 +1,4 @@
-"""PEANUTS: known bad GPU driver builds (KnownDrivers.java with android/app/src/jvmtest's KnownDriversJvmTest): Turnip v27.0.0-R3 on Adreno 7xx, matched by its Mesa
+"""KIWI: known bad GPU driver builds (KnownDrivers.java with android/app/src/jvmtest's KnownDriversJvmTest): Turnip v27.0.0-R3 on Adreno 7xx, matched by its Mesa
 git hash in the driver's own driverInfo or meta.json, never by a folder name; the driver pickers mark it, a start with it asks (Play anyway / Change driver) and the
 game's log gets one [RED] line. The JVM part is skipped without a JDK."""
 import shutil
@@ -8,9 +8,9 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android'
-UI = REPO / 'android/app/src/main/java/dev/peanuts/ui'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/KnownDriversJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative'
+UI = REPO / 'android/app/src/main/java/hernandez/kiwinative/kiwi/ui'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/KnownDriversJvmTest.java'
 
 
 def read(p):
@@ -47,7 +47,7 @@ class Wiring(unittest.TestCase):
 
     def test_documented(self):
         self.assertIn('KnownDrivers', read(REPO / 'android/README.md'))
-        self.assertIn('Turnip v27.0.0-R3', read(REPO / 'peanuts/docs/FAQ.md'))
+        self.assertIn('Turnip v27.0.0-R3', read(REPO / 'kiwi/docs/FAQ.md'))
 
 
 @unittest.skipUnless(shutil.which('javac') and shutil.which('java'), 'no JDK')
@@ -57,7 +57,7 @@ class KnownDriversJvm(unittest.TestCase):
             srcs = [SRC / f'{n}.java' for n in ('KnownDrivers', 'Recommend', 'Readiness')]
             r = subprocess.run(['javac', '-Xlint:all', '-Werror', '-encoding', 'UTF-8', '-d', d, *map(str, srcs), str(TEST)], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-            r = subprocess.run(['java', '-cp', d, 'dev.nxnative.android.KnownDriversJvmTest'], capture_output=True, text=True)
+            r = subprocess.run(['java', '-cp', d, 'hernandez.kiwinative.KnownDriversJvmTest'], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertEqual(r.stdout.strip(), 'ok')
 

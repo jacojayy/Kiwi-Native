@@ -14,7 +14,7 @@ import advanced_switches   # noqa: E402
 REPO = Path(__file__).resolve().parents[2]
 TABLE = REPO / 'dm/tools/advanced_fix.tsv'
 RULES = REPO / 'dm/tools/log_rules.tsv'
-LOGDIGEST = REPO / 'android/app/src/main/java/dev/nxnative/android/LogDigest.java'
+LOGDIGEST = REPO / 'android/app/src/main/java/hernandez/kiwinative/LogDigest.java'
 WIKI = REPO / 'wiki/Troubleshooting.md'
 COLS = ['rule_id', 'advanced_id', 'value', 'scope', 'sentence']
 BEGIN = '<!-- fix-table:begin (dm/tools/advanced_fix.py) -->'
@@ -56,7 +56,7 @@ def problems(head, rows, adv, log_rules, kinds):
     seen = set()
     for r in rows:
         k, n = r['rule_id'], r['advanced_id']
-        def no(msg, k=k, n=n): bad.append(f'{k} -> {n}: {msg}')   # PEANUTS(upstream-candidate): bind this row's labels
+        def no(msg, k=k, n=n): bad.append(f'{k} -> {n}: {msg}')   # KIWI(upstream-candidate): bind this row's labels
         if (k, n) in seen: no('listed twice')
         seen.add((k, n))
         if k.startswith(EXIT):

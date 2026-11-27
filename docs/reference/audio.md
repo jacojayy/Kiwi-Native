@@ -15,7 +15,7 @@ Check whether the SDK carries the renderer: list the `sdk` module's exports for 
 The open then goes through `CreateAudioRendererManagerByDfc`; no IPC.
 For a replaced DSP renderer the size query keeps the service's work-buffer contract; a larger local CPU representation is a backend cost. See [A sound engine's heap too small for its renderer and players](#a-sound-engines-heap-too-small-for-its-renderer-and-players).
 
-<!-- PEANUTS: the audio renderer service for an SDK with no renderer of its own -->
+<!-- KIWI: the audio renderer service for an SDK with no renderer of its own -->
 ### An SDK with no renderer of its own
 
 - **Symptom:** `[RED] sf: the game connects to service audren:u itself, which the host does not serve`, then `Break#1 reason=0` in `nn::diag::detail::AbortImpl` under `nn::audio::GetAudioRendererWorkBufferSize` → `CreateAudioRendererManagerForAppletByHipc`, at boot.
@@ -39,7 +39,7 @@ For a replaced DSP renderer the size query keeps the service's work-buffer contr
 - **Fix:** both forms go through one open that starts the thread (`hle_audren.c` `ar_open`).
 - **Found on:** [Balatro](../../dm/games/0100CD801CE5E000/README.md) (SDK 18.3.2, LÖVE's OpenAL Soft; one boot).
 
-<!-- PEANUTS(upstream-candidate): nxnative 18b435ac38 / a334797d12, more than one audio renderer -->
+<!-- KIWI(upstream-candidate): nxnative 18b435ac38 / a334797d12, more than one audio renderer -->
 ### A game with more than one renderer
 
 - **Symptom:** `[RED] audren: a second renderer (the host drives only one)` with different parameters from the first open, and that renderer's sound is never heard; later, `catch-up renders so far` in the thousands (7,625 in 6 minutes), about 10% of the first renderer's frames.
@@ -51,7 +51,7 @@ For a replaced DSP renderer the size query keeps the service's work-buffer contr
 
 ### The SDK's open with an event calls the open without one (`t_in_open`)
 
-- **Symptom:** `audren: OpenAudioRenderer` logged twice right after the first open, with the same work buffer and "original device 1 mode 1", and a second render thread (the second log line used to be `[RED] audren: a second renderer`, which now means [more than one renderer](#a-game-with-more-than-one-renderer)). <!-- PEANUTS -->
+- **Symptom:** `audren: OpenAudioRenderer` logged twice right after the first open, with the same work buffer and "original device 1 mode 1", and a second render thread (the second log line used to be `[RED] audren: a second renderer`, which now means [more than one renderer](#a-game-with-more-than-one-renderer)). <!-- KIWI -->
 - **Cause:** not a second renderer: SDK 17.5.3's `OpenAudioRenderer` with an event opens it by calling the form without one through the PLT (`sdk+0x1e489c`), which the loader binds to the host's hook since that form has one ([A renderer opened without an event](#a-renderer-opened-without-an-event)), so `ar_open` ran twice for one renderer. The inner call started the render thread before the outer one had created the event, and the outer call took the renderer for a second one.
 - **Fix:** a thread-local flag (`t_in_open`) hands the inner call straight to the SDK with the host's CPU / manual copy of the parameter, and only the outer call starts the thread (`hle_audren.c`).
 - **Found on:** [ROMANCE OF THE THREE KINGDOMS 8 REMAKE](../../dm/games/0100C2A01A730000/README.md) (SDK 17.5.3).
@@ -349,7 +349,7 @@ For a replaced DSP renderer the size query keeps the service's work-buffer contr
 
 ### The sdk's Opus decoder read the game's libopus tables
 
-<!-- PEANUTS -->
+<!-- KIWI -->
 - **Symptom:** voices and music muffled and thin, at full frame rate with no underruns: the decoded Opus PCM (`DM_OPUS_DUMP`) is 15-20 dB below what libopus makes of the same packets and, per CELT band, three of every four bands are 25-38 dB down (coherence near 1 in the bands kept); the game's final mix carries the loss (dialogue 8-16 kHz 16 dB under an Eden-based emulator on the same line).
 - **Cause:** the `sdk`'s libopus (fixed point, functions renamed `nncodecLibopus_*`) keeps its tables under libopus's plain names (`eMeans`, `tf_select_table`, `silk_*`, ~70 symbols) with default visibility, and the loader binds a name to the first module that defines it. Hogwarts Legacy's `main` links its own libopus 1.1-beta (floating point), so the `sdk`'s CELT decoder read `main`'s tables (float `eMeans` read as fixed-point bytes): wrong band energies. The same `sdk` code run alone (unicorn, its own tables) decodes bit-exactly as libopus. On the console this code never runs: the hardware decoder (hwopus) does the work.
 - **Fix:** `hle_codec.c`: when a game module exports libopus's own decoder (`opus_decoder_get_size`, `_init`, `opus_decode`, `opus_decoder_ctl`), the hardware decoder's C interface decodes with it, one state per game decoder, Nintendo's 8-byte packet header stripped; `DM_OPUS_SDK=1` keeps the `sdk`'s. The multi-stream and manager forms still use the `sdk`'s decoders.
@@ -374,23 +374,23 @@ For a replaced DSP renderer the size query keeps the service's work-buffer contr
 - **Found on:** [DRAGON QUEST XI S: Echoes of an Elusive Age – Definitive Edition](../../dm/games/01006C300E9F0000/README.md).
 - **Check:** `audren: rendered 12000 frames, N of them not silent` shows whether a game's sound reaches the output.
 
-<!-- PEANUTS begin: the sound follows the game's pace (dm/peanuts/peanuts_audiosync.c) -->
+<!-- KIWI begin: the sound follows the game's pace (dm/kiwi/kiwi_audiosync.c) -->
 ### A game that keeps its sound in step with its frames
 
 - **Symptom:** short dropouts in cutscenes and heavy scenes, 85–115 ms of exact zeros every few seconds (every 0.5 s at 47 fps), each with a one-frame volume ramp down before and up after; the output has no underruns and every rendered frame sounds.
 - **Cause:** the game's timeline counts frames, while its sound plays in real time. Below its frame rate (a panel slower than 60 Hz: the AYN Thor's measures 59.84 Hz; dropped frames) the timeline falls behind the sound, and the game resyncs: it sets the volume of a synced stream's voices to 0, pauses them (`nn::audio::SetVoicePlayState`) and starts them again about 70 ms later, each time the sound is about 100 ms ahead.
 - **Fix:** the host plays the renderer's output at the game's pace (presented frames / the game's frame rate, against real time, and the sound's lead): within 1 % for every game (a resampler, inaudible), which is the default (`PN_AUDIO_FOLLOW=1`). Following fully (a WSOLA time-stretch, pitch kept) is `PN_AUDIO_FOLLOW=2` only: 0.1.8 also turned it on for a game seen pausing and restarting a group of voices within 300 ms twice within 60 s while it ran slow, kept in `<DM_TEMP>/audio_follow`, which slowed the sound under a frame rate cap (below). `PN_AUDIO_FOLLOW=0` off.
 - **Found on:** [Super Mario Odyssey](../../dm/games/0100000000010000/README.md) 1.4.1 on the AYN Thor.
-- **Check:** `t_peanuts_audiosync` (`make -C dm/host/tests GAME=<id> peanuts-host`); on the phone the log's `peanuts: the sound follows the game's pace` lines give the pace, the lead and the tempo, and a `DM_AUDIO_DUMP` shows no runs of exact zeros inside the sound.
+- **Check:** `t_kiwi_audiosync` (`make -C dm/host/tests GAME=<id> kiwi-host`); on the phone the log's `kiwi: the sound follows the game's pace` lines give the pace, the lead and the tempo, and a `DM_AUDIO_DUMP` shows no runs of exact zeros inside the sound.
 
 ### Sound slowed and stretched under a frame rate cap (0.1.8)
 
 - **Symptom:** with a frame rate cap below the game's own rate (Breath of the Wild or Tears of the Kingdom with the 60 fps rows at a 30 to 45 fps cap), the sound plays slower than normal, stretched, with an echo or crackling; at the game's full rate it is normal. `PN_AUDIO_FOLLOW=0` brings it back. Since 0.1.8; GitHub issue #600 (and #592, #627, #730, #768).
 - **Cause:** under the cap the game runs slower than real time and resyncs its sound, which the automatic mode of [the section above](#a-game-that-keeps-its-sound-in-step-with-its-frames) took as a game that keeps its sound in step with its frames: it then followed the game's pace in full, down to 0.5, and kept that finding for every later start in `<DM_TEMP>/audio_follow`.
-- **Fix:** the automatic mode keeps to the inaudible 1 % (the finding is logged once, `the sound keeps its speed`); an `audio_follow` file from 0.1.8 is ignored; full following is `PN_AUDIO_FOLLOW=2` only (`peanuts_audiosync.c`).
+- **Fix:** the automatic mode keeps to the inaudible 1 % (the finding is logged once, `the sound keeps its speed`); an `audio_follow` file from 0.1.8 is ignored; full following is `PN_AUDIO_FOLLOW=2` only (`kiwi_audiosync.c`).
 - **Found on:** [The Legend of Zelda: Breath of the Wild](../../dm/games/01007EF00011E000/README.md) and [The Legend of Zelda: Tears of the Kingdom](../../dm/games/0100F2C0115B6000/README.md), several phones.
-- **Check:** `t_peanuts_audiosync`: a game at 0.85 of its pace with two resyncs stays at the inaudible tempo, and an old finding does not turn full following on.
-<!-- PEANUTS end -->
+- **Check:** `t_kiwi_audiosync`: a game at 0.85 of its pace with two resyncs stays at the inaudible tempo, and an old finding does not turn full following on.
+<!-- KIWI end -->
 
 ### No virtual audio input devices (SDK 22)
 

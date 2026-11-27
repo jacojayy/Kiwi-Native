@@ -7,9 +7,9 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/ondevice/java/dev/nxnative/android/CpuCores.java'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/CpuCoresJvmTest.java'
-SERVICE = REPO / 'android/app/src/ondevice/java/dev/nxnative/android/PackService.java'
+SRC = REPO / 'android/app/src/ondevice/java/hernandez/kiwinative/CpuCores.java'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/CpuCoresJvmTest.java'
+SERVICE = REPO / 'android/app/src/ondevice/java/hernandez/kiwinative/PackService.java'
 
 
 @unittest.skipUnless(shutil.which('javac') and shutil.which('java'), 'no JDK')
@@ -24,7 +24,7 @@ class Workers(unittest.TestCase):
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def java(self, *args):
-        r = subprocess.run(['java', '-cp', str(self.tmp / 'classes'), 'dev.nxnative.android.CpuCoresJvmTest', *map(str, args)], capture_output=True, text=True)
+        r = subprocess.run(['java', '-cp', str(self.tmp / 'classes'), 'hernandez.kiwinative.CpuCoresJvmTest', *map(str, args)], capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)
         return dict(l.split(' ', 1) for l in r.stdout.splitlines())
 
@@ -53,7 +53,7 @@ class Workers(unittest.TestCase):
         self.assertEqual(got['workers'], '3')
 
     def test_service_sets_it(self):
-        text = SERVICE.read_text()   # PEANUTS: the count is CpuCores.shaderWorkers() sized down for the phone's memory (BuildMemory)
+        text = SERVICE.read_text()   # KIWI: the count is CpuCores.shaderWorkers() sized down for the phone's memory (BuildMemory)
         self.assertIn("CpuCores.shaderWorkers()", text)
         self.assertIn('PackEngine.setenv("DMSH_VK_PROCS", String.valueOf(shaderWorkers))', text)
 

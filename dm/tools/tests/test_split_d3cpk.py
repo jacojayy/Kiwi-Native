@@ -1,6 +1,6 @@
 """Diablo III's console packages (d3cpk.py) give the shaders of their zlib streams to the split, whatever byte ranges the jobs cut them into, and name a control section whose code
 area is not in its stream. Synthetic bytes only."""
-# PEANUTS: Synthetic package coverage for the Diablo III splitter.
+# KIWI: Synthetic package coverage for the Diablo III splitter.
 import contextlib
 import io
 import struct

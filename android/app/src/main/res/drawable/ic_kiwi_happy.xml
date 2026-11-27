@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Kiwi Native mark, as ic_kiwi.xml (the name stays: the header badge, the empty list and the launcher icon's layers look it up) -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetLeft="21%" android:insetTop="21%" android:insetRight="21%" android:insetBottom="21%">
+    <bitmap android:src="@drawable/kiwi_sprite" android:filter="false" />
+</inset>

@@ -1,4 +1,4 @@
-# PEANUTS: new file (code mods: dm/tools/pack_android.py's --modules/--mod-exefs/--mod-patches, DESIGN-MODS.md)
+# KIWI: new file (code mods: dm/tools/pack_android.py's --modules/--mod-exefs/--mod-patches, DESIGN-MODS.md)
 """scripts/pack_android.py's mod-aware helpers (merge_mod_modules, apply_mod_patches): the pure module-list/source-map merge, and the exefs_patches
 layer wired to a real (synthetic) NSO the same way test_patch_ips.py does. Does not exercise the CLI end to end (that needs a full dump/profile,
 exercised on a real device per the mods build report) - this is the two helper functions pack_android.py's main() calls."""
@@ -15,7 +15,7 @@ REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO / 'scripts'))
 sys.path.insert(0, str(REPO / 'dm/tools'))
 import pack_android as pa   # noqa: E402
-import ips, nso   # noqa: E402  # PEANUTS(upstream-candidate): patch_ips is exercised through the packer.
+import ips, nso   # noqa: E402  # KIWI(upstream-candidate): patch_ips is exercised through the packer.
 
 TEXT, RO, DATA = bytes(range(256)) * 20, b'read-only ' * 300, b'\x01\x02' * 0x900
 
@@ -113,7 +113,7 @@ class ApplyModPatches(unittest.TestCase):
 class ModMemoryRows(unittest.TestCase):
     """Which titles' builds with mods get a profile.bin of their own for mod_memory.tsv's numbers alone (a mod that adds no module)"""
     def test_a_title_with_rows_and_one_without(self):
-        rows = [c for line in (REPO / 'dm/peanuts/profile/mod_memory.tsv').read_text(encoding='utf-8').splitlines() if len(c := line.split('#', 1)[0].split()) == 3]
+        rows = [c for line in (REPO / 'dm/kiwi/profile/mod_memory.tsv').read_text(encoding='utf-8').splitlines() if len(c := line.split('#', 1)[0].split()) == 3]
         self.assertTrue(rows, 'mod_memory.tsv has no rows')
         self.assertTrue(pa.mod_memory_rows(rows[0][0]))
         self.assertTrue(pa.mod_memory_rows(rows[0][0].lower()))

@@ -1,4 +1,4 @@
-// PEANUTS: texture readback for the companion runtime (the whole file; vka_readback.inc in vka_tex.c is the replay's side, dm/peanuts/rt/shim/shim_readback.cpp the runtime's).
+// KIWI: texture readback for the companion runtime (the whole file; vka_readback.inc in vka_tex.c is the replay's side, dm/kiwi/rt/shim/shim_readback.cpp the runtime's).
 // A companion's module may ask for a CPU copy of one texture the game keeps only on the GPU (a fog-of-war mask painted into a render target, a minimap rendered to a texture).
 // The contract is the companion runtime's own (its "texture" module extension): plain 8-bit textures only, R8 or four bytes a pixel, one whole level 0 of at most 2048 a side
 // and 16 MiB, found by its storage address or as the newest of a size and format, narrowed by selector flags; nothing ever waits for the GPU.
@@ -68,7 +68,7 @@ int vka_rb_available(void);
 // Queues one request; never blocks, never touches the GPU. 1 = taken (done is called once, later), 0 = not (out of the limits, both slots busy, or not available)
 int vka_rb_submit(const vka_rb_request *rq);
 
-// ---- pure rules (tested on a PC: dm/peanuts/rt/test/svc_test.cpp) ----
+// ---- pure rules (tested on a PC: dm/kiwi/rt/test/svc_test.cpp) ----
 // VkFormat numbers (vulkan_core.h; vka_readback.inc asserts them)
 enum { VKA_RB_VK_R8_UNORM = 9, VKA_RB_VK_R8G8B8A8_UNORM = 37, VKA_RB_VK_R8G8B8A8_SRGB = 43, VKA_RB_VK_B8G8R8A8_UNORM = 44, VKA_RB_VK_B8G8R8A8_SRGB = 50,
        VKA_RB_VK_A8B8G8R8_UNORM_PACK32 = 51, VKA_RB_VK_A8B8G8R8_SRGB_PACK32 = 57 };

@@ -1,4 +1,4 @@
-// PEANUTS: Generated from block_linear.comp with glslc -O --target-env=vulkan1.1.
+// KIWI: Generated from block_linear.comp with glslc -O --target-env=vulkan1.1.
 #pragma once
 static const uint32_t SPV_BLOCK_LINEAR[] = {
     0x07230203, 0x00010300, 0x000d000b, 0x000000c7, 0x00000000, 0x00020011, 0x00000001, 0x0006000b,

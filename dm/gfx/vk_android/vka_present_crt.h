@@ -1,4 +1,4 @@
-// PEANUTS: SPIR-V of the present's CRT look (vka_present.c crt_copy, DM_VK_CRT): drawn with the FSR passes' covering triangle (vka_fsr_vert). Made from
+// KIWI: SPIR-V of the present's CRT look (vka_present.c crt_copy, DM_VK_CRT): drawn with the FSR passes' covering triangle (vka_fsr_vert). Made from
 // dm/gfx/vk_android/crt/crt.frag with the NDK's glslc:
 //   glslc -O --target-env=vulkan1.1 -mfmt=num dm/gfx/vk_android/crt/crt.frag -o -
 #pragma once

@@ -1,4 +1,4 @@
-"""PEANUTS: scripts/pack_android.py copies the shader library into a pack on a microSD card (#495). The card refuses to set a file's time (EPERM from os.utime,
+"""KIWI: scripts/pack_android.py copies the shader library into a pack on a microSD card (#495). The card refuses to set a file's time (EPERM from os.utime,
 as Android's FUSE daemon answers for a card's FAT file system), and shutil.copystat after the copy stopped the pack at its very last step, after the whole
 build. The copy now keeps the time only where the storage takes it. No game files needed: the card's refusal is simulated."""
 import argparse

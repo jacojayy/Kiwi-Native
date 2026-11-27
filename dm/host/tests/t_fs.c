@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>   // PEANUTS: concurrent image read/size/close test
+#include <pthread.h>   // KIWI: concurrent image read/size/close test
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
@@ -195,7 +195,7 @@ static void nup_tests(const char *root) {
     g_nmnt = 0; unsetenv("DM_ROMFS");
 }
 
-// PEANUTS begin: worker for lock-free image I/O test
+// KIWI begin: worker for lock-free image I/O test
 typedef struct { uint64_t h; int ok; } io_arg;
 static void *io_worker(void *vp) {
     io_arg *a = vp; int64_t sz = 0; size_t nr = 0; char b[16] = {0};
@@ -206,7 +206,7 @@ static void *io_worker(void *vp) {
     }
     return NULL;
 }
-// PEANUTS end
+// KIWI end
 int main(void) {
     char root[1024], save[1100], work[1200], p[1200];
     const char *sp = getenv("TMPDIR"); snprintf(root, sizeof root, "%s/t_fs.XXXXXX", sp ? sp : "/private/tmp");
@@ -428,7 +428,7 @@ int main(void) {
         g_test_users = 1;
     }
 
-    // PEANUTS begin: Unmount of add-on content, detached image slots, generation numbers, duplicate mounts, and lock-free image I/O
+    // KIWI begin: Unmount of add-on content, detached image slots, generation numbers, duplicate mounts, and lock-free image I/O
     printf("⑩ Unmount of add-on content (multi-DLC): folder, RomFS image, slot reuse, and open handles\n");
     {   extern int g_test_users; g_test_users = 1; g_nmnt = 0;
         char aocd[1100], d1[1200], d2[1200], f[1300];
@@ -543,7 +543,7 @@ int main(void) {
         g_test_users = 1;
         unsetenv("DM_AOC_DIR");
     }
-    // PEANUTS end
+    // KIWI end
 
     char cmd[1200]; snprintf(cmd, sizeof cmd, "rm -rf '%s'", root); system(cmd);
     printf("== %d checks, %d failed ==\n", checks, fails);

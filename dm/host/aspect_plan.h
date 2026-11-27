@@ -1,4 +1,4 @@
-// PEANUTS: exact-build aspect rows (game.tsv aspect_plan). A game that builds its screen shape from one 16:9 number (a ratio, or a
+// KIWI: exact-build aspect rows (game.tsv aspect_plan). A game that builds its screen shape from one 16:9 number (a ratio, or a
 // width beside a fixed height) follows the picture's shape (DM_VK_PICTURE_ASPECT=<w>:<h>, vka_present.c) with a profile row and no
 // code of its own: the loader checks the word the row expects and writes the value for the chosen shape, before code is sealed.
 // Spec (DM_ASPECT_PLAN): "<main build, 32 hex>,<kind>,m0x<offset in main>,<expected word, 8 hex as in the file>" rows, ';' between.

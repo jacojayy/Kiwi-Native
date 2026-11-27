@@ -80,8 +80,8 @@ typedef struct thr {
     // Pausing (SetThreadActivity, used by IL2CPP's garbage collector to stop the world): pause_req = requested, paused = stopped; when stopped inside an SVC the context comes from the gate frame svc_regs (registered on SVC entry),
     // when stopped in guest code the signal handler saves it into ctx_*; pcv lets the requester wait for "stopped" and the paused thread wait for "resume"
     _Atomic int pause_req; int paused;
-    int world;                 // PEANUTS: this pause_req was set by dm_guest_stop_all (the companion runtime's stop of every game thread), not by the game's SetThreadActivity; under G
-    uint64_t nat_sp;           // PEANUTS: a stack address of this thread at its entry into the outermost native HLE wait (dm_thread_native_wait): dm_guest_stopped_in scans its stack from there; under G
+    int world;                 // KIWI: this pause_req was set by dm_guest_stop_all (the companion runtime's stop of every game thread), not by the game's SetThreadActivity; under G
+    uint64_t nat_sp;           // KIWI: a stack address of this thread at its entry into the outermost native HLE wait (dm_thread_native_wait): dm_guest_stopped_in scans its stack from there; under G
     uint64_t *_Atomic svc_regs; uint64_t svc_pc, svc_x18;   // svc_x18: the guest's x18 at SVC entry (its thread slot; the gate frame holds the Apple platform register)
     // SVC exit without G: bit 0 = inside an SVC, bit 1 = a pause was requested. The exit clears bit 0 with one compare-and-swap when bit 1 is clear, and takes G only otherwise;
     // the requester sets bit 1 and treats the thread as stopped only if bit 0 was set, so a thread it counts as stopped in an SVC cannot leave the SVC without G (svc_regs stays valid for GetThreadContext3)
@@ -92,12 +92,12 @@ typedef struct thr {
     uint32_t woke_by;          // the guest thread whose wake() ended the current wait (its handle; 0 = a host thread or a timeout)
     uint64_t gw_ns, gw_max_ns; uint32_t gw_max_by; int gw_max_kind;
     uint64_t gsl_ns, gnat_ns, gnat_t0;   // time in SleepThread's sleeps and in native HLE waits (dm_thread_native_wait) since the last dm_guest_wait_take   // time blocked in guest waits since the last dm_guest_wait_take, and the longest one (who ended it, its kind)
-    // PEANUTS begin: for the state dump of a frozen game (svc_thread_dump), nothing here decides anything. w_t0 / w_ns: when the current guest wait began and its timeout
+    // KIWI begin: for the state dump of a frozen game (svc_thread_dump), nothing here decides anything. w_t0 / w_ns: when the current guest wait began and its timeout
     // (block); w_dur: how long the last one lasted; held_by: the thread this one's same-core handoff is waiting for (dm_yield_to_core_peers); nmade: threads this one's
     // SVCs woke or moved to a mutex's queue (wake, lock_acquire_for); hist: its last synchronisation SVCs (svc_thread), written by the thread itself
     uint64_t w_t0, w_dur; int64_t w_ns; uint32_t held_by, nmade;
     struct { uint64_t t, a0, a1, dur; uint32_t res, by; uint16_t svc, n; } hist[8]; unsigned nhist;
-    // PEANUTS end
+    // KIWI end
 } thr_t;
 static thr_t *g_all;
 extern __thread _Atomic int dm_host_work;   // declared in hle.h too; defined in hle_nvn.c
@@ -131,13 +131,13 @@ static thr_t *cur(void) {
     if (!t) die("thread SVC called from a non-guest thread");
     return t;
 }
-// PEANUTS begin: a resource the SDK leaves to Horizon's cores to keep apart (hle_fontll.c's font engines, docs/reference/threads.md "Two threads of one core in a
+// KIWI begin: a resource the SDK leaves to Horizon's cores to keep apart (hle_fontll.c's font engines, docs/reference/threads.md "Two threads of one core in a
 //   font engine"): dm_core_excl_held says the calling thread holds one, dm_core_excl_release gives back what it holds. A thread blocks at its SVCs and in native HLE
 //   waits (thr_svc_enter, dm_thread_native_wait), and on Horizon its core then runs another thread
 __thread int dm_core_excl_held;
 void (*dm_core_excl_release)(void);
 uint64_t dm_thread_id_self(void) { thr_t *t = pthread_getspecific(g_keythr); return t ? t->id : 0; }
-// PEANUTS end
+// KIWI end
 // Horizon's per-core priority ordering: a woken higher-priority thread pinned to
 // the caller's core runs until it blocks before the signalling thread continues.
 // See docs/reference/threads.md, "Same-core wake handoffs", for the movie lifetime failure this prevents.
@@ -146,9 +146,9 @@ void dm_thread_mark_host(void) { thr_t *t = pthread_getspecific(g_keythr); if (t
 // Holding G. wake() clears wkind before the pthread resumes; it must already count as runnable in that window, even if Mach still reports WAITING / STOPPED.
 // Explicit host GPU work and contended native codec locks do not occupy a guest core. Ordinary host dispatch delays and HLE calls do, until a guest wait / sleep / exit or a service request (dm_thread_service_request) says otherwise.
 static int thr_runnable(const thr_t *t) {
-    // PEANUTS: a thread held by a stop of all threads (world, dm_guest_stop_all) still counts as runnable: it has not blocked, and its waker is stopped with it. Counted
+    // KIWI: a thread held by a stop of all threads (world, dm_guest_stop_all) still counts as runnable: it has not blocked, and its waker is stopped with it. Counted
     // as blocked (as a thread the game itself paused is, rightly: Horizon does not schedule it), the waker of a same-core handoff found it "not runnable" during the stop,
-    // ended the handoff, and after the resume ran game code beside the higher-priority thread it had woken (t_peanuts_syncstress.c, part 1, case 3)
+    // ended the handoff, and after the resume ran game code beside the higher-priority thread it had woken (t_kiwi_syncstress.c, part 1, case 3)
     return !t->wkind && !t->sleeping && !t->native_wait && !(t->pause_req && !t->world) && !(t->host_work && *t->host_work);
 }
 // Holding G. Whether t was made runnable for self's current handoff (by self, or by a thread that was) and has not blocked since
@@ -210,9 +210,9 @@ void dm_thread_service_request(void) {
 void dm_thread_native_wait(int entering) {
     thr_t *t = pthread_getspecific(g_keythr);
     if (!t) return;
-    if (entering && dm_core_excl_held && dm_core_excl_release) dm_core_excl_release();   // PEANUTS: it blocks (dm_core_excl_held above); before G, which the release does not take
+    if (entering && dm_core_excl_held && dm_core_excl_release) dm_core_excl_release();   // KIWI: it blocks (dm_core_excl_held above); before G, which the release does not take
     pthread_mutex_lock(&G);
-    // PEANUTS: where this thread's stack is while it waits (dm_guest_stopped_in), noted inside the entering branch. As a statement of its own between the two branches it
+    // KIWI: where this thread's stack is while it waits (dm_guest_stopped_in), noted inside the entering branch. As a statement of its own between the two branches it
     // took the else below for itself: a wait entered inside another counted down instead of up, and the outer wait's end died on "unbalanced native HLE wait"
     if (entering) { if (!t->native_wait++) t->gnat_t0 = now_ns(); hand_leave(t);
         if (t->native_wait == 1) t->nat_sp = (uint64_t)(uintptr_t)__builtin_frame_address(0); }
@@ -237,8 +237,8 @@ int dm_yield_to_core_peers(int all) {
         int busy = 0;
         pthread_mutex_lock(&G);
         for (thr_t *t = g_all; t && !busy; t = t->all)
-            if (t != self && t->started && !t->exited && !t->host_owned && t->mask == bit && t->prio < self->prio && thr_runnable(t) && (all || thr_in_handoff(t, self))) { busy = 1; self->held_by = t->handle; }   // PEANUTS: held_by, for the state dump
-        if (!busy) self->held_by = 0;   // PEANUTS
+            if (t != self && t->started && !t->exited && !t->host_owned && t->mask == bit && t->prio < self->prio && thr_runnable(t) && (all || thr_in_handoff(t, self))) { busy = 1; self->held_by = t->handle; }   // KIWI: held_by, for the state dump
+        if (!busy) self->held_by = 0;   // KIWI
         pthread_mutex_unlock(&G);
         if (!busy) return waited;
         { struct timespec ts = {0, 50000}; nanosleep(&ts, 0); } waited = 1;
@@ -284,13 +284,13 @@ static void note_runnable(thr_t *t) {
     if (t->prio < self->prio && t->mask == 1ull << (self->core & 63) && !(self->mask & ~t->mask)) self->yield_pending = 1;   // a waker that can run on another core is not held (dm_yield_to_core_peers)
 }
 static void wake(thr_t *t, int64_t res) {
-    { thr_t *self = pthread_getspecific(g_keythr); t->woke_by = self ? self->handle : 0; if (self) self->nmade++; }   // PEANUTS: nmade, for the state dump
+    { thr_t *self = pthread_getspecific(g_keythr); t->woke_by = self ? self->handle : 0; if (self) self->nmade++; }   // KIWI: nmade, for the state dump
     wait_unlink(t); t->wkind = 0; t->woke = 1; t->wres = res; pthread_cond_signal(&t->cv);
     note_runnable(t);
 }
-// PEANUTS begin: a guest wait's timeout runs on the monotonic clock on Android. pthread_cond_timedwait takes its deadline on the wall clock unless the condition
+// KIWI begin: a guest wait's timeout runs on the monotonic clock on Android. pthread_cond_timedwait takes its deadline on the wall clock unless the condition
 // variable says otherwise, and Android's wall clock is set while a game runs (network time, the user): set back by an hour during a 2 ms TimedWait, the wait's
-// timeout came an hour late; to a game that polls with timed waits that is a thread that never wakes (t_peanuts_syncstress.c, part 1, case 5). The thread's wait
+// timeout came an hour late; to a game that polls with timed waits that is a thread that never wakes (t_kiwi_syncstress.c, part 1, case 5). The thread's wait
 // condition variable (cv) is made for CLOCK_MONOTONIC and block_wait takes its deadline there. Apple has no pthread_condattr_setclock: as it was there
 #ifdef __ANDROID__
 #define WAIT_CLOCK CLOCK_MONOTONIC
@@ -299,7 +299,7 @@ static void wait_cv_init(pthread_cond_t *cv) { pthread_condattr_t a; pthread_con
 #define WAIT_CLOCK CLOCK_REALTIME
 static void wait_cv_init(pthread_cond_t *cv) { pthread_cond_init(cv, NULL); }
 #endif
-// PEANUTS end
+// KIWI end
 // Suspend until woken or timed out (ns<0 infinite, 0 immediate timeout); returns wres or R_TIMEOUT
 static int64_t block_wait(thr_t *t, int kind, int64_t ns);
 static int64_t block(thr_t *t, int kind, int64_t ns) {
@@ -307,10 +307,10 @@ static int64_t block(thr_t *t, int kind, int64_t ns) {
     if (ns == 0) { wait_unlink(t); t->wkind = 0; return R_TIMEOUT; }
     // The time blocked, for the [longframe] line (dm_guest_wait_take): a frame whose presenting thread stood in a guest wait names the kind and the thread that ended it
     uint64_t t0 = now_ns(); t->woke_by = 0;
-    t->w_t0 = t0; t->w_ns = ns;   // PEANUTS: since when and with what timeout, for the state dump
+    t->w_t0 = t0; t->w_ns = ns;   // KIWI: since when and with what timeout, for the state dump
     int64_t r = block_wait(t, kind, ns);
     uint64_t d = now_ns() - t0; t->gw_ns += d;
-    t->w_dur += d;   // PEANUTS: for the thread's SVC history (svc_thread)
+    t->w_dur += d;   // KIWI: for the thread's SVC history (svc_thread)
     if (d > t->gw_max_ns) { t->gw_max_ns = d; t->gw_max_by = t->woke ? t->woke_by : 0; t->gw_max_kind = kind; }
     return r;
 }
@@ -320,7 +320,7 @@ static int64_t block_wait(thr_t *t, int kind, int64_t ns) {
     struct timespec dl;
     int det_wait = ns > 0 && dm_detclock_enabled();
     uint64_t guest_deadline = det_wait ? guest_ns() + (uint64_t)ns : 0;
-    if (ns > 0 && !det_wait) { clock_gettime(WAIT_CLOCK, &dl); dl.tv_sec += ns / 1000000000; dl.tv_nsec += ns % 1000000000;   // PEANUTS: the clock of the thread's cv (WAIT_CLOCK above)
+    if (ns > 0 && !det_wait) { clock_gettime(WAIT_CLOCK, &dl); dl.tv_sec += ns / 1000000000; dl.tv_nsec += ns % 1000000000;   // KIWI: the clock of the thread's cv (WAIT_CLOCK above)
                   if (dl.tv_nsec >= 1000000000) { dl.tv_sec++; dl.tv_nsec -= 1000000000; } }
     while (!t->woke) {
         int rc;
@@ -358,7 +358,7 @@ static void lock_acquire_for(thr_t *t, uint64_t addr, uint32_t tag) {
     }
     t->wkind = 1; t->waddr = addr; t->wtag = tag;      // Still in g_wait, changed to a lock wait
     t->wseq = ++g_wseq;                                  // The kernel inserts it anew into the lock owner's wait queue: at equal priority it goes after the existing lock waiters
-    { thr_t *self = pthread_getspecific(g_keythr); if (self) self->nmade++; }   // PEANUTS: a waiter moved to the mutex's queue counts for the signaller's SVC history too
+    { thr_t *self = pthread_getspecific(g_keythr); if (self) self->nmade++; }   // KIWI: a waiter moved to the mutex's queue counts for the signaller's SVC history too
 }
 
 // ---------- Threads ----------
@@ -435,20 +435,20 @@ void dm_thread_returned(void) { die("guest thread entry function returned (Horiz
 //   · running guest code: send SIGUSR2; the handler saves the ucontext and waits there for the resume (guest code holds no host locks, so the handler may take G);
 //   · inside host code (HLE functions etc.): the handler does not stop it; the requester resends every 100 µs until the thread is back in guest code or enters an SVC.
 module_t *module_of(const void *p);
-// PEANUTS begin: guest code outside the modules. A companion package's helper (dm/peanuts/rt/peanuts_helper.cpp) is code of the package that a patched call of the game runs on
+// KIWI begin: guest code outside the modules. A companion package's helper (dm/kiwi/rt/kiwi_helper.cpp) is code of the package that a patched call of the game runs on
 // the game's own thread, in pages beside main that belong to no module. Without this the pause signal took a thread in it for one in host code and never stopped it there: a
 // stop requested while the helper waited (for one of the game's locks, say) could not complete. The helper holds no host lock, so it stops as game code does.
 // One range, set once before any thread can be in it and never changed: read without a lock, also from the signal handler
 static _Atomic uint64_t g_xcode_lo, g_xcode_hi;
 void dm_guest_code_range(uint64_t lo, uint64_t hi) { atomic_store(&g_xcode_hi, hi); atomic_store(&g_xcode_lo, lo); }
 static int guest_code_extra(uint64_t pc) { uint64_t lo = atomic_load(&g_xcode_lo); return lo && pc >= lo && pc < atomic_load(&g_xcode_hi); }
-// PEANUTS end
+// KIWI end
 static void on_pause_sig(int sig, siginfo_t *si, void *uc_) {
     (void)sig; (void)si;
     thr_t *t = pthread_getspecific(g_keythr);
     if (!t || !atomic_load(&t->pause_req) || atomic_load(&t->svc_regs)) return;
     ucontext_t *uc = uc_;
-    if (!module_of((void *)PLAT_UC_PC(uc)) && !guest_code_extra(PLAT_UC_PC(uc))) return;   // in host code: do not stop; the requester resends   // PEANUTS: a companion's helper code is guest code too (guest_code_extra)
+    if (!module_of((void *)PLAT_UC_PC(uc)) && !guest_code_extra(PLAT_UC_PC(uc))) return;   // in host code: do not stop; the requester resends   // KIWI: a companion's helper code is guest code too (guest_code_extra)
     pthread_mutex_lock(&G);
     if (t->pause_req) {
         for (int i = 0; i < 29; i++) t->ctx_x[i] = PLAT_UC_X(uc, i);
@@ -468,7 +468,7 @@ static void on_pause_sig(int sig, siginfo_t *si, void *uc_) {
 // called by the gate on SVC entry / exit (gate_dispatch in hle.c)
 void thr_svc_enter(uint64_t *regs, uint64_t pc) {
     thr_t *t = pthread_getspecific(g_keythr); if (!t) return;
-    if (dm_core_excl_held && dm_core_excl_release) dm_core_excl_release();   // PEANUTS: an SVC is where a thread blocks (dm_core_excl_held above)
+    if (dm_core_excl_held && dm_core_excl_release) dm_core_excl_release();   // KIWI: an SVC is where a thread blocks (dm_core_excl_held above)
     t->svc_pc = pc; t->svc_x18 = (uint64_t)(uintptr_t)dm_slot_get(18); atomic_store(&t->svc_regs, regs); atomic_fetch_or(&t->svc_state, 1);
     if (atomic_load_explicit(&t->qos_pending, memory_order_relaxed) && atomic_exchange(&t->qos_pending, 0)) {
         pthread_mutex_lock(&G); qos_apply(t); pthread_mutex_unlock(&G);
@@ -488,7 +488,7 @@ static void pause_install(void) {
     sigemptyset(&sa.sa_mask);
     sigaction(SIGUSR2, &sa, NULL);
 }
-// PEANUTS begin: every game thread stopped, for the companion runtime's writes "with the guest stopped" (dm/peanuts: a package's write batch checks values and stores several
+// KIWI begin: every game thread stopped, for the companion runtime's writes "with the guest stopped" (dm/kiwi: a package's write batch checks values and stores several
 // words; Eden suspends the emulated threads around it). Built on the pause above (SetThreadActivity), so a stopped thread is where that leaves it:
 //   - in game code (or a companion helper's), between two instructions, held in the pause signal's handler: it holds no host lock;
 //   - inside an SVC: it may still finish the SVC's host work, but cannot return to game code (thr_svc_leave needs G, which the caller of dm_guest_stop_all holds);
@@ -575,7 +575,7 @@ int dm_guest_stopped_in(uint64_t lo, uint64_t hi) {
     }
     return n;
 }
-// PEANUTS end
+// KIWI end
 // Horizon svc::ThreadContext (arm64, 0x320 bytes)
 typedef struct { uint64_t r[29], fp, lr, sp, pc; uint32_t pstate, pad; __uint128_t v[32]; uint32_t fpcr, fpsr; uint64_t tpidr; } hz_ctx_t;
 _Static_assert(sizeof(hz_ctx_t) == 0x320, "ThreadContext");
@@ -678,7 +678,7 @@ uint32_t svc_thread_main_init(void) {
     pause_install();
     hitch_init();
     thr_t *t = calloc(1, sizeof *t);
-    wait_cv_init(&t->cv); pthread_cond_init(&t->pcv, NULL);   // PEANUTS: wait_cv_init (WAIT_CLOCK)
+    wait_cv_init(&t->cv); pthread_cond_init(&t->pcv, NULL);   // KIWI: wait_cv_init (WAIT_CLOCK)
     // Its affinity is its ideal core alone, as Horizon creates every thread (Mesosphere KThread::Initialize); it was 7, which a same-core handoff now takes for a thread that can run elsewhere (dm_yield_to_core_peers)
     t->started = t->entered = 1; t->prio = 44; t->core = 0; t->mask = 1; t->pt = pthread_self(); t->mport = plat_thread_of(t->pt); t->host_work = &dm_host_work;
     // The iOS boot pthread inherits default QoS. Apply the guest policy before
@@ -744,7 +744,7 @@ static const char *thr_name(thr_t *t, char *nb, size_t n) {   // SDK ThreadType+
     if (plat_mem_read(t->arg + 0x1a0, &np, 8) || !np || plat_mem_read(np, nb, n - 1)) return "?";
     nb[n - 1] = 0; return nb;
 }
-// PEANUTS begin: for hle_fontll.c (dm_core_excl_held above). Whether the caller leaves such a resource to guest thread `owner` between two of its uses, as its core
+// KIWI begin: for hle_fontll.c (dm_core_excl_held above). Whether the caller leaves such a resource to guest thread `owner` between two of its uses, as its core
 //   would on Horizon: both pinned to the same core, and owner alive, runnable and of the same or a higher priority (a core runs no lower-priority thread beside it,
 //   and one of the same priority only once it blocks). 0 for a host thread, an owner gone, or threads Horizon could put on different cores
 int dm_thread_core_excl_wait(uint64_t owner) {
@@ -766,7 +766,7 @@ void dm_thread_describe(uint64_t id, char *buf, size_t n) {
         char nb[32]; snprintf(buf, n, "'%s' (priority %d, core %d, mask %#llx)", thr_name(t, nb, sizeof nb), t->prio, t->core, (unsigned long long)t->mask); break; }
     pthread_mutex_unlock(&G);
 }
-// PEANUTS end
+// KIWI end
 // The calling thread's time in guest waits since its last call (hle_nvn.c's [longframe] attribution): in all, the longest one, its kind and the name of the thread
 // that ended it ("host" for a host thread's signal, "timeout" when none did); SleepThread's sleeps; native HLE waits (a service's blocking call). 0 = not a guest thread
 static const char *const g_wkname[] = {"", "mutex", "condvar", "address", "sync"};
@@ -864,13 +864,13 @@ static void thr_bt(thr_t *t) {
     }
     plat_thread_resume(t->mport);
 }
-__attribute__((weak)) void dm_audren_dump(void);   // PEANUTS: hle_audren.c (a unit that links this file without it has none)
+__attribute__((weak)) void dm_audren_dump(void);   // KIWI: hle_audren.c (a unit that links this file without it has none)
 void svc_thread_dump(void) {
     static const char *kinds[] = {"running/not waiting", "mutex", "condvar", "address", "sync object"};
     int nh = 0; for (int i = 1; i < MAX_H; i++) nh += g_h[i].type != O_FREE;
     fprintf(stderr, "[dm] handle table use %d / %d, threads created so far %llu\n", nh, MAX_H, g_next_id - 0x51);
     fprintf(stderr, "[dm] same-core handoffs %llu, total %.1f ms\n", (unsigned long long)g_preempt_n, g_preempt_ns / 1e6);
-    if (dm_audren_dump) dm_audren_dump();   // PEANUTS: the audio renderer's state; its render thread (host-created, listed below) is what a stalled audio clock hangs on
+    if (dm_audren_dump) dm_audren_dump();   // KIWI: the audio renderer's state; its render thread (host-created, listed below) is what a stalled audio clock hangs on
     for (thr_t *t = g_all; t; t = t->all) {
         module_t *m = module_of((void *)t->last_lr);
         // Thread name: SDK ThreadType+0x1a0 is the name pointer (ThreadManager::SetInitialThreadNameUnsafe 0x34a2a4); x2 of CreateThread = ThreadType*
@@ -886,12 +886,12 @@ void svc_thread_dump(void) {
         int have_raw = (t->wkind == 1 || t->wkind == 2 || t->wkind == 3) && t->waddr && !plat_mem_read(t->waddr & ~0xfull, raw, 64);
         char life[96]; uint64_t nowns = now_ns();
         if (t->exited) snprintf(life, sizeof life, " created at tick %u, exited at tick %u (%.1f s ago)", t->born_tick, t->exit_tick, (nowns - t->exit_ns) / 1e9); else if (!t->born_ns) snprintf(life, sizeof life, " present since process start"); else snprintf(life, sizeof life, " created at tick %u (%.1f s ago)", t->born_tick, (nowns - t->born_ns) / 1e9);
-        fprintf(stderr, "[dm] thread %#x '%s'%s priority %d core %d mask %#llx CPU %.2fs svc %llu %s%s%s waits:%s addr=%#llx%s last svc %#x lr=%s+%#llx\n", t->handle, nm, t->host_owned ? " (host-created)" : "", t->prio, t->core, (unsigned long long)t->mask,   // PEANUTS: host-created marked
+        fprintf(stderr, "[dm] thread %#x '%s'%s priority %d core %d mask %#llx CPU %.2fs svc %llu %s%s%s waits:%s addr=%#llx%s last svc %#x lr=%s+%#llx\n", t->handle, nm, t->host_owned ? " (host-created)" : "", t->prio, t->core, (unsigned long long)t->mask,   // KIWI: host-created marked
                 cpu, t->nsvc, t->exited ? "exited" : "", t->started ? "" : "not started", life, kinds[t->wkind & 7], t->waddr, own, t->last_svc,
                 m ? m->name : "?", m ? t->last_lr - (uint64_t)m->base : t->last_lr);
         if (have_raw) { char hx[200]; int q = 0; for (int i = 0; i < 64; i += 4) q += snprintf(hx + q, sizeof hx - q, "%08x ", *(uint32_t *)(raw + i));
                         fprintf(stderr, "[dm]   %#x waited-for object, 64 bytes from %#llx: %s\n", t->handle, t->waddr & ~0xfull, hx); }
-        // PEANUTS begin: what a frozen game's dump did not say (a hunt for a lost wake-up had only "waits: condvar" and "sync object addr=0" to go on).
+        // KIWI begin: what a frozen game's dump did not say (a hunt for a lost wake-up had only "waits: condvar" and "sync object addr=0" to go on).
         //   wait:    how long the thread has waited and with what timeout; for WaitSynchronization each handle, its kind and whether it is signalled now (a waiter
         //            parked on a signalled object is a lost wake-up, there on the page), and a cancel left pending;
         //   sched:   what the same-core handoff makes of the thread: whether it counts as runnable (and why not), whose handoffs it is part of, and the thread its
@@ -930,7 +930,7 @@ void svc_thread_dump(void) {
                 if (t->hist[k].svc == 0x11 || t->hist[k].svc == 0x1B || t->hist[k].svc == 0x1C || t->hist[k].svc == 0x1D || t->hist[k].svc == 0x35 || t->hist[k].n) q += snprintf(ln + q, sizeof ln - q, " made %u", t->hist[k].n); }
             if (q) fprintf(stderr, "[dm]   %#x history (age, svc(x0, x1) = result; of %u):%s\n", t->handle, t->nhist, ln);
         }
-        // PEANUTS end
+        // KIWI end
         // A thread in an SVC: the guest code that called it, from its stack. Engines built without frame pointers (Batman: Arkham Knight's Unreal Engine 3) leave the frame-pointer backtrace
         // at the SVC wrapper, so the words of its stack that point into a module are listed, nearest first, with x19-x28. The gate block's sp (regs[99]) holds the x29 / x30 the block
         // pushed (x30 = the return address into the wrapper's caller, which the backtrace skips: the wrappers are leaf functions), the guest stack at the SVC follows at +16.
@@ -1145,19 +1145,19 @@ void dm_guest_sleep_ns(int64_t ns) {
     sleep_precise(now_ns() + (uint64_t)ns);
     if (me) me->sleeping = 0;
 }
-// PEANUTS begin: each thread's last eight synchronisation SVCs, for the state dump (svc_thread_dump): what it was called with, what it returned, when, how long it
+// KIWI begin: each thread's last eight synchronisation SVCs, for the state dump (svc_thread_dump): what it was called with, what it returned, when, how long it
 // blocked, who ended the wait, and how many threads it woke or moved to a mutex's queue. A frozen game shows its last steps there: a signal that reached nobody,
 // a wait that ended in a timeout, the wait a thread never came back from. Yields and sleeps are left out (a thread that polls would fill the list with them)
 static int hist_svc(int num) {
     return num == 0x09 || num == 0x11 || num == 0x12 || num == 0x17 || num == 0x18 || num == 0x19 || num == 0x1A || num == 0x1B || num == 0x1C || num == 0x1D || num == 0x32 || num == 0x34 || num == 0x35;
 }
-// PEANUTS end
+// KIWI end
 int svc_thread(int num, uint64_t *regs) {
-    // PEANUTS: the call's arguments, before the result overwrites them (the history above)
+    // KIWI: the call's arguments, before the result overwrites them (the history above)
     thr_t *hme = hist_svc(num) ? pthread_getspecific(g_keythr) : NULL; uint64_t ha0 = regs[0], ha1 = regs[1]; uint32_t hn0 = 0;
     if (hme) { hn0 = hme->nmade; hme->w_dur = 0; hme->woke_by = 0; }
     int r = svc_thread_impl(num, regs);
-    if (hme) {   // PEANUTS: written by the thread itself, read by the dump without a lock (a line of it may be half new)
+    if (hme) {   // KIWI: written by the thread itself, read by the dump without a lock (a line of it may be half new)
         unsigned k = hme->nhist++ & 7;
         hme->hist[k].t = now_ns(); hme->hist[k].a0 = ha0; hme->hist[k].a1 = ha1; hme->hist[k].dur = hme->w_dur; hme->hist[k].res = (uint32_t)regs[0];
         hme->hist[k].by = hme->woke_by; hme->hist[k].svc = (uint16_t)num; hme->hist[k].n = (uint16_t)(hme->nmade - hn0);
@@ -1179,7 +1179,7 @@ static int svc_thread_impl(int num, uint64_t *regs) {
     switch (num) {
     case 0x08: {  // CreateThread(→w1 handle; x1 entry, x2 argument, x3 stack top, w4 priority, w5 core)
         thr_t *t = calloc(1, sizeof *t);
-        wait_cv_init(&t->cv); pthread_cond_init(&t->pcv, NULL);   // PEANUTS: wait_cv_init (WAIT_CLOCK)
+        wait_cv_init(&t->cv); pthread_cond_init(&t->pcv, NULL);   // KIWI: wait_cv_init (WAIT_CLOCK)
         t->entry = regs[1]; t->arg = regs[2]; t->stack_top = regs[3] & ~0xFull;
         // Core -2 (IdealCoreUseProcessValue) = the process's default ideal core (0 for this game), with an affinity mask of just that core - as in the Horizon kernel. It used to be recorded as -2 and GetCurrentProcessorNumber answered -2;
         //   SMBW's font engine picks its per-core engine slot by the current core number and crashed indexing with -2 (main +0x107dbc0, SequenceBackgroundWorker thread)
@@ -1244,9 +1244,9 @@ static int svc_thread_impl(int num, uint64_t *regs) {
         else if (t == me) r = R_BAD_STATE;
         else if (act == 1) {
             atomic_store(&t->pause_req, 1);
-            t->world = 0;   // PEANUTS: the game's own pause takes the thread over from a stop of all threads under way (dm_guest_stop_all), whose end then leaves it paused
+            t->world = 0;   // KIWI: the game's own pause takes the thread over from a stop of all threads under way (dm_guest_stop_all), whose end then leaves it paused
             int st = atomic_fetch_or(&t->svc_state, 2);
-            // PEANUTS(upstream-candidate): the flag is set from what holds now, not left as an earlier pause had it. An SVC's exit clears it only on its slow path
+            // KIWI(upstream-candidate): the flag is set from what holds now, not left as an earlier pause had it. An SVC's exit clears it only on its slow path
             // (thr_svc_leave), so after "paused inside an SVC, resumed before the SVC ended" it stayed 1 and the next pause took a running thread for a stopped one.
             // ctx_ok: still held in the pause signal's handler (a stop of all threads that is ending, or one that just handed the thread over)
             t->paused = !t->started || t->exited || (st & 1) || t->ctx_ok;
@@ -1459,7 +1459,7 @@ uint32_t hle_new_event(uint32_t *write_end) {   // A new kernel event, as svcCre
     pthread_mutex_lock(&G); uint32_t r = h_new(O_EVENT_R, e); if (write_end) *write_end = h_new(O_EVENT_W, e); pthread_mutex_unlock(&G);
     return r;
 }
-// PEANUTS: a host service's event (hle_new_event's write end), signaled from a host thread (the audio renderer service's 5 ms event, hle_audren_svc.c); 0 once the handle is closed
+// KIWI: a host service's event (hle_new_event's write end), signaled from a host thread (the audio renderer service's 5 ms event, hle_audren_svc.c); 0 once the handle is closed
 int hle_signal_event_handle(uint32_t write_end) {
     pthread_mutex_lock(&G);
     event_t *e = h_peek(write_end, O_EVENT_W);   // a closed handle is the service's normal end, not an error

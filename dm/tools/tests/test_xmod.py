@@ -1,4 +1,4 @@
-# PEANUTS: new file (code mods: branches straight from one module into another, dm/tools/xmod.py and patch_nso.py --xmod)
+# KIWI: new file (code mods: branches straight from one module into another, dm/tools/xmod.py and patch_nso.py --xmod)
 """dm/tools/xmod.py (the console's module layout and the branches that leave a module) and the rewriter's side of it (patch_nso.py --xmod, <module>.xmod.tsv), on
 two small hand-made modules that branch into each other the way a console mod's do. No game files."""
 import os

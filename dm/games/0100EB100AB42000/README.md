@@ -1,4 +1,4 @@
-<!-- PEANUTS: new profile, provisional -->
+<!-- KIWI: new profile, provisional -->
 # FINAL FANTASY XII THE ZODIAC AGE (`0100EB100AB42000`)
 
 Provisional profile, generated on 2026-11-24 by `scripts/build_ipa_from_nsp.py` from the survey of the user's

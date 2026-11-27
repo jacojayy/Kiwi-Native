@@ -1,6 +1,6 @@
 # The Hundred Line -Last Defense Academy- (`010093C0215B4000`)
 
-<!-- PEANUTS: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
+<!-- KIWI: a Kiwi Native profile and note (Kiwi Native has none for this title). -->
 
 Update 1.2.1 (v589824) over the base game; no add-on content. SDK 18.3.2. Media.Vision's own engine (MVGL, Lua scripts) on NVN, with CRIWARE, as [Digimon Story Time Stranger](../010062E01FE0C000/README.md). Modules: `main`, `subsdk0` (NintendoSDK_movie) and `sdk`.
 
@@ -32,7 +32,7 @@ Update 1.2.1 (v589824) over the base game; no add-on content. SDK 18.3.2. Media.
 - **Shaders:** `shad` entries are NXVS / NXFS containers, as in Digimon (16,810 in `app_0`, 618 in `patch_0`, 120 in `app_1`, 18 in `app_switch_0`). `main` holds 179 more NX?S containers. `shader_split.py` finds **7,204 shaders** (4,779 pixel, 2,425 vertex): 7,026 from the archives and 178 from `main`. It reports no `[RED]` line, no variation pair and an empty conflict table.
 - The archives also hold 222 `.glsl` entries (GLSL 4.40 source). `main` does not import GLSLC, so they are taken to be leftovers, as in Digimon.
 
-<!-- PEANUTS begin: Android -->
+<!-- KIWI begin: Android -->
 ## Frame rate
 
 The game holds itself to 30 fps. It asks for present interval 1, and its main loop sleeps out the rest of each frame. There is no FPSLocker Warehouse config for this build, so the profile has two reviewed rows of its own (main 1.2.1 only):
@@ -82,4 +82,4 @@ The game holds itself to 30 fps. It asks for present interval 1, and its main lo
 - The 222 `.glsl` entries are not checked.
 - One of the 179 NX?S containers in `main` is not among the split's 178 `main` shaders. It may be a duplicate key; this is not checked.
 - One device only.
-<!-- PEANUTS end -->
+<!-- KIWI end -->

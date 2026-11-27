@@ -1,4 +1,4 @@
-"""PEANUTS: the NSP script's survey lists the RomFS's NRO files, not every path that ends in .nro. The Binding of Isaac: Afterbirth+ keeps its two NROs in
+"""KIWI: the NSP script's survey lists the RomFS's NRO files, not every path that ends in .nro. The Binding of Isaac: Afterbirth+ keeps its two NROs in
 a RomFS folder that is itself named `.nro` (`.nro/AfterbirthPlus.nro`, `.nro/Repentance.nro`); the survey's manifest pass copies them to
 <survey>/extract/romfs_nro/.nro/, rglob('*.nro') matched that folder as well, and profile_guess.nro_modules read it as a module: the survey stopped with
 IsADirectoryError before it wrote survey.md. No game files or Xcode needed."""

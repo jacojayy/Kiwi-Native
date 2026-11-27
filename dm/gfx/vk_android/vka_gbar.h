@@ -68,7 +68,7 @@ static inline int vkgb_cmd(vkgb *g, int kind, int *ind, vkgb_stats *s) {
     }
     }
 }
-// PEANUTS begin: a host pipeline barrier as vkgb_cmd's kind (vka_gbar.c g_vkCmdPipelineBarrier, the scoped barriers of #505/#562). Vulkan's bit values, mirrored so
+// KIWI begin: a host pipeline barrier as vkgb_cmd's kind (vka_gbar.c g_vkCmdPipelineBarrier, the scoped barriers of #505/#562). Vulkan's bit values, mirrored so
 // this header stays free of Vulkan (vka_gbar.c checks them against the header). scoped: DM_VK_BAR_SCOPED (default 1). Old rule (scoped 0): only an ALL_COMMANDS to
 // ALL_COMMANDS barrier from every write to every read is full. Scoped rule: one to ALL_COMMANDS reads and writes is full also from compute shader writes (it settles what
 // is pending: compute writes are all a pending game barrier orders), and any other one to ALL_COMMANDS reads and writes, with no buffer or image barrier (others 0),
@@ -82,5 +82,5 @@ static inline int vkgb_host_bar(uint32_t s, uint32_t d, uint32_t src_acc, uint32
     if ((s == VKGB_STAGE_ALL && (src_acc & VKGB_ACC_MEM_WRITE)) || ((s & VKGB_STAGE_COMPUTE) && (src_acc & VKGB_ACC_SHADER_WRITE))) return VKGB_H_FULL;
     return others ? VKGB_H_WORK : VKGB_H_SINCE_NONE;
 }
-// PEANUTS end
+// KIWI end
 #endif

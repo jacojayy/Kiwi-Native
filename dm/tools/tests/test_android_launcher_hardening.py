@@ -1,11 +1,11 @@
-"""0.1.8 hardening of the launcher package's Peanuts code (GameActivity, UserSaves): the four-finger tap follows its fingers by pointer ID, the thread
+"""0.1.8 hardening of the launcher package's Kiwi code (GameActivity, UserSaves): the four-finger tap follows its fingers by pointer ID, the thread
 placement loop does not scan /proc each second while the game is stopped, and the Saves tab's user cards hold no destroyed launcher screen."""
 import re
 import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-PKG = REPO / 'android/app/src/main/java/dev/nxnative/android'
+PKG = REPO / 'android/app/src/main/java/hernandez/kiwinative'
 
 
 def body(src, start, end):
@@ -39,7 +39,7 @@ class PinLoop(unittest.TestCase):
     def test_a_recreated_screen_knows_the_placement(self):
         # attach() (a screen recreated while the game runs) calls pinStart: with pinnedAway process-wide it undoes the old screen's placement in top-app
         self.assertIn('private static boolean pinnedAway;', self.g)
-        self.assertIn('pinStart();', body(self.g, 'prewarmTick();   // PEANUTS: restore the progress cover after recreation', '\n    }\n'))
+        self.assertIn('pinStart();', body(self.g, 'prewarmTick();   // KIWI: restore the progress cover after recreation', '\n    }\n'))
 
 
 class UserSavesTab(unittest.TestCase):

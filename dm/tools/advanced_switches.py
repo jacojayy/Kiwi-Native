@@ -132,7 +132,7 @@ def problems(rows, env, keys=None, ids=None, java=None, wiki=None):
     if len(names) != len(set(names)): bad.append('a switch has two rows')
     for r in rows:
         n, t = r['name'], r.get('tier', '')
-        def no(msg, n=n): bad.append(f'{n}: {msg}')   # PEANUTS(upstream-candidate): bind this row's name
+        def no(msg, n=n): bad.append(f'{n}: {msg}')   # KIWI(upstream-candidate): bind this row's name
         if t not in TIERS: no(f'tier {t!r} is not one of {TIERS}'); continue
         if r['area'] not in AREAS: no(f'area {r["area"]!r} is not one of {AREAS}')
         if r['type'] not in TYPES: no(f'type {r["type"]!r} is not one of {TYPES}')

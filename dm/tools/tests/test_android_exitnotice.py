@@ -8,8 +8,8 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-SRC = REPO / 'android/app/src/main/java/dev/nxnative/android/ExitNotice.java'
-TEST = REPO / 'android/app/src/jvmtest/java/dev/nxnative/android/ExitNoticeJvmTest.java'
+SRC = REPO / 'android/app/src/main/java/hernandez/kiwinative/ExitNotice.java'
+TEST = REPO / 'android/app/src/jvmtest/java/hernandez/kiwinative/ExitNoticeJvmTest.java'
 NXLAUNCH = REPO / 'android/app/src/main/cpp/nxlaunch.c'
 
 # ApplicationExitInfo.REASON_*
@@ -29,12 +29,12 @@ class ExitNotice(unittest.TestCase):
     def tearDownClass(cls): shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def java(self, *a):
-        r = subprocess.run(['java', '-Dstdout.encoding=UTF-8', '-cp', str(self.tmp / 'classes'), 'dev.nxnative.android.ExitNoticeJvmTest', *map(str, a)],
+        r = subprocess.run(['java', '-Dstdout.encoding=UTF-8', '-cp', str(self.tmp / 'classes'), 'hernandez.kiwinative.ExitNoticeJvmTest', *map(str, a)],
                            capture_output=True, text=True, encoding='utf-8')
         self.assertEqual(r.returncode, 0, r.stderr)
         return r.stdout.rstrip('\n').split(' ', 1)[1]
 
-    def test_worker_reduction_requires_a_matching_memory_exit(self):   # PEANUTS
+    def test_worker_reduction_requires_a_matching_memory_exit(self):   # KIWI
         for reason, status, reports, expected in (
             (LOW_MEMORY, 0, True, True), (SIGNALED, 9, False, True), (SIGNALED, 9, True, False),
             (NONE, 0, False, False), (CRASH_NATIVE, 11, True, False), (USER_REQUESTED, 0, True, False),
@@ -90,7 +90,7 @@ class ExitNotice(unittest.TestCase):
         mem = 'Android closed it: the phone ran out of memory. Closing other apps before playing can help.'
         self.assertEqual(self.cause(RUN, LOW_MEMORY), mem)
         self.assertEqual(self.cause(RUN, SIGNALED, 9, 'lmk'), mem)                               # phones that report the low-memory killer as a signal
-        # PEANUTS(upstream-candidate): these exit records must produce a cause before prefix checks.
+        # KIWI(upstream-candidate): these exit records must produce a cause before prefix checks.
         background = self.cause(RUN, LOW_MEMORY, bg=True); unknown = self.cause(RUN, SIGNALED, 9)
         assert background is not None and unknown is not None
         self.assertTrue(background.startswith('Android closed it while it was in the background'))

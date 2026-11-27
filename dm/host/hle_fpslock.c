@@ -28,7 +28,7 @@
 // put its floor back, until the game restarted. So a floor row never writes above that maximum, and a rate needing more vsyncs than that is not offered (row_holds)
 // The vsync kinds hold only rates that divide 60 (60, 30, 20, 15); the rate kinds any target (rate_ok)
 // And a step count: a framework that runs a whole number of fixed steps each frame and presents at that many vsyncs, picked by a mode field before it (a profile's fps_steps rows; steps_tick)
-// PEANUTS: new EXTRA_VSYNCS_U8 lock kind (Link's Awakening / Echoes of Wisdom frame-controller rows below use it) — a game tweak, candidate for an overlay once peanuts.tsv exists.
+// KIWI: new EXTRA_VSYNCS_U8 lock kind (Link's Awakening / Echoes of Wisdom frame-controller rows below use it) — a game tweak, candidate for an overlay once kiwi.tsv exists.
 // And a frame controller's range of extra vsyncs as two bytes, the least then the most it may wait (Link's Awakening's Grezzo controller: its 30 fps mode is one extra vsync with two
 // world steps a frame; a late frame takes it there, a quick one back, no hysteresis). Target 60 writes 0, 0 (never 30: a late frame shows one vsync late instead), 30 writes 1, 1.
 // The game rewrites both itself (boost on and off, a level's own least), so the row is re-asserted at every present; the game keeps setting its present interval (follows_game)
@@ -37,9 +37,9 @@ enum { FPS_F32, VSYNCS_I32, MS_F32, FPS_I32, TICKS_U32, SECS_F32, MODE_U32, FPS_
 static float ms_want(int fps) { return 1000.0f / (float)fps - (fps == 60 ? MS_MARGIN : 0); }
 // deref: after [main + ptr_off], nderef more pointers, each at the object reached so far + deref[i] (an object behind a global, then members)
 typedef struct { const char *build, *what; uint64_t ptr_off; uint32_t field; uint8_t kind, copies; uint32_t scale; uint8_t nderef; uint16_t deref[3]; } lock_t;
-static int vsync_kind(int kind) { return kind == VSYNCS_I32 || kind == MIN_VSYNCS_I32 || kind == STEPS_I32 || kind == EXTRA_VSYNCS_U8; }   // PEANUTS: EXTRA_VSYNCS_U8 (see enum above)
-static int follows_game(int kind) { return kind == MIN_VSYNCS_I32 || kind == STEPS_I32 || kind == EXTRA_VSYNCS_U8; }   // the game still sets its present interval itself (dm_fps_lock_engine leaves these out) — PEANUTS: EXTRA_VSYNCS_U8
-// PEANUTS: TICKS_U32 too: the frame time it writes is any rate's, but the game presents in whole vsyncs (Pokemon Sword at a 45 or 40 cap: 33.4 ms frames, the same
+static int vsync_kind(int kind) { return kind == VSYNCS_I32 || kind == MIN_VSYNCS_I32 || kind == STEPS_I32 || kind == EXTRA_VSYNCS_U8; }   // KIWI: EXTRA_VSYNCS_U8 (see enum above)
+static int follows_game(int kind) { return kind == MIN_VSYNCS_I32 || kind == STEPS_I32 || kind == EXTRA_VSYNCS_U8; }   // the game still sets its present interval itself (dm_fps_lock_engine leaves these out) — KIWI: EXTRA_VSYNCS_U8
+// KIWI: TICKS_U32 too: the frame time it writes is any rate's, but the game presents in whole vsyncs (Pokemon Sword at a 45 or 40 cap: 33.4 ms frames, the same
 // as at 30; AYN Thor, 2026-11-24), so 45 and 40 were applied and shown as caps the game did not run at
 static int rate_ok(int kind, int target) { return !(vsync_kind(kind) || kind == TICKS_U32) || 60 % target == 0; }
 static const lock_t k_locks[] = {
@@ -49,7 +49,7 @@ static const lock_t k_locks[] = {
     // game's logic steps by that interval, as BotW's VFR does (docs/reference/frame-rate.md). A floor of 2 makes the game itself run at 30 and stay at the right speed.
     // The controller is at [framework+0x218] (main+0x5bfb00); the framework at [app], the app object at main+0x26cc208 (nnMain main+0x5bdff4, its GOT slot main+0x2455ca0)
     { "e25c90c1c136638885659fd55bf8a03b", "sead frame-rate controller minimum interval", 0x26cc208, 0x0, MIN_VSYNCS_I32, 1, 0, 2, {0x0, 0x218} },
-    // PEANUTS: per-game lock row (Link's Awakening EXTRA_VSYNCS_U8)
+    // KIWI: per-game lock row (Link's Awakening EXTRA_VSYNCS_U8)
     // The Legend of Zelda: Link's Awakening 1.1.0: Grezzo's frame controller (main+0xc910, a virtual method; its decision at main+0xca64..+0xcb28). Each frame it counts the vsyncs the
     // last frame missed ([gfx+0x81ac] − +0x4dc), takes one off when that frame's CPU time (system tick, limit 13,333,332 ns at main+0x1cab1f8) and GPU time ([gfx+0x81c0], limit
     // 14,166,666 ns at main+0x1cab1e8) were both under their limits, clamps the count to [+0x4e2 least, +0x4e3 most] on the game manager and writes it to +0x4e1 (and the extra world
@@ -58,7 +58,7 @@ static const lock_t k_locks[] = {
     // and a few frames in a hundred run late, each a flip to 30 and back (50-58 fps on the overlay); with least = most = 0 those frames show one vsync late instead and the world
     // steps once a frame as at 60. Found 2026-11-12 (LAS recomp's pace.c describes the same bytes for 1.0.1; the layout did not change)
     { "909e904af78ac1b8deefe97ab2ccdb51", "Grezzo frame controller extra vsyncs", 0x1c97188, 0x4e2, EXTRA_VSYNCS_U8, 1 },
-    // PEANUTS: per-game lock row (Echoes of Wisdom EXTRA_VSYNCS_U8)
+    // KIWI: per-game lock row (Echoes of Wisdom EXTRA_VSYNCS_U8)
     // The Legend of Zelda: Echoes of Wisdom 1.1.0 (v196608): Grezzo's frame governor, rewritten since Link's Awakening (no least / most bytes: the clamp pattern is not in this
     // main). The game manager is a static object at main+0x34bd4b0 (bss; made at main+0x33b1e4, handed to its per-frame task object {vtable main+0x3085020, manager} at
     // main+0x3432d4); its frame task main+0x345da0 (vtable +0x78; the governor from +0x346b8c) takes this frame's cost as the larger of the CPU time since the last frame less the
@@ -72,7 +72,7 @@ static const lock_t k_locks[] = {
     // the Thor the game saw 1.3 ms of CPU and 4.4 ms of GPU yet sat at 30: a frame once over 1/60 s puts it there, and at interval 2 every frame measures over 1/60 s, so the hold
     // renews itself for good. Found 2026-11-12 from main 9f221e1a (ptr_off 0: the field is at main + field)
     { "9f221e1afa65ba5443e955158ab97da8", "Grezzo frame governor enable", 0, 0x34bd894, EXTRA_VSYNCS_U8, 1 },
-    // PEANUTS: per-game lock row (Persona 5 Royal VSYNCS_I32)
+    // KIWI: per-game lock row (Persona 5 Royal VSYNCS_I32)
     // Persona 5 Royal 1.0.2 (main d4b150b29a931cd3): a present-interval field at the end of a pointer chain from a global in main's
     // bss, [main+0x2327b90] -> +0x10 -> +0x60 -> +0x8, field +0xf14 (an int32, 1 = 60 fps, 2 = 30 fps). Found from a build-ID-matched
     // community cheat for this exact build (ChanseyIsTheBest/NX-60FPS-RES-GFX-Cheats, titles/01005CA01580E000/cheats/D4B150B29A931CD3.txt,
@@ -94,7 +94,7 @@ static const lock_t k_locks[] = {
     // "performance... mostly the same", consistent with Persona 5 Royal's engine stepping by real time rather than by the frame, unlike
     // Animal Crossing: New Horizons (see dm/games/01006F8002326000/README.md, which found the opposite for that game).
     { "d4b150b29a931cd381e2a30318fc299f", "Persona 5 Royal present interval", 0x2327b90, 0xf14, VSYNCS_I32, 1, 0, 3, {0x10, 0x60, 0x8} },
-    // PEANUTS: per-game lock rows (Pokemon Sword / Shield 1.3.2, TICKS_U32)
+    // KIWI: per-game lock rows (Pokemon Sword / Shield 1.3.2, TICKS_U32)
     // Game Freak's engine keeps a table of frame times in ns by present interval at main+0x203eeb0 (u64: 16666667, 33333334, 50000000, 66666667,
     // 83333334; the same offset in both mains). The game runs in mode 1 (interval 2, 33333334 ns) and divides the measured frame time by its
     // entry (Sword main+0x680fc4, main+0x687fc8). The community's 60 fps patch for 1.3.2 passes 1 to the present interval call (Sword
@@ -102,11 +102,11 @@ static const lock_t k_locks[] = {
     // is 0) and, being an engine row, makes presentation follow the cap instead of the game's interval 2 (hle_nvn.c fps_present_cap)
     { "a3b75bcd3311385aeed67fbeeb79cbb7", "Game Freak frame time of interval 2", 0, 0x203eeb8, TICKS_U32, 1, 1000000000 },
     { "a16802625e7826bf83b6f9708e475b91", "Game Freak frame time of interval 2", 0, 0x203eeb8, TICKS_U32, 1, 1000000000 },
-    // PEANUTS end
+    // KIWI end
     // Pokemon Brilliant Diamond 1.3.0: Unity's Application.targetFrameRate. Its icall registration (main+0xe34e60) resolves to main+0xdc8e70 -> +0x5fa640,
     // which stores w0 at main+0x4afc868; the getter at +0x5fa630 reads the same int32. The game sets 30 when entering the field; display pacing alone does not remove that cap.
     { "94ceae325c205c4b9d6f7235552f28fd", "Unity targetFrameRate", 0, 0x4afc868, FPS_I32, 1 },
-    // PEANUTS: Pokemon Shining Pearl 1.3.0, Brilliant Diamond's twin: the engine code is at the same place in its main (the setter at main+0x5fa630 stores w0 at main+0x4afc868,
+    // KIWI: Pokemon Shining Pearl 1.3.0, Brilliant Diamond's twin: the engine code is at the same place in its main (the setter at main+0x5fa630 stores w0 at main+0x4afc868,
     // the getter at +0x5fa620 reads it; read from the build's own code, 2026-11-15)
     { "38f59cbda2eb9c44b72f94c4d25935a2", "Unity targetFrameRate", 0, 0x4afc868, FPS_I32, 1 },
     // Monster Hunter Rise 16.0.2: RE Engine's frame limit, a float at [main+0x1295b3f0]+0x434 (the pointer is a global in main's bss). The frame loop (main+0x6b106c8) sleeps until
@@ -133,9 +133,9 @@ static const lock_t k_locks[] = {
     // this row the game keeps 30 fps at the right speed (the simulation at 60 and the regulator at 30: match clock as at 30). The game asks for present interval 2
     // (BaseDisplaySettings.PresentInterval), which the profile's present_interval display ignores
     { "a48c0de3bc353efa0e4d359bde05ef24", "FIFA frame regulator", 0xda20e38, 0x8, FPS_F64, 2, 0 },
-    // PEANUTS: 1.8d.6523: main+0x5d66b50 loads the regulator and writes both doubles at +0x8; main+0x9a09100 reads its rate from +0x8.
+    // KIWI: 1.8d.6523: main+0x5d66b50 loads the regulator and writes both doubles at +0x8; main+0x9a09100 reads its rate from +0x8.
     { "570dc9f1750fa7ea9df20b95b482d039", "FIFA frame regulator", 0xda450d8, 0x8, FPS_F64, 2, 0 },
-    // PEANUTS: EA SPORTS FC 27 1.8d.f570 (v524288): the same regulator behind [main+0xda5d0f8]. Found 2026-11-19 by disassembly of this main (the earlier mains were not at hand
+    // KIWI: EA SPORTS FC 27 1.8d.f570 (v524288): the same regulator behind [main+0xda5d0f8]. Found 2026-11-19 by disassembly of this main (the earlier mains were not at hand
     // for nso_fnmap.py): the setter main+0x5d75d90 is 1.8d.310c's and 1.8d.6523's (GameRenderSettings.Enable at +0x1f5, fmov v1.2d, #30.0; stur q1, [x9, #8] at main+0x5d75db8), and the tick
     // main+0x9a1ddc0 reads the rate as ldr d0, [x8, #8] from the same global
     { "464512b32a94dd3b6517a5b5d711d0d0", "FIFA frame regulator", 0xda5d0f8, 0x8, FPS_F64, 2, 0 },
@@ -148,7 +148,7 @@ static const lock_t k_locks[] = {
 // 0..2 (STEPS_HOLD), which keeps it; 60 and 0 leave the game's own mode (it runs 2 steps on a frame that overran: full speed at 60 or below). Each step stays 1/60 s, so the race,
 // ghosts, time trials and online races step as at 60. DM_FPS_STEPS_ROWS: the unit tests' own rows
 typedef struct { const char *build; uint64_t ptr_off; uint32_t mode, count; uint8_t nderef; uint16_t deref[3]; } steps_row_t;
-#if defined(DM_RUNTIME_PROFILE) && !defined(DM_FPS_STEPS_ROWS)   // PEANUTS: the generic host reads the profile's own table instead of a static const initialized from the macro
+#if defined(DM_RUNTIME_PROFILE) && !defined(DM_FPS_STEPS_ROWS)   // KIWI: the generic host reads the profile's own table instead of a static const initialized from the macro
 // NSTEPS also sizes other file-scope static arrays below (NROWS, steps[], g_st[], nlog/over/orig/have_orig[]), which need a compile-time bound: use the
 // profile's fixed row capacity, not the runtime row count. Every slot past the real count has an empty build string (profile_rt.h/gen_runtime_profile.py
 // zero-pad unused rows), and every k_steps[] reader below already checks build[0] first, so the extra always-empty slots are inert, not a behavior change.
@@ -165,13 +165,13 @@ static const steps_row_t *k_steps_get(void) { pthread_once(&k_steps_once, k_step
 #define DM_FPS_STEPS_ROWS DM_GAME_FPS_STEPS
 #define DM_FPS_NSTEPS_ROWS DM_GAME_NFPS_STEPS
 #endif
-static const steps_row_t k_steps[] = DM_FPS_STEPS_ROWS;   // PEANUTS: the per-title build (the generic host reads the profile, above)
+static const steps_row_t k_steps[] = DM_FPS_STEPS_ROWS;   // KIWI: the per-title build (the generic host reads the profile, above)
 #define NSTEPS DM_FPS_NSTEPS_ROWS
 #endif
 #define STEPS_MAX 3    // 20 fps: the most steps a frame offered (each 1/60 s)
 #define STEPS_HOLD 3   // a mode outside the game's 0..2: its pick then leaves the count the host wrote
 static int rd(uint64_t a, void *out, size_t n) { return a >= 0x1000 && !plat_mem_read(a, out, n); }
-// PEANUTS: preferred, reviewed Warehouse rows are build-gated and use the host presentation limiter's live target.
+// KIWI: preferred, reviewed Warehouse rows are build-gated and use the host presentation limiter's live target.
 #include "fpslocker_rows.h"
 static void fpslocker_store(uint64_t a, uint32_t value) {
     uint32_t *p = (uint32_t *)(uintptr_t)a;
@@ -641,7 +641,7 @@ static int fps_limit_start(void) {
     if (atomic_compare_exchange_strong(&g_fps_limit, &was, l)) { g_fps_limit_src = e ? "DM_FPS_LIMIT" : "game profile fps_limit"; if (l) LOG("main: frame limit %d fps (%s)", l, g_fps_limit_src); }
     return atomic_load(&g_fps_limit);
 }
-// PEANUTS: the thermal cap (hle_nvn.c thermal_capped: serious or worse, back after 30 s fair; on Android only for a game that opts in, vka_perf.c dm_thermal_now) holds a
+// KIWI: the thermal cap (hle_nvn.c thermal_capped: serious or worse, back after 30 s fair; on Android only for a game that opts in, vka_perf.c dm_thermal_now) holds a
 // limit above 30 at 30, as the player's own choice of 30 would: the frame step's games had it, a limit through FPSLocker rows (Hogwarts Legacy) did not. A game without a
 // limit keeps its own rate. The state is sampled whatever the limit, so the 30 calm seconds also count while the limit is 30 or less: a limit raised after the device has
 // cooled is not held for another 30 s. The hold logs when it starts and when the device has cooled (a limit lowered to 30 or less while hot logs as itself)
@@ -667,13 +667,13 @@ static int limit_raw(void) {
 // before (a step of 4 vsyncs is not one the games' own logic uses). 0 = no limit, or no frame step. A framework's step count (a profile's fps_steps row, steps_tick) holds the limit the
 // same way: its steps a frame and its present interval are the limit's vsyncs
 static int limit_step(int l) { return l >= 60 ? 60 : l >= 30 ? 30 : l >= 20 ? 20 : 0; }
-// PEANUTS: Elapsed-time hooks do not quantize the rate to whole steps.
+// KIWI: Elapsed-time hooks do not quantize the rate to whole steps.
 int dm_fps_limit_step(void) { return (dm_fps_state && !dm_fps_elapsed_step()) || steps_row() ? limit_step(limit_raw()) : 0; }
 // The frame step's cap in the state page (+0, float; 0 = the stubs run the game's own logic): the frame rate cap (fps_target, the in-game panel's cap) and the frame limit's
 // step, whichever is lower. The stubs know 30 and 60 (several compare with 30.0): a 20 fps limit writes 30 there, and hle_nvn.c fps_step_cap takes the 20 from dm_fps_limit_step
 void dm_fps_step_fold(void) {
     if (!dm_fps_state) return;
-    // PEANUTS: Pass the selected cap to the elapsed-time hook.
+    // KIWI: Pass the selected cap to the elapsed-time hook.
     if (dm_fps_elapsed_step()) {
         int limit = limit_raw();
         float rate = (float)(limit ? limit : dm_fps_target());
@@ -695,7 +695,7 @@ void dm_fps_step_fold(void) {
     }
 }
 int nxhost_fps_limit_get(void) { int s = dm_fps_limit_step(); return s ? s : limit_raw(); }   // the rate the limit holds (0: none; a frame-step game's whole-vsync rate); probe.c aims the dynamic resolution at it, frame generation fits its frames to it
-// PEANUTS: active effective frame cap for GPU clock floor pacing (0: uncapped / game's own); vka_dev.c vka_floor_period_ns.
+// KIWI: active effective frame cap for GPU clock floor pacing (0: uncapped / game's own); vka_dev.c vka_floor_period_ns.
 int dm_fps_cap_get(void) {
     int lim = nxhost_fps_limit_get();
     if (dm_fps_elapsed_step()) return lim > 0 ? lim : dm_fps_target();
@@ -714,13 +714,13 @@ int nxhost_fps_decoupled(void) {
 static void fps_limit_wait(void) {
     if (!PLAT_ANDROID) return;   // only the Android launcher sets a frame limit
     int lim = limit_raw();
-    // PEANUTS: Preserve fixed-rate cinematics.
+    // KIWI: Preserve fixed-rate cinematics.
     int fixed = dm_fps_elapsed_step() && (__atomic_load_n((const uint32_t *)(dm_fps_state + 0x24), __ATOMIC_RELAXED) || dm_movie_playing());
     if (fixed) lim = 30;
     static uint64_t next;
     if (!lim || dm_fps_limit_step()) { next = 0; return; }   // none, or the frame step holds it (dm_fps_limit_step)
     uint64_t now = plat_abs_time(), period = 1000000000ull / (uint64_t)lim;   // the platform's monotonic clock and sleep (plat.h): clock_nanosleep is Linux only
-    // PEANUTS: DM_VK_PACE_PANEL: a limit that is the panel's rate or a whole division of it ticks in the panel's measured refreshes (60 on a 59.83 Hz panel: 16.71 ms)
+    // KIWI: DM_VK_PACE_PANEL: a limit that is the panel's rate or a whole division of it ticks in the panel's measured refreshes (60 on a 59.83 Hz panel: 16.71 ms)
     { uint64_t vka_panel_tick(uint64_t) __attribute__((weak)); if (!fixed && &vka_panel_tick) period = vka_panel_tick(period); }
     if (next > now && next - now <= period) { plat_wait_until(next); now = next; }
     next = (next > now || (next && now - next < period / 2) ? next : now) + period;   // keep the phase through small lateness, restart after a long frame
@@ -772,7 +772,7 @@ static void steps_tick(const lock_t *L, int r, int target, const char *src) {
 void dm_fps_lock_tick(void) {
     fps_limit_wait();
     atomic_fetch_add_explicit(&g_presents, 1, memory_order_relaxed);   // sead_rate's frame count
-    if (fpslocker_tick()) return;   // PEANUTS: one engine-FPS method at a time
+    if (fpslocker_tick()) return;   // KIWI: one engine-FPS method at a time
     dynamic_resolution_tick();   // separate from the FPS cap
     static int state = -2, nlog[NROWS], target, gen = -1, start_cap; static const char *src; static uint8_t over[NROWS];
     static uint32_t orig[NROWS][2]; static uint8_t have_orig[NROWS][2];   // what a row held before the host first wrote it: put back when the cap goes to 0 while the game runs
@@ -793,7 +793,7 @@ void dm_fps_lock_tick(void) {
                          if (fb.n) LOG("main: Frostbite simulation rate left as the game sets it (%s)", src); }
             else for (int r = 0; r < nrow; r++) {   // back to the game's own: the values the game had before the host wrote them (NieR and Frostbite keep the last cap until the game sets them again)
                 uint64_t obj = row_obj(rows[r]); if (!obj) continue;
-                // PEANUTS: EXTRA_VSYNCS_U8 restore path
+                // KIWI: EXTRA_VSYNCS_U8 restore path
                 if (rows[r]->kind == EXTRA_VSYNCS_U8) {   // the two bytes the game had (least 0, most 1 in play)
                     if (have_orig[r][0]) { uint16_t *p = (uint16_t *)(uintptr_t)(obj + rows[r]->field); dm_guest_write_prepare(p, sizeof *p); __atomic_store_n(p, (uint16_t)orig[r][0], __ATOMIC_RELAXED);
                                            LOG("main: %s back to the game's least %u most %u (%s)", rows[r]->what, orig[r][0] & 0xff, (orig[r][0] >> 8) & 0xff, src); }
@@ -869,7 +869,7 @@ void dm_fps_lock_tick(void) {
             }
             continue;
         }
-        // PEANUTS: EXTRA_VSYNCS_U8 write path
+        // KIWI: EXTRA_VSYNCS_U8 write path
         if (L->kind == EXTRA_VSYNCS_U8) {   // the least and the most extra vsyncs, two bytes, re-asserted every frame (the game rewrites them)
             uint64_t a = obj + L->field; uint16_t cur, want = target == 60 ? 0x0000 : target == 30 ? 0x0101 : 0xffff;
             if (want == 0xffff || !rd(a, &cur, sizeof cur) || cur == want) continue;

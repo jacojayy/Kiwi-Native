@@ -1,4 +1,4 @@
-# PEANUTS: One Piece Pirate Warriors 4, v0 and v1179648, tested on Android.
+# KIWI: One Piece Pirate Warriors 4, v0 and v1179648, tested on Android.
 
 # ---- Identity ----
 title_id	01008FE00E2F6000
@@ -34,7 +34,7 @@ sys_resource	0x0
 shader_groups	/File/=file /LinkData/=linkdata
 shader_note	23250 shaders shared by v0 and v1179648
 
-# PEANUTS: Android presentation caps.
+# KIWI: Android presentation caps.
 fps_limit_present	1
 fps_limit_min	30
 fps_limit_max	60

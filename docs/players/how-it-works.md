@@ -1,6 +1,6 @@
 # How it works
 
-Back to the [main page](../banana-native-README.github.md). <!-- PEANUTS: upstream's .github/README.md and README.md are kept in docs/ (banana-native-README*.md) -->
+Back to the [main page](../kiwi-native-README.github.md). <!-- KIWI: upstream's .github/README.md and README.md are kept in docs/ (kiwi-native-README*.md) -->
 
 Kiwi Native works in the spirit of Wine: it reproduces no console hardware. The game's own ARM64 code runs directly
 on the phone's CPU, as an Android process. Kiwi Native supplies its own implementation of the system interfaces that
@@ -19,7 +19,7 @@ SPIR-V ahead of time.
 - `dm/gfx/tools` translates the shaders to SPIR-V ahead of time, with Ryujinx's shader translator.
 - `dm/gfx/vk_android` replays the game's NVN command buffers on Vulkan.
 - `dm/host` and `android/host` implement the system services the game calls; `android/app` is the launcher.
-- `scripts/bananative.bat` (Windows) and `scripts/bananative.command` (Mac) set up the tools and open the packer's
+- `scripts/kiwinative.bat` (Windows) and `scripts/kiwinative.command` (Mac) set up the tools and open the packer's
   window, `scripts/pack_gui.py`, which runs `scripts/pack_android.py`.
 
 Kiwi Native is an Android port of [nxnative](https://github.com/seedds/nxnative) by seedds, which does the same on

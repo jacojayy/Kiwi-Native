@@ -1,4 +1,4 @@
-// PEANUTS: the Android replay's transform feedback, the part with no Vulkan in it (dm/gfx/vk_android/vka_tf_spv.c): the capture layout read from a control section, and
+// KIWI: the Android replay's transform feedback, the part with no Vulkan in it (dm/gfx/vk_android/vka_tf_spv.c): the capture layout read from a control section, and
 // the rewrite that makes a vertex module capture it, on the graphics selftest's vertex shader (one float vec4 output at Location 0), checked by structure and, when
 // spirv-val is on the PATH, by validation. DM_VK_SPV_DIR=<folder of .spv vertex modules> also rewrites each of those to capture its lowest vec4 output and validates it
 #include "../../gfx/vk_android/vka_tf.h"

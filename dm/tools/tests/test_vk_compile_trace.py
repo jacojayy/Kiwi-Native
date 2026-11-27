@@ -1,4 +1,4 @@
-# PEANUTS: execute the production driver-call wrappers with FPCR and Vulkan entry points stubbed.
+# KIWI: execute the production driver-call wrappers with FPCR and Vulkan entry points stubbed.
 """Tracing forwards all compile arguments/results and preserves both host and guest FPCR modes."""
 from pathlib import Path
 import shutil
@@ -14,7 +14,7 @@ class CompileTrace(unittest.TestCase):
     def test_driver_boundary_and_fpcr(self):
         source = (ROOT / 'dm/gfx/vk_android/vka_dev.c').read_text()
         start = source.index('static int g_compile_trace;')
-        wrappers = source[start:source.index('// PEANUTS end', start)]
+        wrappers = source[start:source.index('// KIWI end', start)]
         harness = r'''
 #define _GNU_SOURCE
 #define VK_NO_PROTOTYPES

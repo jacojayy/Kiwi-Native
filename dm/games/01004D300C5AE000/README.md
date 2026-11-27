@@ -4,11 +4,11 @@ Update 1.1.0 (v65536) over the base game, SDK 11.4.0. HAL Laboratory's own engin
 
 ## Android first-launch shader preparation
 
-<!-- PEANUTS begin -->
+<!-- KIWI begin -->
 On AYN Thor with Turnip v26.2.0 R5, a first walk from the opening beach with an empty cache triggered the 7% draw warning. The renderer recorded 23,880 draws waiting for pipelines in a 300-frame window. The profile bundles 418 recorded Vulkan pipeline keys from the opening route (412 graphics and six compute), so the Android host can prepare them before gameplay. Later stages can introduce additional pipelines.
 
 The 39-game 0.1.5 verification APK prepared all 418 keys in 10.8 seconds on Turnip R5. Two 112-frame walks from the opening save recorded zero skipped draws, out of 125,170 draws on an empty cache and 125,687 on the warm relaunch.
-<!-- PEANUTS end -->
+<!-- KIWI end -->
 
 ## What it needs
 
@@ -44,7 +44,7 @@ No code of the game is cut, and no run-time key is set. The game asks for presen
 
 - **Current:** 30 fps on the Mac, as on the Switch (`power` lines: 28–30 fps; frame interval p99 33.6 ms in play). The game sets present interval 1 and paces its frames itself. CPU about one core and 5–5.6 W on an Apple M6 in Point of Arrival.
 
-<!-- PEANUTS begin: frame limits from 20 to 120 -->
+<!-- KIWI begin: frame limits from 20 to 120 -->
 
 ### Android: frame limits from 20 to 120
 
@@ -98,7 +98,7 @@ The same rows, a build of main 0.1.7 with this profile only (which then started 
 
 The game's speed was normal by eye at each limit.
 
-**Keeping it fixed.** Do not take the Warehouse's interval row (`zero_i32` at `+0x50`) back: it is the mode-0 catch-up. `peanuts/tests/test_profile_fpslocker.py` fails if a row writes `+0x50` or `+0x10`, or if the `+0x2c` row is missing, and it parses every profile's rows with the host's parser (one refused row, such as a `constant_i32` value written `2` instead of `2:1`, makes the host drop the whole set). A player's log with the collapse shows the log digest's `game-catchup-stall` rule.
+**Keeping it fixed.** Do not take the Warehouse's interval row (`zero_i32` at `+0x50`) back: it is the mode-0 catch-up. `kiwi/tests/test_profile_fpslocker.py` fails if a row writes `+0x50` or `+0x10`, or if the `+0x2c` row is missing, and it parses every profile's rows with the host's parser (one refused row, such as a `constant_i32` value written `2` instead of `2:1`, makes the host drop the whole set). A player's log with the collapse shows the log digest's `game-catchup-stall` rule.
 
 **For a new main build.** The rows are keyed by the main's build ID, so a new update runs without them (the limits pace presentation only) until they are carried over. Find the timer in that main and check each offset by disassembly before adding rows for its build ID: the constructor stores `obj + 0x10` to the pointer and sets `+0x3c` to 1 and `+0x20` to 10 (1.1.0: `main+0x526470`-`0x526590`, the store at `main+0x526560`); the pacing reads the mode (`ldr w8, [x19, #0x60]`; `cmp w8, #2`) at the frame's start and before its wait (1.1.0: `main+0x532E30`, `main+0x533CD0`), and mode 2 waits `[x19, #0x3c]` ticks (`main+0x533D14`); each tick count is the elapsed time divided by 16,666,666 ns. `dm/tools/nso_fnmap.py` maps the functions from 1.1.0; the 1.0.0 main has the same code (its pacing at `main+0x5326C0`-`0x533160`).
 
@@ -108,9 +108,9 @@ The game's speed was normal by eye at each limit.
 
 **60 fps by default since 0.1.8** (the owner's call, 2026-11-24, for every game that started Game owned): with no pick the game starts at the 60 limit, so the reviewed rows above run from the first start; with the game's own timer kept (2026-11-24) they no longer collapse at 60. Where 60 cannot be held (the Thor's busy levels with its CPU clocks held down, below), 30 or 45 is even; a saved pick stays.
 
-<!-- PEANUTS end -->
+<!-- KIWI end -->
 
-<!-- PEANUTS begin: picture shapes -->
+<!-- KIWI begin: picture shapes -->
 ## Picture shapes (Android)
 
 Game settings › Display offers **Fill the screen** beside Fit and Stretch (the game draws for the screen's own shape, from the next start), with no code of the game's own: one `aspect_plan` row (`width_movz` at `main+0x747408`). The game builds its screen size there (`mov x8,#1920; movk x8,#1080,lsl #32`, read on the 1.1.0 pack's main), and the loader makes the width the one for the picture's shape before code is sealed: 2520 for 21:9, 1234 for 8:7 ([`aspect_plan.h`](../../host/aspect_plan.h), `test_aspect_plan.py`). The site is the one the community's 21:9 patch for this build changes (Fl4sh9174, Switch-Emulator-Ultrawide-FPS-Mods: 2580 there, for 3440x1440), which says the cameras and part of the menus follow it.
@@ -124,7 +124,7 @@ The two runs below used `aspect 21:9` and `aspect 8:7` rows and the Aspect ratio
 **Fill on the Thor's second screen (dev build 73e1d54e, Display › Fill the screen, Swap screens on):** the log has `aspect ratio: screen shape, window 1240x1080 -> 31:27` and `aspect plan: 1 words for the 1.1481 picture`, and the game runs at 60 fps on the title screen. **Known limit on a screen narrower than 16:9:** the title screen's game logo is cut at the picture's left edge (the game's own frame, `ctl` screenshot of frame 3325); the Nintendo and HAL marks in the corners and the file menu follow the shape. So the 3D view fills such a screen, and a 2D element the game places for 16:9 can fall outside it. Nothing of the kind was seen at 21:9.
 
 Not run yet: Fill on a screen wider than 16:9, the HUD at 8:7, the menus and the movies at either shape, and a 16:9 capture of the same spot to measure how much the view changes.
-<!-- PEANUTS end -->
+<!-- KIWI end -->
 
 ## Audio
 
@@ -157,9 +157,9 @@ Not run yet: Fill on a screen wider than 16:9, the HUD at 8:7, the menus and the
 
 ## Found on this game
 
-- [A fixed-step mode chosen by a frame limit catches up until the frame rate collapses](../../../docs/reference/frame-rate.md#a-fixed-step-mode-chosen-by-a-frame-limit-catches-up-until-the-frame-rate-collapses-android). <!-- PEANUTS -->
+- [A fixed-step mode chosen by a frame limit catches up until the frame rate collapses](../../../docs/reference/frame-rate.md#a-fixed-step-mode-chosen-by-a-frame-limit-catches-up-until-the-frame-rate-collapses-android). <!-- KIWI -->
 - [HAL's `.cmp` containers: a size-prefixed frame](../../../docs/reference/shaders.md#hals-cmp-containers-a-size-prefixed-frame).
 - [A host lock held across a same-core handoff](../../../docs/reference/threads.md#a-host-lock-held-across-a-same-core-handoff).
 - [Write faults made writable page by page split GPU memory past vm.max_map_count](../../../docs/reference/memory.md#write-faults-made-writable-page-by-page-split-gpu-memory-past-vmmax_map_count-android).
 - [Joining contiguous placed segments holds frames at the same spots](../../../docs/reference/memory.md#joining-contiguous-placed-segments-holds-frames-at-the-same-spots-android).
-- [Joins for textures grow one segment until a join is refused](../../../docs/reference/memory.md#joins-for-textures-grow-one-segment-until-a-join-is-refused-android). <!-- PEANUTS(upstream-candidate) -->
+- [Joins for textures grow one segment until a join is refused](../../../docs/reference/memory.md#joins-for-textures-grow-one-segment-until-a-join-is-refused-android). <!-- KIWI(upstream-candidate) -->

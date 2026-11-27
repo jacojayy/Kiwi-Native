@@ -1,6 +1,6 @@
 # key <TAB> which dumps have it: the map is the union of 4.0.0 and 4.0.1 (shader_versions); these effects of 4.0.0's Common/Effect/common.ptcl (its BNSH at 0x7e2000)
 # are not in 4.0.1's rebuilt common.ptcl (its BNSH at 0x7e3000), and as the first version's rows they carry no version tag (README.md, Shaders)
-# PEANUTS: this list is Kiwi Native's own (pull request #40); Kiwi Native's profile of the game has none
+# KIWI: this list is Kiwi Native's own (pull request #40); Kiwi Native's profile of the game has none
 0217ffd0add67541	4.0.0 (v1441792) only
 02a15997fcc4970f	4.0.0 (v1441792) only
 02b3daaf7259e1bd	4.0.0 (v1441792) only

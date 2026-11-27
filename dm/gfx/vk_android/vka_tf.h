@@ -1,4 +1,4 @@
-// PEANUTS: NVN transform feedback on the Vulkan replay (vka_tf.c, vka_tf_spv.c). The first part is plain C with no Vulkan, so the host test
+// KIWI: NVN transform feedback on the Vulkan replay (vka_tf.c, vka_tf_spv.c). The first part is plain C with no Vulkan, so the host test
 // (dm/host/tests/t_android_tf.c) runs the same code
 #pragma once
 #include <stddef.h>
