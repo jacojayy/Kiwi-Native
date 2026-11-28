@@ -161,6 +161,14 @@ public final class KiwiPrefs {
 
     private static final java.util.regex.Pattern VARIANT_ID = java.util.regex.Pattern.compile("([0-9A-Fa-f]{16})-mod-([0-9A-Fa-f]+)");
 
+    /** KIWI: the games pinned to the top of Home (title IDs, upper case) */
+    public static boolean isPinned(Context c, String titleId) { return of(c).getStringSet("pinned", java.util.Collections.emptySet()).contains(titleId.toUpperCase(java.util.Locale.ROOT)); }
+    public static void setPinned(Context c, String titleId, boolean on) {
+        java.util.Set<String> all = new java.util.HashSet<>(of(c).getStringSet("pinned", java.util.Collections.emptySet()));
+        if (on) all.add(titleId.toUpperCase(java.util.Locale.ROOT)); else all.remove(titleId.toUpperCase(java.util.Locale.ROOT));
+        of(c).edit().putStringSet("pinned", all).apply();
+    }
+
     public static boolean setupDone(Context c) { return of(c).getBoolean("setup_done", false); }
     public static void setupDone(Context c, boolean on) { of(c).edit().putBoolean("setup_done", on).apply(); }
 

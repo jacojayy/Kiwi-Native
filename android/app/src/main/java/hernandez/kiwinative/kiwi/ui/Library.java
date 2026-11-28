@@ -1104,6 +1104,11 @@ public final class Library {
             case NO_PROFILE: show.addAll(np); break;
             default: show.addAll(allRows);
         }
+        if (filter != BUILDING) {   // KIWI: pinned games first, each group in its order
+            List<Row> pins = new ArrayList<>(), rest = new ArrayList<>();
+            for (Row r : show) (KiwiPrefs.isPinned(a, r.id()) ? pins : rest).add(r);
+            show.clear(); show.addAll(pins); show.addAll(rest);
+        }
         int hidden = hiddenGameCount();
         int cols = coverColumns();
         gridPos.clear();
@@ -1112,7 +1117,7 @@ public final class Library {
         if (!setup && !rows.isEmpty() && filter != BUILDING) BottomScreen.only(gridPos.keySet());
 
         // nothing visible changed: the views stay, with their focus, their scroll position and whatever is animating
-        String sig = setup ? null : signature(show, pc, b, buildCard, building, all, ready, toBuild, noProfile, hidden, cols) + queueSignature();   // the first-run card reads too much to list: always built
+        String sig = setup ? null : signature(show, pc, b, buildCard, building, all, ready, toBuild, noProfile, hidden, cols) + queueSignature() + continueKey(rows);   // the first-run card reads too much to list: always built
         boolean user = animateNext;
         animateNext = false;
         if (sig != null && sig.equals(shown) && box.getChildCount() > 0) {
@@ -1133,12 +1138,14 @@ public final class Library {
         box.removeAllViews();
         tiles.clear(); keyed.clear();
         lostKey = null; restoreKey = null;   // the removal above is not a focus lost to restore at the next rebuild
-        buildStatus = null; buildBody = null; buildPct = null; buildBar = null; buildGoOn = null; coverChip = null; coverStrip = null; firstCover = null;
+        buildSteps = null; buildStatus = null; buildBody = null; buildPct = null; buildBar = null; buildGoOn = null; coverChip = null; coverStrip = null; firstCover = null;
         if (ondeviceCard != null && ondeviceCard.getParent() instanceof ViewGroup) ((ViewGroup) ondeviceCard.getParent()).removeView(ondeviceCard);
         shown = sig;
         if (setup) PUi.add(box, setupCard(), 0);
         if (bare) { lastCells = 0; hadNote = false; return; }
 
+        View cont = !setup && filter != BUILDING && find.isEmpty() ? continueCard(rows) : null;   // KIWI
+        if (cont != null) PUi.add(box, cont, 0);
         // the filter row
         LinearLayout top = PUi.row(a);
         HorizontalScrollView chips = new HorizontalScrollView(a);
@@ -1195,7 +1202,7 @@ public final class Library {
         track(findB, "find", null);
         LinearLayout.LayoutParams flp = PUi.wrap(); flp.leftMargin = PUi.dp(a, 8);
         top.addView(findB, flp);
-        PUi.add(box, top, setup ? 16 : 2);
+        PUi.add(box, top, setup ? 16 : cont != null ? 14 : 2);
         TextView note = null;   // the scan's line, or the empty library's: it fades in when the last rebuild did not have it
         if (scanning) {
             int n = KiwiPrefs.roots(a).size();
@@ -1438,8 +1445,14 @@ public final class Library {
         LinearLayout wrap = new LinearLayout(a);
         wrap.setOrientation(LinearLayout.VERTICAL);
         wrap.addView(e, PUi.fill());
+        final String was = find;
+        e.addTextChangedListener(new android.text.TextWatcher() {   // KIWI: the covers narrow as you type
+            @Override public void beforeTextChanged(CharSequence t, int st, int c, int af) { }
+            @Override public void onTextChanged(CharSequence t, int st, int b, int c) { }
+            @Override public void afterTextChanged(android.text.Editable t) { find = t.toString().trim(); render(); }
+        });
         AlertDialog d = PUi.sheet(a, "Find", wrap).setPositiveButton("Find", (x, w) -> { find = e.getText().toString().trim(); animateNext = true; render(); })
-                .setNegativeButton("Cancel", null).setNeutralButton(find.isEmpty() ? null : "Clear", (x, w) -> { find = ""; animateNext = true; render(); }).create();
+                .setNegativeButton("Cancel", (x, w) -> { find = was; render(); }).setNeutralButton(find.isEmpty() ? null : "Clear", (x, w) -> { find = ""; animateNext = true; render(); }).create();
         e.setOnEditorActionListener((v, id, ev) -> { find = e.getText().toString().trim(); d.dismiss(); animateNext = true; render(); return true; });
         d.show();
         e.requestFocus();
@@ -1482,6 +1495,63 @@ public final class Library {
     }
 
     /** The title's play time for the bottom screen's card, null when the game was never played with this app */
+    /** KIWI: the ready game played last (the ledger's last-played time), null when none was */
+    private Row lastPlayedRow(List<Row> rows) {
+        Row best = null;
+        long at = 0;
+        for (Row r : rows) {
+            if (isBuilding(r) || r.status() != READY) continue;
+            hernandez.kiwinative.kiwi.launch.PlayLedger.Entry e = playTimes.get(r.id().toUpperCase(Locale.ROOT));
+            if (e != null && e.last > at) { at = e.last; best = r; }
+        }
+        return best;
+    }
+
+    private String continueKey(List<Row> rows) {
+        Row r = lastPlayedRow(rows);
+        hernandez.kiwinative.kiwi.launch.PlayLedger.Entry e = r == null ? null : playTimes.get(r.id().toUpperCase(Locale.ROOT));
+        return r == null ? "" : "|c:" + r.id() + ":" + e.last + ":" + e.ms;
+    }
+
+    private static String agoWords(long at) {
+        long m = Math.max(0, System.currentTimeMillis() - at) / 60000, h = m / 60, d = h / 24;
+        return m < 2 ? "Played just now" : m < 60 ? "Played " + m + " min ago" : h < 24 ? "Played " + h + " h ago" : d == 1 ? "Played yesterday" : "Played " + d + " days ago";
+    }
+
+    /** KIWI: Home's first card once something has been played: the last game, when it was played, how long in all, and Play */
+    private View continueCard(List<Row> rows) {
+        final Row row = lastPlayedRow(rows);
+        if (row == null) return null;
+        hernandez.kiwinative.kiwi.launch.PlayLedger.Entry e = playTimes.get(row.id().toUpperCase(Locale.ROOT));
+        LinearLayout card = PUi.card(a);
+        int p = PUi.dp(a, 14);
+        card.setPadding(p, p, p, p);
+        LinearLayout line = PUi.row(a);
+        TextView tile = PUi.tile(a, row.name(), 64);
+        Bitmap bm = icons.get(row.id());
+        if (bm != null) PUi.tileIcon(tile, bm);
+        line.addView(tile);
+        LinearLayout info = new LinearLayout(a);
+        info.setOrientation(LinearLayout.VERTICAL);
+        info.setPadding(PUi.dp(a, 14), 0, PUi.dp(a, 8), 0);
+        TextView kicker = PUi.text(a, "CONTINUE PLAYING", 11, R.color.bn_accent, 800);
+        kicker.setLetterSpacing(0.1f);
+        info.addView(kicker);
+        TextView name = PUi.text(a, row.name(), 17, R.color.bn_text, 800);
+        name.setSingleLine(true);
+        name.setEllipsize(TextUtils.TruncateAt.END);
+        info.addView(name);
+        info.addView(PUi.small(a, e.ms > 0 ? PUi.joined(agoWords(e.last), hernandez.kiwinative.kiwi.launch.PlayLedger.compact(e.ms) + " in all") : agoWords(e.last)));
+        line.addView(info, PUi.weight());
+        PUi.Action go = PUi.action(a, R.drawable.ic_play, "Play", PUi.Kind.PRIMARY, Haptics.on(Haptics.Word.HEAVY, v -> play(row)));
+        go.setOnKeyListener(shoulders);
+        focusRing(go, Color.TRANSPARENT);
+        track(go, "continue", null);
+        line.addView(go, PUi.wrap());
+        card.addView(line);
+        return card;
+    }
+
     private hernandez.kiwinative.kiwi.launch.PlayLedger.Entry play(String titleId) {
         hernandez.kiwinative.kiwi.launch.PlayLedger.Entry e = playTimes.get(titleId.toUpperCase(Locale.ROOT));
         return e == null || e.ms <= 0 ? null : e;
@@ -1571,6 +1641,20 @@ public final class Library {
             cover.addView(mark(pill, PUi.col(a, fill), text, false, Gravity.TOP | Gravity.START));
         } else {
             cover.addView(mark(a.getString(R.string.not_supported_yet), PUi.col(a, R.color.bn_danger_tint), R.color.bn_danger, false, Gravity.TOP | Gravity.START));
+        }
+        if (!building) {   // KIWI: the pin: a star at the cover's lower left; pinned games lead Home
+            final boolean pinned = KiwiPrefs.isPinned(a, r.id());
+            TextView pin = PUi.text(a, pinned ? "\u2605" : "\u2606", 15, pinned ? R.color.bn_on_kiwi : R.color.bn_text, 700);
+            pin.setGravity(Gravity.CENTER);
+            pin.setIncludeFontPadding(false);
+            pin.setBackground(pinned ? Glass.jelly(a, PUi.col(a, R.color.bn_kiwi), 15) : Glass.chip(a, 15));
+            pin.setAlpha(pinned ? 1f : 0.7f);
+            pin.setClickable(true);
+            pin.setContentDescription((pinned ? "Unpin " : "Pin ") + name);
+            pin.setOnClickListener(v -> { Haptics.play(v, Haptics.Word.TICK); KiwiPrefs.setPinned(a, r.id(), !pinned); animateNext = true; render(); });
+            FrameLayout.LayoutParams plp = new FrameLayout.LayoutParams(PUi.dp(a, 32), PUi.dp(a, 32), Gravity.BOTTOM | Gravity.START);
+            plp.setMargins(p8, p8, p8, p8);
+            cover.addView(pin, plp);
         }
         if (companion) cover.addView(companionBadge(building && !stopped && !queued && !queueStopped));
 
@@ -1890,6 +1974,8 @@ public final class Library {
         }
     }
 
+    private LinearLayout buildSteps;   // KIWI: the build card's stages (Import, Shaders, Companion, Ready)
+
     private View buildCard(Build b) {
         LibraryScanner.Title t = titleFor(b.titleId);
         String name = t != null ? t.name : b.name;
@@ -1917,6 +2003,18 @@ public final class Library {
         top.addView(info, PUi.weight());
         top.addView(PUi.more(a, "Manage " + name, Haptics.on(Haptics.Word.CLICK, v -> { if (t != null) sheet(t); })));
         c.addView(top);
+        if (!b.failed) {   // KIWI: where the build is, as four stages
+            buildSteps = PUi.row(a);
+            String[] names = {"Import", "Shaders", "Companion", "Ready"};
+            for (int i = 0; i < names.length; i++) {
+                TextView st = PUi.chip(a, names[i]);
+                st.setSingleLine(true);
+                LinearLayout.LayoutParams sl = PUi.wrap();
+                if (i > 0) sl.leftMargin = PUi.dp(a, 6);
+                buildSteps.addView(st, sl);
+            }
+            PUi.add(c, buildSteps, 12, PUi.wrap());
+        }
         buildBody = PUi.body(a, "");
         PUi.add(c, buildBody, 12);
         buildBar = Strip.card(a);
@@ -2011,6 +2109,19 @@ public final class Library {
         return c;
     }
 
+    /** KIWI: the stages of the build card: the ones behind it ticked, the one it is at lit in kiwi green, the ones ahead quiet */
+    private void stages(Build b) {
+        String[] names = {"Import", "Shaders", "Companion", "Ready"};
+        int at = b.step.equals("import") ? 0 : b.step.equals("companion") ? 2 : b.step.equals("done") ? 3 : 1;
+        for (int i = 0; i < buildSteps.getChildCount() && i < names.length; i++) {
+            TextView st = (TextView) buildSteps.getChildAt(i);
+            st.setText(i < at || at == 3 ? "✓ " + names[i] : names[i]);
+            if (i == at && at < 3) { st.setTextColor(PUi.col(a, R.color.bn_on_kiwi)); st.setBackground(Glass.jelly(a, PUi.col(a, R.color.bn_kiwi), 20)); }
+            else if (i < at || at == 3) { st.setTextColor(PUi.col(a, R.color.bn_accent)); st.setBackground(Glass.chip(a, 20)); }
+            else { st.setTextColor(PUi.col(a, R.color.bn_text_2)); st.setBackground(Glass.panel(a, 20)); }
+        }
+    }
+
     /** The build's state into the card and the cover that show it; fresh: the views were just built (a bar shows its value as it is, later values animate their fill) */
     private void updateBuildCard(Build b, boolean fresh) {
         if (coverChip != null) {   // the building cover's chip and strip (the Building filter not chosen)
@@ -2018,6 +2129,7 @@ public final class Library {
             coverChip.setTextColor(PUi.col(a, b.failed ? R.color.bn_danger : R.color.bn_accent));
             if (coverStrip != null) { coverStrip.setVisibility(b.failed ? View.GONE : View.VISIBLE); if (!coverStrip.isIndeterminate()) Motion.progress(coverStrip, b.percent, fresh); }
         }
+        if (buildSteps != null) stages(b);
         if (buildStatus == null) return;
         PUi.status(buildStatus, stepWords(b), b.failed ? R.color.bn_danger : b.step.equals("done") ? R.color.bn_leaf : R.color.bn_accent);
         if (buildGoOn != null) buildGoOn.setVisibility(!b.failed && BuildPipeline.goOnOffered(b.titleId) ? View.VISIBLE : View.GONE);   // #803
@@ -2211,15 +2323,27 @@ public final class Library {
         PUi.add(c, t, 6, PUi.wrap());
         LinearLayout steps = PUi.row(a);
         steps.setGravity(Gravity.CENTER);
-        String[] s = {"1  Keys", "2  Game folder", "3  Updates & DLC", "4  Firmware"};
+        String[] s = {"Keys", "Game folder", "Updates & DLC", "Firmware"};
+        boolean[] done = {KiwiPrefs.hasKeys(a), KiwiPrefs.gameDir(a) != null, !KiwiPrefs.addonDirs(a).isEmpty(), KiwiPrefs.hasFonts(a)};
+        int next = -1, doneRequired = 0;   // KIWI: the steps tick as they are done; Updates & DLC is optional; the first required one left is lit
+        for (int k = 0; k < s.length; k++) { if (k == 2) continue; if (done[k]) doneRequired++; else if (next < 0) next = k; }
         for (int k = 0; k < s.length; k++) {
             LinearLayout.LayoutParams lp = PUi.wrap();
             if (k > 0) lp.leftMargin = PUi.dp(a, 6);
-            TextView chip = PUi.chip(a, s[k]);
+            TextView chip = PUi.chip(a, (done[k] ? "\u2713 " : (k + 1) + "  ") + s[k]);
             chip.setSingleLine(true);
+            if (done[k]) { chip.setTextColor(PUi.col(a, R.color.bn_accent)); chip.setBackground(Glass.chip(a, 20)); }
+            else if (k == next) { chip.setTextColor(PUi.col(a, R.color.bn_on_kiwi)); chip.setBackground(Glass.jelly(a, PUi.col(a, R.color.bn_kiwi), 20)); }
             steps.addView(chip, lp);
         }
         PUi.add(c, steps, 16, PUi.wrap());
+        ProgressBar prog = PUi.progress(a);
+        prog.setMax(3);
+        prog.setProgress(doneRequired);
+        PUi.add(c, prog, 12, new LinearLayout.LayoutParams(PUi.dp(a, 220), ViewGroup.LayoutParams.WRAP_CONTENT));
+        TextView nextWords = PUi.small(a, next < 0 ? "All set. Show your games." : doneRequired + " of 3 done. Next: " + (next == 0 ? "add your keys" : next == 1 ? "pick your game folder" : "add your firmware"));
+        nextWords.setGravity(Gravity.CENTER);
+        PUi.add(c, nextWords, 6, PUi.wrap());
         boolean keys = KiwiPrefs.hasKeys(a);
         List<String> games = KiwiPrefs.gameDirs(a);
         String game = games.isEmpty() ? null : games.size() == 1 ? games.get(0) : games.size() + " game folders";
