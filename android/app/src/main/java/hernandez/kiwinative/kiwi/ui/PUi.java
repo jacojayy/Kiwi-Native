@@ -63,10 +63,10 @@ public final class PUi {
         GradientDrawable mask = new GradientDrawable();   // an opaque copy of the shape: a transparent button (QUIET) still shows its ripple
         mask.setColor(Color.BLACK);
         mask.setCornerRadius(shape.getCornerRadius());
-        return new RippleDrawable(ColorStateList.valueOf(0x336B4423), shape, mask);
+        return new RippleDrawable(ColorStateList.valueOf(0x336DB02A), shape, mask);
     }
 
-    public static Typeface face(int weight) { return Typeface.create(Typeface.SANS_SERIF, weight, false); }
+    public static Typeface face(int weight) { return hernandez.kiwinative.Fonts.face(weight); }   // KIWI: Nunito
 
     /** A vector icon (res/drawable/ic_*.xml) tinted with a palette color */
     public static Drawable icon(Context c, int drawable, int colorRes) {
@@ -271,7 +271,7 @@ public final class PUi {
     public static LinearLayout card(Context c) {
         LinearLayout l = new LinearLayout(c);
         l.setOrientation(LinearLayout.VERTICAL);
-        l.setBackground(round(col(c, R.color.bn_card), dp(c, 20), col(c, R.color.bn_card_stroke), dp(c, 1)));
+        hernandez.kiwinative.kiwi.ui.Glass.card(l, 24);   // KIWI: liquid glass
         int p = dp(c, 18);
         l.setPadding(p, p, p, p);
         return l;
@@ -288,7 +288,7 @@ public final class PUi {
     public static LinearLayout inner(Context c, int fillRes) {
         LinearLayout l = new LinearLayout(c);
         l.setOrientation(LinearLayout.VERTICAL);
-        l.setBackground(round(col(c, fillRes), dp(c, 16), 0, 0));
+        l.setBackground(round(col(c, fillRes) & 0x00FFFFFF | 0xB0000000, dp(c, 18), 0, 0));   // KIWI: a little see-through
         int p = dp(c, 14);
         l.setPadding(p, p, p, p);
         return l;
@@ -397,8 +397,8 @@ public final class PUi {
     private static void style(Context c, View b, Kind k, float radiusDp) {
         int fill, stroke = 0;
         switch (k) {
-            case PRIMARY: fill = col(c, R.color.bn_kiwi); break;
-            case TONAL: fill = col(c, R.color.bn_tint); break;
+            case PRIMARY: b.setBackground(ripple(c, hernandez.kiwinative.kiwi.ui.Glass.jelly(c, col(c, R.color.bn_kiwi), radiusDp))); return;   // KIWI: glossy
+            case TONAL: b.setBackground(hernandez.kiwinative.kiwi.ui.Glass.rippled(c, hernandez.kiwinative.kiwi.ui.Glass.chip(c, radiusDp), radiusDp)); return;   // KIWI: glass
             case SOFT: fill = Color.TRANSPARENT; stroke = col(c, R.color.bn_card_stroke); break;
             case DANGER: fill = col(c, R.color.bn_danger_tint); break;
             default: fill = Color.TRANSPARENT; break;

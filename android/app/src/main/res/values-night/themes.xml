@@ -8,7 +8,7 @@
         <item name="android:colorAccent">@color/bn_accent</item>
         <item name="android:colorControlActivated">@color/bn_accent</item>
         <item name="android:colorBackground">@color/bn_bg</item>
-        <item name="android:windowBackground">@color/bn_bg</item>
+        <item name="android:windowBackground">@drawable/kiwi_aurora</item>
         <item name="android:textColorPrimary">@color/bn_text</item>
         <item name="android:textColorSecondary">@color/bn_text_2</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
@@ -27,6 +27,9 @@
         <item name="android:textColorPrimary">@color/bn_text</item>
         <item name="android:textColorSecondary">@color/bn_text_2</item>
         <item name="android:windowBackground">@drawable/bn_dialog_bg</item>
+        <item name="android:windowBackgroundBlurRadius">36dp</item>
+        <item name="android:windowBlurBehindEnabled">true</item>
+        <item name="android:windowBlurBehindRadius">18dp</item>
         <item name="android:buttonBarButtonStyle">@style/Kiwi.DialogButton</item>
     </style>
 

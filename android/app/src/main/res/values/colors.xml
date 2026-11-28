@@ -19,4 +19,12 @@
     <color name="bn_danger">#FFB83A12</color>
     <color name="bn_danger_tint">#FFFDE3D8</color>
     <color name="bn_warn_tint">#FFF6EDB0</color>
+
+    <!-- Liquid glass (kiwi.ui.Glass): a frosted fill, a sheen from the top left, a bright rim -->
+    <color name="glass_fill">#A8FFFFFF</color>
+    <color name="glass_fill_strong">#D0FFFFFF</color>
+    <color name="glass_sheen_top">#80FFFFFF</color>
+    <color name="glass_sheen_bottom">#00FFFFFF</color>
+    <color name="glass_edge">#99FFFFFF</color>
+    <color name="glass_shade">#1F2E6B1E</color>
 </resources>

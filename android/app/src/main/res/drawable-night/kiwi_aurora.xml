@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The ground the glass sits on: a soft kiwi gradient with three blurred blobs of colour (lime, leaf, teal) -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:angle="270" android:startColor="#08110A" android:endColor="#0F1D12" />
+        </shape>
+    </item>
+    <item android:gravity="top|start" android:width="520dp" android:height="520dp" android:left="-170dp" android:top="-190dp">
+        <shape android:shape="oval">
+            <gradient android:type="radial" android:gradientRadius="260dp" android:centerColor="#4D6DB02A" android:endColor="#006DB02A" />
+        </shape>
+    </item>
+    <item android:gravity="bottom|end" android:width="560dp" android:height="560dp" android:right="-200dp" android:bottom="-220dp">
+        <shape android:shape="oval">
+            <gradient android:type="radial" android:gradientRadius="280dp" android:centerColor="#4020A08A" android:endColor="#0020A08A" />
+        </shape>
+    </item>
+    <item android:gravity="center_vertical|end" android:width="380dp" android:height="380dp" android:right="-150dp" android:top="-60dp">
+        <shape android:shape="oval">
+            <gradient android:type="radial" android:gradientRadius="190dp" android:centerColor="#33497A1E" android:endColor="#00497A1E" />
+        </shape>
+    </item>
+</layer-list>

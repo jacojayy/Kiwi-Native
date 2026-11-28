@@ -16,4 +16,11 @@
     <color name="bn_danger">#FFFF9670</color>
     <color name="bn_danger_tint">#FF3D2016</color>
     <color name="bn_warn_tint">#FF343512</color>
+
+    <color name="glass_fill">#1AFFFFFF</color>
+    <color name="glass_fill_strong">#2BFFFFFF</color>
+    <color name="glass_sheen_top">#33FFFFFF</color>
+    <color name="glass_sheen_bottom">#00FFFFFF</color>
+    <color name="glass_edge">#3DFFFFFF</color>
+    <color name="glass_shade">#40000000</color>
 </resources>
