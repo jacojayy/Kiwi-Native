@@ -67,7 +67,13 @@ public final class Look {
         GradientDrawable d = new GradientDrawable();
         d.setColor(SHEET);
         d.setCornerRadii(bottom ? new float[] {r, r, r, r, 0, 0, 0, 0} : new float[] {r, r, 0, 0, 0, 0, r, r});
-        sheet.setBackground(d);
+        GradientDrawable sheen = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[] {0x22FFFFFF, 0x00FFFFFF});   // liquid glass: a sheen from the corner and a thin bright rim
+        sheen.setCornerRadii(bottom ? new float[] {r, r, r, r, 0, 0, 0, 0} : new float[] {r, r, 0, 0, 0, 0, r, r});
+        GradientDrawable rim = new GradientDrawable();
+        rim.setColor(0);
+        rim.setStroke(Math.max(1, dp(c, 1)), 0x33FFFFFF);
+        rim.setCornerRadii(bottom ? new float[] {r, r, r, r, 0, 0, 0, 0} : new float[] {r, r, 0, 0, 0, 0, r, r});
+        sheet.setBackground(new android.graphics.drawable.LayerDrawable(new android.graphics.drawable.Drawable[] {d, sheen, rim}));
         sheet.setClipToOutline(true);
         sheet.setOutlineProvider(new android.view.ViewOutlineProvider() {
             @Override public void getOutline(android.view.View v, android.graphics.Outline o) {

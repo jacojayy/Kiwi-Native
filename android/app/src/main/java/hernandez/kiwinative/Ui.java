@@ -490,7 +490,7 @@ final class Ui {
         v.setClickable(true);
         v.setFocusable(true);
         v.setOnClickListener(l);
-        v.setLayoutParams(new LinearLayout.LayoutParams(dp(c, 44), dp(c, 44)));
+        v.setLayoutParams(new LinearLayout.LayoutParams(dp(c, 48), dp(c, 48)));
         return v;
     }
 
