@@ -183,11 +183,11 @@ public final class DragRing extends View {
             alpha = alphaFrom + (alphaTo - alphaFrom) * ease.getInterpolation(ft);
             if (ft < 1f) more = true; else { alpha = alphaTo; alphaMs = 0; }
         }
-        draw(canvas);
+        paintRing(canvas);
         if (more) postInvalidateOnAnimation(); else last = 0;
     }
 
-    private void draw(Canvas canvas) {
+    private void paintRing(Canvas canvas) {
         if (alpha < 0.01f) return;
         float stroke = line.getStrokeWidth();
         if (cur[2] - cur[0] <= stroke || cur[3] - cur[1] <= stroke) return;
