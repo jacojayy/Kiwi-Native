@@ -296,6 +296,7 @@ final class Ui {
         // Edge to edge on every Android: from Android 15 targetSdk 35 makes it so, but before it the window keeps its content clear of the bars itself and
         // consumes the insets, so the listener below never ran and the column had no gutter and no width limit (cards from edge to edge on Android 13)
         a.getWindow().setDecorFitsSystemWindows(false);
+        hernandez.kiwinative.kiwi.ui.Immersive.apply(a);   // KIWI: landscape fills the screen, with no bars
         View scrim = new View(a);
         scrim.setBackgroundColor((col(a, R.color.bn_bg) & 0x00FFFFFF) | 0xEE000000);
         ScrollView scroll = new ScrollView(a);
@@ -312,7 +313,8 @@ final class Ui {
             int w = a.getResources().getDisplayMetrics().widthPixels;
             int gutter = dp(a, a.getResources().getConfiguration().screenWidthDp < 360 ? 16 : 20);
             int side = Math.max(gutter, (w - i.left - i.right - dp(a, maxWidthDp)) / 2);
-            v.setPadding(side + i.left, i.top + dp(a, 8), side + i.right, barBelow ? dp(a, 16) : i.bottom + dp(a, 24));
+            boolean tight = hernandez.kiwinative.kiwi.ui.Immersive.compact(a);   // KIWI: landscape on a phone: less height spent on the margins
+            v.setPadding(side + i.left, i.top + dp(a, tight ? 2 : 8), side + i.right, barBelow ? dp(a, 16) : i.bottom + dp(a, tight ? 12 : 24));
             scrim.getLayoutParams().height = i.top;
             scrim.requestLayout();
             return in;
@@ -327,7 +329,7 @@ final class Ui {
     /** The same, with a small line under the title in the accent yellow (Home: the build identifier, Prefs.buildId), or none when null */
     static LinearLayout header(Context c, View leading, CharSequence title, CharSequence subtitle, View trailing) {
         LinearLayout h = row(c);
-        h.setMinimumHeight(dp(c, 56));
+        h.setMinimumHeight(dp(c, hernandez.kiwinative.kiwi.ui.Immersive.compact(c) ? 44 : 56));   // KIWI: slimmer in landscape on a phone
         if (leading != null) h.addView(leading);
         TextView t = title(c, title);
         t.setAccessibilityHeading(true);

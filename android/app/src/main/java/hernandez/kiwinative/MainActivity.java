@@ -204,7 +204,7 @@ public final class MainActivity extends Activity {
         FrameLayout frame = (FrameLayout) bananas.getParent();
         while (frame.getChildCount() > 1) frame.removeViewAt(1);
         boolean wide = getResources().getConfiguration().screenWidthDp >= 600;
-        LinearLayout content = Ui.page(this, frame, settingsGame != null && !advancedOpen && wide ? 1040 : 900);   // KIWI: four covers per row on a handheld (upstream: 640)
+        LinearLayout content = Ui.page(this, frame, hernandez.kiwinative.kiwi.ui.Immersive.compact(this) && settingsGame == null && !advancedOpen && !settingsPage ? 1200 : settingsGame != null && !advancedOpen && wide ? 1040 : 900);   // KIWI: Home in landscape on a phone uses the width   // KIWI: four covers per row on a handheld (upstream: 640)
         poppedText = null;
         if (settingsGame != null) for (Game x : Game.load(this)) if (x.gameDir.equals(settingsGame.gameDir)) { settingsGame = x; break; }   // its folders as they are now (Folders, Import pack)
         if (advancedOpen) { accessCard = null; gameBox = null; overlayRow = null; AdvancedPage.build(this, content, advancedTitleId, advancedName, this::closeAdvanced); }
@@ -495,6 +495,7 @@ public final class MainActivity extends Activity {
     @Override public void onWindowFocusChanged(boolean focus) {
         super.onWindowFocusChanged(focus);
         if (focus) refreshSettings();   // back from a dialog (GPU driver, Folders, …)
+        if (focus) hernandez.kiwinative.kiwi.ui.Immersive.apply(this);   // KIWI: the system shows the bars again after a dialog or the keyboard; landscape hides them
     }
 
     @Override protected void onNewIntent(Intent i) {

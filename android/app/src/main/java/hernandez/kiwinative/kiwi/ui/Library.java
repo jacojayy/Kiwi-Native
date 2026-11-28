@@ -1232,7 +1232,7 @@ public final class Library {
             return;
         }
 
-        int cell = (Math.min(widthDp(), 900) - 40 - PUi.GAP * (cols - 1)) / cols;   // Banana's 20 dp gutters and 12 dp gaps
+        int cell = (Math.min(widthDp(), Immersive.compact(a) ? 1200 : 900) - 40 - PUi.GAP * (cols - 1)) / cols;   // Banana's 20 dp gutters and 12 dp gaps
         List<View> cells = new ArrayList<>();
         for (Row r : show) cells.add(coverCell(r, cell));
         grid(cells, cols, 16);
@@ -1460,7 +1460,10 @@ public final class Library {
 
     private int widthDp() { Configuration c = a.getResources().getConfiguration(); return c.screenWidthDp; }
     private int fullColumns() { return widthDp() >= 700 ? 2 : 1; }
-    private int coverColumns() { return widthDp() >= 700 ? 4 : widthDp() >= 540 ? 3 : 2; }
+    private int coverColumns() {
+        if (Immersive.compact(a)) return Math.max(4, Math.min(7, (Math.min(widthDp(), 1200) - 40) / 150));   // KIWI: a phone in landscape: smaller covers, more in a row, less to scroll
+        return widthDp() >= 700 ? 4 : widthDp() >= 540 ? 3 : 2;
+    }
 
     /** Views in rows of cols weighted cells, 12 dp apart, rowGap dp between rows; an odd last cell keeps its width (empty cells fill the rest) */
     private void grid(List<View> cards, int cols, int rowGap) {

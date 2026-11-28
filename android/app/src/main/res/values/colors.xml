@@ -26,5 +26,7 @@
     <color name="glass_sheen_top">#80FFFFFF</color>
     <color name="glass_sheen_bottom">#00FFFFFF</color>
     <color name="glass_edge">#99FFFFFF</color>
+    <color name="glass_edge_top">#E6FFFFFF</color>
+    <color name="glass_edge_bottom">#59FFFFFF</color>
     <color name="glass_shade">#1F2E6B1E</color>
 </resources>

@@ -43,18 +43,8 @@ final class PadFocus {
     /** The step of a tab switch for a shoulder button: -1 (L1), +1 (R1), else 0 */
     static int tabStep(int keyCode) { return keyCode == KeyEvent.KEYCODE_BUTTON_L1 ? -1 : keyCode == KeyEvent.KEYCODE_BUTTON_R1 ? 1 : 0; }
 
-    /** Puts the frame on whatever has the focus in this window, and takes it off the one that lost it */
-    static void watch(Window w) {
-        final View[] lit = new View[1];
-        final Drawable[] old = new Drawable[1];
-        w.getDecorView().getViewTreeObserver().addOnGlobalFocusChangeListener((was, now) -> {
-            if (lit[0] != null) { lit[0].setForeground(old[0]); lit[0] = null; old[0] = null; }
-            if (now == null || now.isInTouchMode() || now instanceof EditText || now instanceof ListView) return;
-            lit[0] = now;
-            old[0] = now.getForeground();
-            now.setForeground(hernandez.kiwinative.kiwi.ui.FocusFrame.at(now, frame(now.getContext())));   // KIWI: where the view shows, also on a one-line button or tab, whose text scrolls far (hernandez.kiwinative.kiwi.ui.FocusFrame)
-        });
-    }
+    /** Puts the drag ring on this window: one outline that glides to whatever has the focus (hernandez.kiwinative.kiwi.ui.DragRing; not in touch mode, where nothing has it) */
+    static void watch(Window w) { hernandez.kiwinative.kiwi.ui.DragRing.watch(w); }
 
     /** Every focusable view under root, in focus order */
     static ArrayList<View> focusables(View root) { return root.getFocusables(View.FOCUS_FORWARD); }
